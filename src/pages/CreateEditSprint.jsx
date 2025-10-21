@@ -114,7 +114,7 @@ export function SprintSetup({ onBack }: SprintSetupProps) {
           </CardContent>
         </Card>
 
-        {/* Team Allocation */}
+
         <Card>
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
