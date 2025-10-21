@@ -9,6 +9,8 @@ import Results from "../pages/Results";
 // import AdminProfile from "../pages/AdminProfile";
 // import UserProfile from "../pages/UserProfile";
 import UserDashboard from "../pages/UserDashboard";
+import Configuration from "../pages/Configuration";
+import Home from "../pages/Home";
 
 const routerSprint = createBrowserRouter([{
     path: "/",
@@ -16,7 +18,7 @@ const routerSprint = createBrowserRouter([{
     children: [
       {
         index: true, 
-        element: <App />,
+        element: <Home />,
       },
       {
         path: "/user-dashboard",
@@ -25,6 +27,10 @@ const routerSprint = createBrowserRouter([{
       {
         path: "/results",
         element: <Results />,
+      },
+      {
+        path: "/configuration",
+        element: <Configuration />,
       },
       // {
       //   path: "admin-profile",
