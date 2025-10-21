@@ -1,0 +1,23 @@
+.user-dashboard-container {
+    background-color: #f8f9fa;
+    color: black;
+    text-align: justify;
+    border-radius: 10px;
+    padding: 5% 3%;
+}
+
+.user-dashboard-container h1 {
+    font-weight: 400;
+    font-size: 30px;
+    margin-bottom: 5px;
+}
+
+.text-muted-foreground {
+    color: #717182;
+}
+
+.stats-cards {
+    display: flex;
+    gap: 4rem;
+    margin-top: 3%;
+}
