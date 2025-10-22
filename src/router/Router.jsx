@@ -3,8 +3,8 @@ import { createBrowserRouter } from "react-router-dom";
 import Layout from "../layout/Layout";
 
 import App from "../App"; 
-// import Login from "../pages/Login";
-// import Register from "../pages/Register";
+import LoginPage from "../pages/LoginPage";
+import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
 // import AdminProfile from "../pages/AdminProfile";
 // import UserProfile from "../pages/UserProfile";
@@ -18,6 +18,14 @@ const routerSprint = createBrowserRouter([{
       {
         index: true, 
         element: <App />,
+      },
+      {
+        path: "/login",
+        element: <LoginPage />,
+      },
+      {
+        path: "/register",
+        element: <RegisterPage />,
       },
       {
         path: "/user-dashboard",
