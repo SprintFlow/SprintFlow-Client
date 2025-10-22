@@ -11,12 +11,9 @@ import {
   Avatar,
 } from "@mui/material";
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
+import PropTypes from "prop-types";
 
-interface LoginPageProps {
-  onLogin: (role: "admin" | "user") => void;
-}
-
-export function LoginPage({ onLogin }: LoginPageProps) {
+export function LoginPage({ onLogin }) {
   return (
     <Box
       sx={{
@@ -92,3 +89,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     </Box>
   );
 }
+
+LoginPage.propTypes = {
+  onLogin: PropTypes.func.isRequired,
+};
