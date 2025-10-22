@@ -22,19 +22,17 @@ import { ArrowLeft, Plus, Trash2, Save, Users, Target, Calendar } from "lucide-r
 
 export default function CreateEditSprint({ onBack }) {
   const teamMembers = [
-    { id: 1, name: "Ana García", role: "Frontend Developer", availability: "100%" },
-    { id: 2, name: "Carlos López", role: "Backend Developer", availability: "100%" },
-    { id: 3, name: "María Rodríguez", role: "Full Stack", availability: "80%" },
-    { id: 4, name: "Juan Martínez", role: "QA Engineer", availability: "100%" },
+    { id: 1, name: "Ana García", role: "Developer" },
+    { id: 2, name: "Carlos López", role: "Developer" },
+    { id: 3, name: "María Rodríguez", role: "Developer" },
+    { id: 4, name: "Juan Martínez", role: "QA" },
   ];
 
-  const backlogItems = [
-    { id: 1, title: "Sistema de autenticación de usuarios", points: 8, priority: "Alta" },
-    { id: 2, title: "Panel de control principal", points: 13, priority: "Media" },
-    { id: 3, title: "Integración con servicio de pagos", points: 5, priority: "Alta" },
+  const userStories = [
+    { id: 1, title: "Implementar login de usuarios", points: 8 },
+    { id: 2, title: "Crear dashboard principal", points: 13 },
+    { id: 3, title: "Integrar API de pagos", points: 5 },
   ];
-
-  const totalPoints = backlogItems.reduce((sum, item) => sum + item.points, 0);
 
   return (
     <Box sx={{ p: 4, display: "flex", flexDirection: "column", gap: 4 }}>
@@ -118,7 +116,7 @@ export default function CreateEditSprint({ onBack }) {
         </Grid>
       </Grid>
 
-      {/* Backlog Items */}
+      {/* Historias de Usuario */}
       <Card>
         <CardHeader title="Elementos del Backlog" subheader="Tareas y historias asignadas al sprint" />
         <CardContent>
