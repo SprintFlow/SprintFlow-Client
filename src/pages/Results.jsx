@@ -49,7 +49,7 @@ export default function Results() {
   // Rendimiento del equipo
   const teamPerformance = [
     { name: "Guille", planned: 40, completed: 35 },
-    { name: "Nanu", planned: 40, completed: 30 },
+    { name: "Manu", planned: 40, completed: 30 },
     { name: "Neo", planned: 40, completed: 35 },
   ];
 
