@@ -1,17 +1,26 @@
-import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
-import { Badge } from "./ui/badge";
+import React from "react";
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  CardHeader,
+  TextField,
+  Button,
+  Divider,
+  LinearProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
+import { ArrowLeft, Plus, Trash2, Save, Users, Target, Calendar } from "lucide-react";
 
-interface CreateEditSprintProps {
-  onBack: () => void;
-}
-
-export function CreateEditSprint({ onBack }: CreateEditSprintProps) {
+export default function CreateEditSprint({ onBack }) {
   const teamMembers = [
     { id: 1, name: "Ana García", role: "Developer" },
     { id: 2, name: "Carlos López", role: "Developer" },
@@ -26,178 +35,141 @@ export function CreateEditSprint({ onBack }: CreateEditSprintProps) {
   ];
 
   return (
-    <div className="space-y-6">
+    <Box sx={{ p: 4, display: "flex", flexDirection: "column", gap: 4 }}>
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Button variant="outlined" startIcon={<ArrowLeft />} onClick={onBack}>
+          Regresar
         </Button>
-        <div>
-          <h1>Crear Nuevo Sprint</h1>
-          <p className="text-muted-foreground mt-1">
-            Define los parámetros y objetivos del sprint
-          </p>
-        </div>
-      </div>
+        <Box>
+          <Typography variant="h4">Configurar Sprint</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Establece la configuración y objetivos para el próximo ciclo de trabajo
+          </Typography>
+        </Box>
+      </Box>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Información Básica */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Información Básica</CardTitle>
-            <CardDescription>Datos generales del sprint</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="sprint-name">Nombre del Sprint</Label>
-              <Input
-                id="sprint-name"
-                placeholder="Sprint 25"
-                className="bg-input-background"
-                defaultValue="Sprint 25"
+      <Grid container spacing={3}>
+        {/* Sprint Details */}
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardHeader
+              title="Detalles del Sprint"
+              subheader="Información fundamental del ciclo"
+              avatar={<Target />}
+            />
+            <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <TextField label="Título del Sprint" defaultValue="Sprint Q4-2025" fullWidth />
+              <TextField label="Capacidad (horas)" type="number" defaultValue="180" fullWidth />
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <TextField type="date" defaultValue="2025-10-20" fullWidth />
+                <TextField type="date" defaultValue="2025-11-03" fullWidth />
+              </Box>
+              <TextField
+                label="Enfoque Principal"
+                multiline
+                rows={4}
+                defaultValue="Desarrollar e implementar el sistema de autenticación seguro y comenzar con la estructura base del dashboard administrativo."
+                fullWidth
               />
-            </div>
+            </CardContent>
+          </Card>
+        </Grid>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start-date">Fecha Inicio</Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  className="bg-input-background"
-                  defaultValue="2025-10-20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end-date">Fecha Fin</Label>
-                <Input
-                  id="end-date"
-                  type="date"
-                  className="bg-input-background"
-                  defaultValue="2025-11-03"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="available-hours">Horas Disponibles</Label>
-              <Input
-                id="available-hours"
-                type="number"
-                placeholder="160"
-                className="bg-input-background"
-                defaultValue="160"
-              />
-              <p className="text-xs text-muted-foreground">
-                Total de horas del equipo para este sprint
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sprint-goal">Objetivo del Sprint</Label>
-              <Textarea
-                id="sprint-goal"
-                placeholder="Describe el objetivo principal..."
-                className="bg-input-background min-h-[100px]"
-                defaultValue="Completar el módulo de autenticación y comenzar con el dashboard principal"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Equipo Participante */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Equipo Participante</CardTitle>
-            <CardDescription>Miembros asignados al sprint</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+        {/* Team Members */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardHeader
+              title="Asignación de Equipo"
+              subheader="Recursos asignados al sprint"
+              avatar={<Users />}
+            />
+            <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               {teamMembers.map((member) => (
-                <div
+                <Box
                   key={member.id}
-                  className="flex items-center justify-between p-3 border rounded-lg bg-input-background"
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    p: 1,
+                    border: "1px solid",
+                    borderColor: "grey.300",
+                    borderRadius: 1,
+                  }}
                 >
-                  <div>
-                    <p>{member.name}</p>
-                    <p className="text-sm text-muted-foreground">{member.role}</p>
-                  </div>
-                  <Badge variant="outline">Asignado</Badge>
-                </div>
+                  <Box>
+                    <Typography variant="body2">{member.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {member.role} - {member.availability}
+                    </Typography>
+                  </Box>
+                  <Button size="small" variant="outlined" color="error">
+                    <Trash2 />
+                  </Button>
+                </Box>
               ))}
-              <Button variant="outline" className="w-full mt-4">
-                <Plus className="h-4 w-4 mr-2" />
-                Añadir miembro
+              <Button variant="outlined" startIcon={<Plus />}>
+                Agregar Recurso
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Historias de Usuario */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle>Historias de Usuario</CardTitle>
-            <CardDescription>Backlog del sprint con puntuaciones</CardDescription>
-          </div>
-          <Button variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva historia
-          </Button>
-        </CardHeader>
+        <CardHeader title="Elementos del Backlog" subheader="Tareas y historias asignadas al sprint" />
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Puntos</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {userStories.map((story) => (
-                <TableRow key={story.id}>
-                  <TableCell>US-{story.id}</TableCell>
-                  <TableCell>{story.title}</TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      defaultValue={story.points}
-                      className="w-20 bg-input-background"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Elemento</TableCell>
+                  <TableCell>Descripción</TableCell>
+                  <TableCell>Prioridad</TableCell>
+                  <TableCell>Estimación</TableCell>
+                  <TableCell>Acciones</TableCell>
                 </TableRow>
-              ))}
-              <TableRow>
-                <TableCell colSpan={2} className="text-right">
-                  <strong>Total Puntos Planificados:</strong>
-                </TableCell>
-                <TableCell colSpan={2}>
-                  <strong>26 puntos</strong>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {backlogItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>TASK-{item.id}</TableCell>
+                    <TableCell>{item.title}</TableCell>
+                    <TableCell>{item.priority}</TableCell>
+                    <TableCell>{item.points}</TableCell>
+                    <TableCell>
+                      <Button variant="outlined" color="error" size="small">
+                        <Trash2 />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow>
+                  <TableCell colSpan={3} align="right">
+                    Total Estimado:
+                  </TableCell>
+                  <TableCell>{totalPoints} puntos</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-          <div className="flex items-center justify-between mt-6 pt-6 border-t">
-            <Button variant="outline" onClick={onBack}>
-              Cancelar
+          {/* Actions */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+            <Button variant="outlined" onClick={onBack}>
+              Descartar
             </Button>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Save className="h-4 w-4 mr-2" />
-              Guardar Sprint
-            </Button>
-          </div>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button variant="outlined">Guardar Borrador</Button>
+              <Button variant="contained" color="primary" startIcon={<Save />}>
+                Crear Sprint
+              </Button>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
-    </div>
+    </Box>
   );
 }

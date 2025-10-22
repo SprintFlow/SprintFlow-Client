@@ -9,6 +9,7 @@ import Results from "../pages/Results";
 // import AdminProfile from "../pages/AdminProfile";
 // import UserProfile from "../pages/UserProfile";
 import UserDashboard from "../pages/UserDashboard";
+import CreateEditSprint from "../pages/CreateEditSprint"
 
 const routerSprint = createBrowserRouter([{
     path: "/",
@@ -21,6 +22,10 @@ const routerSprint = createBrowserRouter([{
       {
         path: "/user-dashboard",
         element: <UserDashboard />,
+      },
+      {
+        path: "/create-edit-sprint",
+        element: <CreateEditSprint />,
       },
       {
         path: "/results",
