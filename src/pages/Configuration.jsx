@@ -117,7 +117,7 @@ const Configuration = () => {
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <TextField
-                  label="Nombre completo"
+                  label="Nombre"
                   value={personalInfo.fullName}
                   onChange={(e) => handlePersonalInfoChange('fullName', e.target.value)}
                   fullWidth

@@ -6,8 +6,6 @@ import App from "../App";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
-// import AdminProfile from "../pages/AdminProfile";
-// import UserProfile from "../pages/UserProfile";
 import UserDashboard from "../pages/UserDashboard";
 import Configuration from "../pages/Configuration";
 import Home from "../pages/Home";
