@@ -13,7 +13,7 @@ import {
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import PropTypes from "prop-types";
 
-export function LoginPage({ onLogin }) {
+export default function LoginPage({ onLogin }) {
   return (
     <Box
       sx={{
