@@ -69,7 +69,7 @@ const Home = () => {
               Resultados
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Analiza los resultados de tus sprints
+              Analiza los resultados
             </Typography>
           </Paper>
 
