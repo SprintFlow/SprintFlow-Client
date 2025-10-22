@@ -21,20 +21,20 @@ import {
 import { ArrowLeft, Plus, Trash2, Save, Users, Target, Calendar } from "lucide-react";
 
 export default function CreateEditSprint({ onBack }) {
-  const teamMembers = [
-    { id: 1, name: "Ana García", role: "Frontend Developer", availability: "100%" },
-    { id: 2, name: "Carlos López", role: "Backend Developer", availability: "100%" },
-    { id: 3, name: "María Rodríguez", role: "Full Stack", availability: "80%" },
-    { id: 4, name: "Juan Martínez", role: "QA Engineer", availability: "100%" },
-  ];
+//   const teamMembers = [
+//     { id: 1, name: "Ana García", role: "Frontend Developer", availability: "100%" },
+//     { id: 2, name: "Carlos López", role: "Backend Developer", availability: "100%" },
+//     { id: 3, name: "María Rodríguez", role: "Full Stack", availability: "80%" },
+//     { id: 4, name: "Juan Martínez", role: "QA Engineer", availability: "100%" },
+//   ];
 
-  const backlogItems = [
-    { id: 1, title: "Sistema de autenticación de usuarios", points: 8, priority: "Alta" },
-    { id: 2, title: "Panel de control principal", points: 13, priority: "Media" },
-    { id: 3, title: "Integración con servicio de pagos", points: 5, priority: "Alta" },
-  ];
+//   const backlogItems = [
+//     { id: 1, title: "Sistema de autenticación de usuarios", points: 8, priority: "Alta" },
+//     { id: 2, title: "Panel de control principal", points: 13, priority: "Media" },
+//     { id: 3, title: "Integración con servicio de pagos", points: 5, priority: "Alta" },
+//   ];
 
-  const totalPoints = backlogItems.reduce((sum, item) => sum + item.points, 0);
+// //   const totalPoints = backlogItems.reduce((sum, item) => sum + item.points, 0);
 
   return (
     <Box sx={{ p: 4, display: "flex", flexDirection: "column", gap: 4 }}>
@@ -87,9 +87,8 @@ export default function CreateEditSprint({ onBack }) {
               avatar={<Users />}
             />
             <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              {teamMembers.map((member) => (
+              {/* {teamMembers.map((member) => ( */}
                 <Box
-                  key={member.id}
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
@@ -100,16 +99,16 @@ export default function CreateEditSprint({ onBack }) {
                   }}
                 >
                   <Box>
-                    <Typography variant="body2">{member.name}</Typography>
+                    <Typography variant="body2">fulanito</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {member.role} - {member.availability}
+                     fulanito
                     </Typography>
                   </Box>
                   <Button size="small" variant="outlined" color="error">
                     <Trash2 />
                   </Button>
                 </Box>
-              ))}
+              {/* ))} */}
               <Button variant="outlined" startIcon={<Plus />}>
                 Agregar Recurso
               </Button>
@@ -134,24 +133,24 @@ export default function CreateEditSprint({ onBack }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {backlogItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>TASK-{item.id}</TableCell>
-                    <TableCell>{item.title}</TableCell>
-                    <TableCell>{item.priority}</TableCell>
-                    <TableCell>{item.points}</TableCell>
+                {/* {backlogItems.map((item) => ( */}
+                  <TableRow>
+                    <TableCell>TASK-3</TableCell>
+                    <TableCell>fulanito</TableCell>
+                    <TableCell>fulanito</TableCell>
+                    <TableCell>fulanito</TableCell>
                     <TableCell>
                       <Button variant="outlined" color="error" size="small">
                         <Trash2 />
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                {/* ))} */}
                 <TableRow>
                   <TableCell colSpan={3} align="right">
                     Total Estimado:
                   </TableCell>
-                  <TableCell>{totalPoints} puntos</TableCell>
+                  <TableCell> puntos</TableCell>
                   <TableCell />
                 </TableRow>
               </TableBody>
@@ -160,7 +159,7 @@ export default function CreateEditSprint({ onBack }) {
 
           {/* Actions */}
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-            <Button variant="outlined" onClick={onBack}>
+            <Button variant="outlined">
               Descartar
             </Button>
             <Box sx={{ display: "flex", gap: 1 }}>
