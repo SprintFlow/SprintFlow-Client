@@ -13,7 +13,7 @@ import {
 import PersonAddIcon from "@mui/icons-material/PersonAdd"; // Un icono más apropiado para el registro
 import PropTypes from "prop-types";
 
-export function RegisterPage({ onRegister }) {
+export default function RegisterPage({ onRegister }) {
   return (
     <Box
       sx={{
