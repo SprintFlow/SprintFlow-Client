@@ -11,13 +11,9 @@ import {
   Avatar,
 } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd"; // Un icono más apropiado para el registro
+import PropTypes from "prop-types";
 
-// Podrías definir una prop para manejar el envío del formulario
-interface RegisterPageProps {
-  onRegister: () => void;
-}
-
-export function RegisterPage({ onRegister }: RegisterPageProps) {
+export function RegisterPage({ onRegister }) {
   return (
     <Box
       sx={{
@@ -104,3 +100,7 @@ export function RegisterPage({ onRegister }: RegisterPageProps) {
     </Box>
   );
 }
+
+RegisterPage.propTypes = {
+  onRegister: PropTypes.func.isRequired,
+};
