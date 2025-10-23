@@ -1,11 +1,11 @@
 import React from "react";
-import { Footer } from "../components/Footer";
-import { NavBar } from "../components/Navbar";
-import { AdminDashboard } from "../pages/AdminDashboard";
-import { UserDashboard } from "../pages/UserDashboard";
-import { CreateEditSprint } from "../pages/CreateEditSprint";
+// import { Footer } from "../components/Footer";
+// import { NavBar } from "../components/Navbar";
+// import { AdminDashboard } from "../pages/AdminDashboard";
+// import { UserDashboard } from "../pages/UserDashboard";
+// import { CreateEditSprint } from "../pages/CreateEditSprint";
 
-export default function App() {
+export default function AdminDashboard() {
   const NavigationFor = (role) => (
     <Navigation
       currentView="dashboard"

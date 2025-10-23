@@ -41,7 +41,7 @@ const routerSprint = createBrowserRouter([{
         element: <Results />,
       },
       {
-        path: "/admin-dashboard", // ✅ nueva ruta
+        path: "/admin-dashboard", 
         element: <AdminDashboard />,
       },
       {
