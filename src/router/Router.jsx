@@ -9,7 +9,8 @@ import Results from "../pages/Results";
 import UserDashboard from "../pages/UserDashboard";
 import Configuration from "../pages/Configuration";
 import Home from "../pages/Home";
-import CreateEditSprint from "../pages/CreateEditSprint"
+import CreateEditSprint from "../pages/CreateEditSprint";
+import AdminDashboard from "../pages/AdminDashboard";
 
 const routerSprint = createBrowserRouter([{
     path: "/",
@@ -38,6 +39,10 @@ const routerSprint = createBrowserRouter([{
       {
         path: "/results",
         element: <Results />,
+      },
+      {
+        path: "/admin-dashboard", 
+        element: <AdminDashboard />,
       },
       {
         path: "/configuration",
