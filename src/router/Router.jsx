@@ -6,10 +6,11 @@ import App from "../App";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
-// import AdminProfile from "../pages/AdminProfile";
-// import UserProfile from "../pages/UserProfile";
 import UserDashboard from "../pages/UserDashboard";
-import CreateEditSprint from "../pages/CreateEditSprint"
+import Configuration from "../pages/Configuration";
+import Home from "../pages/Home";
+import CreateEditSprint from "../pages/CreateEditSprint";
+import AdminDashboard from "../pages/AdminDashboard";
 
 const routerSprint = createBrowserRouter([{
     path: "/",
@@ -17,7 +18,7 @@ const routerSprint = createBrowserRouter([{
     children: [
       {
         index: true, 
-        element: <App />,
+        element: <Home />,
       },
       {
         path: "/login",
@@ -43,7 +44,10 @@ const routerSprint = createBrowserRouter([{
         path: "/admin-dashboard", // ✅ nueva ruta
         element: <AdminDashboard />,
       },
-
+      {
+        path: "/configuration",
+        element: <Configuration />,
+      },
       // {
       //   path: "admin-profile",
       //   element: <AdminProfile />,
