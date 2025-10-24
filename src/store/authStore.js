@@ -19,7 +19,7 @@ const useAuthStore = create(
       login: async (credentials) => {
         set({ isLoading: true, error: null });
         try {
-          // SIMULACIÓN - Reemplazar cuando tengas backend real
+          // SIMULACIÓN - Reemplazar con backend real
           await new Promise(resolve => setTimeout(resolve, 1000)); // Simula delay de red
           
           // Validar credenciales demo
@@ -89,7 +89,7 @@ const useAuthStore = create(
       register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-          // SIMULACIÓN - Reemplazar cuando tengas backend real
+          // SIMULACIÓN - Reemplazar backend real
           await new Promise(resolve => setTimeout(resolve, 1000)); // Simula delay de red
           
           // Simular respuesta exitosa
