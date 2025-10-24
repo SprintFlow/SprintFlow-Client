@@ -1,8 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import Layout from "../layout/Layout";
-
-import App from "../App";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
@@ -11,6 +9,7 @@ import Configuration from "../pages/Configuration";
 import Home from "../pages/Home";
 import CreateEditSprint from "../pages/CreateEditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 const routerSprint = createBrowserRouter([{
     path: "/",
@@ -30,23 +29,43 @@ const routerSprint = createBrowserRouter([{
       },
       {
         path: "/user-dashboard",
-        element: <UserDashboard />,
+        element: (
+          <ProtectedRoute>
+            <UserDashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/create-edit-sprint",
-        element: <CreateEditSprint />,
+        element: (
+          <ProtectedRoute>
+            <CreateEditSprint />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/results",
-        element: <Results />,
+        element: (
+          <ProtectedRoute>
+            <Results />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/admin-dashboard", 
-        element: <AdminDashboard />,
+        element: (
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/configuration",
-        element: <Configuration />,
+        element: (
+          <ProtectedRoute>
+            <Configuration />
+          </ProtectedRoute>
+        ),
       },
       // {
       //   path: "admin-profile",
