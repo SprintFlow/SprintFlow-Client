@@ -1,159 +1,146 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import axios from 'axios';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-// Configurar axios base URL (ajusta según tu backend)
-const API_BASE_URL = 'http://localhost:3000/api';
+// Configuración inicial del estado
+const initialState = {
+  token: null,
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+};
 
+// Store principal de autenticación simplificado - sin Immer
 const useAuthStore = create(
   persist(
     (set, get) => ({
       // Estado inicial
-      token: null,
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
+      ...initialState,
 
-      // Acción para login
+      // Acciones - Login
       login: async (credentials) => {
         set({ isLoading: true, error: null });
+
         try {
-          // SIMULACIÓN - Reemplazar con backend real
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Simula delay de red
+          // SIMULACIÓN - Mock para desarrollo
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          // Validar credenciales demo
-          const validCredentials = [
-            { email: 'admin@cohispania.com', password: 'demo123', role: 'admin' },
-            { email: 'dev@cohispania.com', password: 'demo123', role: 'user' },
-            { email: credentials.email, password: credentials.password, role: 'user' } // Cualquier email/password funciona
+          // Credenciales de demo
+          const demoUsers = [
+            { email: 'admin@cohispania.com', password: 'demo123', role: 'admin', name: 'Administrador' },
+            { email: 'dev@cohispania.com', password: 'demo123', role: 'user', name: 'Desarrollador' }
           ];
-          
-          const foundUser = validCredentials.find(u => 
+
+          const foundUser = demoUsers.find(u => 
             u.email === credentials.email && u.password === credentials.password
           );
-          
-          if (!foundUser && credentials.email && credentials.password) {
-            // Si no es un usuario demo, crear uno temporal
-            const mockToken = 'mock-jwt-token-' + Date.now();
-            const mockUser = {
+
+          if (foundUser || (credentials.email && credentials.password)) {
+            const mockUser = foundUser || {
               id: Date.now(),
               name: credentials.email.split('@')[0],
               email: credentials.email,
               role: 'user'
             };
-            
+
+            const mockToken = `mock-jwt-${mockUser.role}-${Date.now()}`;
+
             set({
               token: mockToken,
               user: mockUser,
               isAuthenticated: true,
               isLoading: false,
-              error: null,
+              error: null
             });
-            
-            return { success: true };
-          } else if (foundUser) {
-            // Usuario demo encontrado
-            const mockToken = 'mock-jwt-token-' + Date.now();
-            const mockUser = {
-              id: Date.now(),
-              name: foundUser.role === 'admin' ? 'Administrador' : 'Desarrollador',
-              email: foundUser.email,
-              role: foundUser.role
-            };
-            
-            set({
-              token: mockToken,
-              user: mockUser,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-            });
-            
+
             return { success: true };
           } else {
             throw new Error('Credenciales inválidas');
           }
         } catch (error) {
-          const errorMessage = error.message || 'Error en el login';
-          set({ 
-            isLoading: false, 
-            error: errorMessage,
-            isAuthenticated: false 
+          set({
+            isLoading: false,
+            error: error.message || 'Error en el login',
+            isAuthenticated: false
           });
-          return { success: false, error: errorMessage };
+          return { success: false, error: error.message };
         }
       },
 
-      // Acción para register
+      // Acciones - Register
       register: async (userData) => {
         set({ isLoading: true, error: null });
+
         try {
-          // SIMULACIÓN - Reemplazar backend real
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Simula delay de red
-          
-          // Simular respuesta exitosa
-          const mockToken = 'mock-jwt-token-' + Date.now();
+          // SIMULACIÓN - Mock para desarrollo
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          const mockToken = `mock-jwt-user-${Date.now()}`;
           const mockUser = {
             id: Date.now(),
             name: userData.name,
             email: userData.email,
             role: 'user'
           };
-          
+
           set({
             token: mockToken,
             user: mockUser,
             isAuthenticated: true,
             isLoading: false,
-            error: null,
+            error: null
           });
-          
+
           return { success: true };
         } catch (error) {
-          const errorMessage = 'Error en el registro';
-          set({ 
-            isLoading: false, 
-            error: errorMessage,
-            isAuthenticated: false 
+          set({
+            isLoading: false,
+            error: error.message || 'Error en el registro',
+            isAuthenticated: false
           });
-          return { success: false, error: errorMessage };
+          return { success: false, error: error.message };
         }
       },
 
-      // Acción para logout
+      // Acciones - Logout
       logout: () => {
         set({
           token: null,
           user: null,
           isAuthenticated: false,
           isLoading: false,
-          error: null,
+          error: null
         });
       },
 
-      // Limpiar errores
+      // Acciones - Clear Error
       clearError: () => {
         set({ error: null });
       },
 
-      // Obtener token (para usar en peticiones)
-      getToken: () => {
-        return get().token;
-      },
+      // Getters/Selectors
+      getToken: () => get().token,
+      getUser: () => get().user,
+      isLoggedIn: () => get().isAuthenticated,
 
       // Verificar autenticación
       checkAuth: () => {
         const { token } = get();
         return !!token;
       },
+
+      // Reset store (útil para testing)
+      reset: () => {
+        set({ ...initialState });
+      },
     }),
     {
-      name: 'auth-storage', // nombre para localStorage
-      partialize: (state) => ({ 
-        token: state.token, 
-        user: state.user, 
-        isAuthenticated: state.isAuthenticated 
+      name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        token: state.token,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )
