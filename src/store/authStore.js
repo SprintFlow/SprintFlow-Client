@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import axiosClient from '../utils/axiosClient';
 
 // Configuración inicial del estado
 const initialState = {
@@ -10,7 +11,7 @@ const initialState = {
   error: null,
 };
 
-// Store principal de autenticación simplificado - sin Immer
+// Store principal de autenticación simplificado 
 const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -22,48 +23,26 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
 
         try {
-          // SIMULACIÓN - Mock para desarrollo
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Credenciales de demo
-          const demoUsers = [
-            { email: 'admin@cohispania.com', password: 'demo123', role: 'admin', name: 'Administrador' },
-            { email: 'dev@cohispania.com', password: 'demo123', role: 'user', name: 'Desarrollador' }
-          ];
+          const { data } = await axiosClient.post('/auth/login', credentials);
+          const { token, user } = data;
 
-          const foundUser = demoUsers.find(u => 
-            u.email === credentials.email && u.password === credentials.password
-          );
+          set({
+            token,
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null
+          });
 
-          if (foundUser || (credentials.email && credentials.password)) {
-            const mockUser = foundUser || {
-              id: Date.now(),
-              name: credentials.email.split('@')[0],
-              email: credentials.email,
-              role: 'user'
-            };
-
-            const mockToken = `mock-jwt-${mockUser.role}-${Date.now()}`;
-
-            set({
-              token: mockToken,
-              user: mockUser,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null
-            });
-
-            return { success: true };
-          } else {
-            throw new Error('Credenciales inválidas');
-          }
-        } catch (error) {
+          return { success: true };
+        } catch (err) {
+          const msg = err.response?.data?.message || err.message || 'Error en el login';
           set({
             isLoading: false,
-            error: error.message || 'Error en el login',
+            error: msg,
             isAuthenticated: false
           });
-          return { success: false, error: error.message };
+          return { success: false, error: msg };
         }
       },
 
@@ -72,33 +51,26 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
 
         try {
-          // SIMULACIÓN - Mock para desarrollo
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-          const mockToken = `mock-jwt-user-${Date.now()}`;
-          const mockUser = {
-            id: Date.now(),
-            name: userData.name,
-            email: userData.email,
-            role: 'user'
-          };
+          const { data } = await axiosClient.post('/auth/register', userData);
+          const { token, user } = data;
 
           set({
-            token: mockToken,
-            user: mockUser,
+            token,
+            user,
             isAuthenticated: true,
             isLoading: false,
             error: null
           });
 
           return { success: true };
-        } catch (error) {
+        } catch (err) {
+          const msg = err.response?.data?.message || 'Error en el registro';
           set({
             isLoading: false,
-            error: error.message || 'Error en el registro',
+            error: msg,
             isAuthenticated: false
           });
-          return { success: false, error: error.message };
+          return { success: false, error: msg };
         }
       },
 
@@ -124,9 +96,17 @@ const useAuthStore = create(
       isLoggedIn: () => get().isAuthenticated,
 
       // Verificar autenticación
-      checkAuth: () => {
+      checkAuth: async () => {
         const { token } = get();
-        return !!token;
+        if (!token) return false;
+        
+        try {
+          const response = await axiosClient.get('/auth/verify');
+          return response.status === 200;
+        } catch {
+          get().logout();
+          return false;
+        }
       },
 
       // Reset store (útil para testing)

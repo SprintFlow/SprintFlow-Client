@@ -3,99 +3,44 @@
 
 import axiosClient from '../utils/axiosClient';
 
+// Manejo centralizado de errores
+const handleRequest = async (request) => {
+  try {
+    return await request;
+  } catch (err) {
+    console.error('API Error:', err);
+    throw err.response?.data || err;
+  }
+};
+
 export const UserServices = {
   // Obtener perfil del usuario actual
-  getProfile: async () => {
-    try {
-      const response = await axiosClient.get('/user/profile');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
+  getProfile: () => handleRequest(axiosClient.get('/users/profile')),
+  
   // Actualizar perfil del usuario
-  updateProfile: async (userData) => {
-    try {
-      const response = await axiosClient.put('/user/profile', userData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+  updateProfile: (data) => handleRequest(axiosClient.put('/users/profile', data)),
 
   // Obtener todos los usuarios (admin)
-  getAll: async () => {
-    try {
-      const response = await axiosClient.get('/users');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
+  getAll: () => handleRequest(axiosClient.get('/users')),
+  
   // Obtener usuario por ID
-  getById: async (userId) => {
-    try {
-      const response = await axiosClient.get(`/users/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
+  getById: (userId) => handleRequest(axiosClient.get(`/users/${userId}`)),
+  
   // Crear nuevo usuario (admin)
-  create: async (userData) => {
-    try {
-      const response = await axiosClient.post('/users', userData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
+  create: (userData) => handleRequest(axiosClient.post('/users', userData)),
+  
   // Actualizar usuario (admin)
-  update: async (userId, userData) => {
-    try {
-      const response = await axiosClient.put(`/users/${userId}`, userData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
+  update: (userId, userData) => handleRequest(axiosClient.put(`/users/${userId}`, userData)),
+  
   // Eliminar usuario (admin)
-  delete: async (userId) => {
-    try {
-      const response = await axiosClient.delete(`/users/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
+  delete: (userId) => handleRequest(axiosClient.delete(`/users/${userId}`)),
+  
   // Cambiar rol del usuario
-  updateRole: async (userId, role) => {
-    try {
-      const response = await axiosClient.patch(`/users/${userId}/role`, { role });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
+  updateRole: (userId, role) => handleRequest(axiosClient.patch(`/users/${userId}/role`, { role })),
+  
   // Cambiar contraseña
-  changePassword: async (currentPassword, newPassword) => {
-    try {
-      const response = await axiosClient.patch('/user/password', {
-        currentPassword,
-        newPassword
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
+  changePassword: (currentPassword, newPassword) => 
+    handleRequest(axiosClient.patch('/users/password', { currentPassword, newPassword }))
 };
 
 export default UserServices;

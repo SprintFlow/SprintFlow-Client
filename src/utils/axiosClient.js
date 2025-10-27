@@ -1,13 +1,14 @@
 import axios from 'axios';
 import useAuthStore from '../store/authStore';
+import config from '../config/env';
 
 // Configurar la base URL de tu API
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = config.API_BASE_URL;
 
 // Crear instancia de axios
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: config.API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
