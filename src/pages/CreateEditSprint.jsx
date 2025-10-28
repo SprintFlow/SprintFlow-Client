@@ -1,235 +1,349 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
-  Typography,
-  Grid,
   Card,
   CardContent,
   CardHeader,
   TextField,
+  Typography,
   Button,
-  Divider,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
+  TableCell,
+  TableBody,
+  IconButton,
+  Divider,
+  MenuItem,
+  Autocomplete,
 } from "@mui/material";
-import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, ArrowLeft } from "lucide-react";
+import axios from "axios";
+
+// 🧠 Simulación de usuarios del sistema (en un entorno real, los traerías del backend)
+const availableUsers = [
+  { id: "u1", name: "Ana García" },
+  { id: "u2", name: "Carlos López" },
+  { id: "u3", name: "María Rodríguez" },
+  { id: "u4", name: "Juan Martínez" },
+  { id: "u5", name: "Laura Fernández" },
+];
 
 export default function CreateEditSprint({ onBack }) {
-  
-  const teamMembers = [
-    { id: 1, name: "Ana García", role: "Frontend Developer" },
-    { id: 2, name: "Carlos López", role: "Backend Developer" },
-    { id: 3, name: "María Rodríguez", role: "Full Stack Developer" },
-    { id: 4, name: "Juan Martínez", role: "QA Engineer" },
-    { id: 5, name: "Laura Fernández", role: "UX/UI Designer" },
-  ];
+  // 🧩 Estado base del formulario
+  const [sprintData, setSprintData] = useState({
+    name: "",
+    startDate: "",
+    endDate: "",
+    status: "Planificado",
+    observations: "",
+    plannedStories: [],
+    usersAssigned: [],
+  });
 
-  const userStories = [
-    { id: 1, title: "Implementar autenticación con OAuth2", points: 8 },
-    { id: 2, title: "Diseñar la interfaz del panel de control", points: 5 },
-    { id: 3, title: "Configurar base de datos de usuarios", points: 3 },
-    { id: 4, title: "Integrar API de notificaciones por correo", points: 8 },
-    { id: 5, title: "Ajustar estilos del dashboard responsive", points: 2 },
-  ];
+  const [loading, setLoading] = useState(false);
 
-  const totalPoints = userStories.reduce((sum, s) => sum + s.points, 0);
+  // 🪄 Función genérica para campos simples
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setSprintData({ ...sprintData, [name]: value });
+  };
+
+  // 🏗️ Añadir historia planificada
+  const addStory = () => {
+    setSprintData((prev) => ({
+      ...prev,
+      plannedStories: [...prev.plannedStories, { score: 1, quantity: 1 }],
+    }));
+  };
+
+  // 🧹 Eliminar historia
+  const removeStory = (index) => {
+    const updated = [...sprintData.plannedStories];
+    updated.splice(index, 1);
+    setSprintData({ ...sprintData, plannedStories: updated });
+  };
+
+  // 👥 Añadir miembro del equipo
+  const addMember = () => {
+    setSprintData((prev) => ({
+      ...prev,
+      usersAssigned: [...prev.usersAssigned, { userId: "", hours: 0 }],
+    }));
+  };
+
+  // ❌ Eliminar miembro
+  const removeMember = (index) => {
+    const updated = [...sprintData.usersAssigned];
+    updated.splice(index, 1);
+    setSprintData({ ...sprintData, usersAssigned: updated });
+  };
+
+  // 🧮 Calcular total de puntos planificados
+  const totalPoints = sprintData.plannedStories.reduce(
+    (sum, s) => sum + s.score * s.quantity,
+    0
+  );
+
+  // 💾 Enviar formulario al backend
+  const handleSave = async () => {
+    if (!sprintData.name || !sprintData.startDate || !sprintData.endDate) {
+      alert("Por favor, completa todos los campos obligatorios.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.post("/api/sprints", sprintData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Sprint guardado:", response.data);
+      alert("✅ Sprint creado correctamente");
+      onBack();
+    } catch (error) {
+      console.error("❌ Error al guardar el sprint:", error);
+      alert("Error al guardar el sprint");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center", 
-        justifyContent: "flex-start", 
-        p: 4,
-        backgroundColor: "#fafafa",
-      }}
-    >
-      <Box display="flex" alignItems="center" gap={2} mb={4}>
-        <Button
-          startIcon={<ArrowLeft size={18} />}
-          variant="outlined"
-          onClick={onBack}
-        >
-          Volver
-        </Button>
-        <Box textAlign="center">
-          <Typography variant="h5" fontWeight="600">
-            Sprint Q4 - 2025
-          </Typography>
-          <Typography color="text.secondary">
-            Planificación del ciclo de desarrollo del cuarto trimestre
-          </Typography>
-        </Box>
-      </Box>
-
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: 1100, 
-          mx: "auto", 
-        }}
+    <Box p={4} sx={{ backgroundColor: "#fafafa", minHeight: "100vh" }}>
+      <Button
+        startIcon={<ArrowLeft />}
+        onClick={onBack}
+        variant="outlined"
+        sx={{ mb: 3 }}
       >
-        <Grid container spacing={3} justifyContent="center">
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardHeader
-                title="Información Básica"
-                subheader="Datos generales del sprint"
-              />
-              <CardContent>
-                <Box display="flex" flexDirection="column" gap={2}>
-                  <TextField
-                    label="Nombre del Sprint"
-                    value="Sprint Q4-2025"
-                    InputProps={{ readOnly: true }}
-                  />
-                  <Box display="flex" gap={2}>
-                    <TextField
-                      label="Fecha de Inicio"
-                      type="date"
-                      value="2025-10-20"
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{ readOnly: true }}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Fecha de Fin"
-                      type="date"
-                      value="2025-11-03"
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{ readOnly: true }}
-                      fullWidth
-                    />
-                  </Box>
-                  <TextField
-                    label="Horas Disponibles"
-                    type="number"
-                    value="200"
-                    InputProps={{ readOnly: true }}
-                    helperText="Total de horas disponibles del equipo durante este sprint"
-                  />
-                  <TextField
-                    label="Objetivo del Sprint"
-                    multiline
-                    minRows={4}
-                    value="Completar el módulo de autenticación, implementar el sistema de notificaciones y dejar preparado el entorno del dashboard administrativo."
-                    InputProps={{ readOnly: true }}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+        Volver
+      </Button>
 
-          {/* Equipo Participante */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardHeader
-                title="Equipo Participante"
-                subheader="Miembros asignados al sprint"
-              />
-              <CardContent>
-                <Box display="flex" flexDirection="column" gap={2}>
-                  {teamMembers.map((member) => (
-                    <Box
-                      key={member.id}
-                      display="flex"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      p={2}
-                      border="1px solid #ddd"
-                      borderRadius={2}
-                    >
-                      <Box>
-                        <Typography fontWeight="500">{member.name}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {member.role}
-                        </Typography>
-                      </Box>
-                      <Chip label="Asignado" variant="outlined" color="primary" />
-                    </Box>
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+      <Card sx={{ maxWidth: 1100, mx: "auto" }}>
+        <CardHeader
+          title="Planificación del Sprint"
+          subheader="Completa los datos para crear un nuevo sprint"
+        />
+        <Divider />
 
-        {/* Historias de Usuario */}
-        <Box mt={4}>
-          <Card>
-            <CardHeader
-              title="Historias de Usuario"
-              subheader="Backlog del sprint con estimaciones"
-              action={
-                <Button variant="outlined" startIcon={<Plus size={16} />}>
-                  Nueva historia
-                </Button>
-              }
+        <CardContent>
+          {/* 🧾 Información básica */}
+          <Box display="flex" flexDirection="column" gap={2}>
+            <TextField
+              name="name"
+              label="Nombre del Sprint"
+              value={sprintData.name}
+              onChange={handleChange}
+              fullWidth
+              required
             />
-            <CardContent>
-              <TableContainer component={Paper} variant="outlined">
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>ID</TableCell>
-                      <TableCell>Descripción</TableCell>
-                      <TableCell>Puntos</TableCell>
-                      <TableCell align="center">Acciones</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {userStories.map((story) => (
-                      <TableRow key={story.id}>
-                        <TableCell>US-{story.id}</TableCell>
-                        <TableCell>{story.title}</TableCell>
-                        <TableCell>{story.points}</TableCell>
-                        <TableCell align="center">
-                          <Button color="error" size="small">
-                            <Trash2 size={16} />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow>
-                      <TableCell colSpan={2} align="right" sx={{ fontWeight: 500 }}>
-                        Total Puntos Planificados:
-                      </TableCell>
-                      <TableCell colSpan={2}>
-                        <Typography fontWeight="bold">
-                          {totalPoints} puntos
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
+            <Box display="flex" gap={2}>
+              <TextField
+                name="startDate"
+                label="Fecha de inicio"
+                type="date"
+                value={sprintData.startDate}
+                onChange={handleChange}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+              <TextField
+                name="endDate"
+                label="Fecha de fin"
+                type="date"
+                value={sprintData.endDate}
+                onChange={handleChange}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+            </Box>
 
-              <Divider sx={{ my: 3 }} />
+            <TextField
+              name="status"
+              label="Estado"
+              select
+              value={sprintData.status}
+              onChange={handleChange}
+              fullWidth
+            >
+              <MenuItem value="Planificado">Planificado</MenuItem>
+              <MenuItem value="Activo">Activo</MenuItem>
+              <MenuItem value="Completado">Completado</MenuItem>
+            </TextField>
 
-              <Box display="flex" justifyContent="space-between">
-                <Button variant="outlined" onClick={onBack}>
-                  Cancelar
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<Save size={18} />}
-                >
-                  Guardar Sprint
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-      </Box>
+            <TextField
+              name="observations"
+              label="Observaciones"
+              multiline
+              minRows={3}
+              value={sprintData.observations}
+              onChange={handleChange}
+              fullWidth
+            />
+          </Box>
+
+          <Divider sx={{ my: 4 }} />
+
+          {/* 📊 Historias planificadas */}
+          <Typography variant="h6" gutterBottom>
+            Historias planificadas
+          </Typography>
+
+          <Button
+            startIcon={<Plus />}
+            variant="outlined"
+            onClick={addStory}
+            sx={{ mb: 2 }}
+          >
+            Añadir historia
+          </Button>
+
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Puntuación</TableCell>
+                <TableCell>Cantidad</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sprintData.plannedStories.map((story, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      inputProps={{ min: 0.5, step: 0.5 }}
+                      value={story.score}
+                      onChange={(e) => {
+                        const updated = [...sprintData.plannedStories];
+                        updated[index].score = parseFloat(e.target.value);
+                        setSprintData({
+                          ...sprintData,
+                          plannedStories: updated,
+                        });
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      inputProps={{ min: 1 }}
+                      value={story.quantity}
+                      onChange={(e) => {
+                        const updated = [...sprintData.plannedStories];
+                        updated[index].quantity = parseInt(e.target.value);
+                        setSprintData({
+                          ...sprintData,
+                          plannedStories: updated,
+                        });
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <IconButton color="error" onClick={() => removeStory(index)}>
+                      <Trash2 size={18} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <Typography sx={{ mt: 2, fontWeight: 600 }}>
+            Total puntos planificados: {totalPoints}
+          </Typography>
+
+          <Divider sx={{ my: 4 }} />
+
+          {/* 👥 Miembros del equipo */}
+          <Typography variant="h6" gutterBottom>
+            Equipo asignado
+          </Typography>
+
+          <Button
+            startIcon={<Plus />}
+            variant="outlined"
+            onClick={addMember}
+            sx={{ mb: 2 }}
+          >
+            Añadir miembro
+          </Button>
+
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Miembro</TableCell>
+                <TableCell>Horas asignadas</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sprintData.usersAssigned.map((member, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Autocomplete
+                      options={availableUsers}
+                      getOptionLabel={(option) => option.name}
+                      value={
+                        availableUsers.find(
+                          (u) => u.id === member.userId
+                        ) || null
+                      }
+                      onChange={(_, value) => {
+                        const updated = [...sprintData.usersAssigned];
+                        updated[index].userId = value ? value.id : "";
+                        setSprintData({
+                          ...sprintData,
+                          usersAssigned: updated,
+                        });
+                      }}
+                      renderInput={(params) => (
+                        <TextField {...params} label="Seleccionar usuario" />
+                      )}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      inputProps={{ min: 0 }}
+                      value={member.hours}
+                      onChange={(e) => {
+                        const updated = [...sprintData.usersAssigned];
+                        updated[index].hours = parseInt(e.target.value);
+                        setSprintData({
+                          ...sprintData,
+                          usersAssigned: updated,
+                        });
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <IconButton color="error" onClick={() => removeMember(index)}>
+                      <Trash2 size={18} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {/* 🔘 Botones de acción */}
+          <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
+            <Button variant="outlined" onClick={onBack}>
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Save />}
+              onClick={handleSave}
+              disabled={loading}
+            >
+              {loading ? "Guardando..." : "Guardar Sprint"}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
     </Box>
   );
 }
