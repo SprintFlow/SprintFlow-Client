@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './styles.css';
+import '.Navbar/navbar.css';
 
 
 function Navbar({ role = 'guest' }) {
