@@ -10,10 +10,47 @@ import {
   Link,
   Avatar,
 } from "@mui/material";
-import PersonAddIcon from "@mui/icons-material/PersonAdd"; // Un icono más apropiado para el registro
-import PropTypes from "prop-types";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../store/authStore";
 
-export default function RegisterPage({ onRegister }) {
+export default function RegisterPage() {
+  const navigate = useNavigate();
+  console.log("useAuthStore:", useAuthStore());
+  const register = useAuthStore((state) => state.register);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (form.password !== form.confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+
+    const result = await register({
+      name: form.name,
+      email: form.email,
+      password: form.password,
+    });
+
+    if (!result.success) {
+      setError("Error al registrarse. Inténtalo de nuevo.");
+    } else {
+      navigate("/"); // o directamente al dashboard
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -47,8 +84,8 @@ export default function RegisterPage({ onRegister }) {
                 id="name"
                 label="Nombre completo"
                 name="name"
-                autoComplete="name"
-                autoFocus
+                value={form.name}
+                onChange={handleChange}
                 fullWidth
               />
               <TextField
@@ -56,7 +93,8 @@ export default function RegisterPage({ onRegister }) {
                 label="Correo electrónico"
                 name="email"
                 type="email"
-                autoComplete="email"
+                value={form.email}
+                onChange={handleChange}
                 fullWidth
               />
               <TextField
@@ -64,6 +102,8 @@ export default function RegisterPage({ onRegister }) {
                 label="Contraseña"
                 name="password"
                 type="password"
+                value={form.password}
+                onChange={handleChange}
                 fullWidth
               />
               <TextField
@@ -71,8 +111,16 @@ export default function RegisterPage({ onRegister }) {
                 label="Confirmar contraseña"
                 name="confirmPassword"
                 type="password"
+                value={form.confirmPassword}
+                onChange={handleChange}
                 fullWidth
               />
+
+              {error && (
+                <Typography color="error" align="center">
+                  {error}
+                </Typography>
+              )}
 
               <Button
                 type="submit"
@@ -80,17 +128,19 @@ export default function RegisterPage({ onRegister }) {
                 size="large"
                 fullWidth
                 sx={{ mt: 3, mb: 2 }}
-                onClick={(e) => {
-                  e.preventDefault(); // Previene el envío real por ahora
-                  onRegister();
-                }}
+                onClick={handleRegister}
               >
                 Registrarse
               </Button>
 
               <Typography variant="body2" align="center">
-                <Link href="/login" underline="hover">
-                  ¿Ya tienes una cuenta? Inicia sesión
+                ¿Ya tienes una cuenta?{" "}
+                <Link
+                  component="button"
+                  underline="hover"
+                  onClick={() => navigate("/login")}
+                >
+                  Inicia sesión
                 </Link>
               </Typography>
             </Stack>
@@ -100,7 +150,3 @@ export default function RegisterPage({ onRegister }) {
     </Box>
   );
 }
-
-RegisterPage.propTypes = {
-  onRegister: PropTypes.func.isRequired,
-};
