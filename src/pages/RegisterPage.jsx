@@ -14,11 +14,13 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
+import AuthServices from "../services/AuthServices";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  console.log("useAuthStore:", useAuthStore());
-  const register = useAuthStore((state) => state.register);
+  const setToken = useAuthStore((state) => state.setToken);
+  const setUser = useAuthStore((state) => state.setUser);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -33,21 +35,29 @@ export default function RegisterPage() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
     if (form.password !== form.confirmPassword) {
       setError("Las contraseñas no coinciden");
       return;
     }
 
-    const result = await register({
-      name: form.name,
-      email: form.email,
-      password: form.password,
-    });
+    try {
+      const data = await AuthServices.register({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+      });
 
-    if (!result.success) {
-      setError("Error al registrarse. Inténtalo de nuevo.");
-    } else {
-      navigate("/"); // o directamente al dashboard
+      // Guardamos token y usuario en el store
+      setToken(data.token);
+      setUser(data.user);
+
+      navigate("/"); // o dashboard
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message || "Error al registrarse. Inténtalo de nuevo."
+      );
     }
   };
 

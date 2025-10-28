@@ -14,22 +14,31 @@ import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
+import AuthServices from "../services/AuthServices";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
+  const setToken = useAuthStore((state) => state.setToken);
+  const setUser = useAuthStore((state) => state.setUser);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    const result = await login({ email, password });
+    try {
+      const data = await AuthServices.login(email, password);
 
-    if (!result.success) {
-      setError("Credenciales inválidas o error en el servidor.");
-    } else {
+      // Guardamos token y usuario en el store
+      setToken(data.token);
+      setUser({ id: data.userId, name: data.name, role: data.role });
+
       navigate("/"); // redirige al home o dashboard
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message || "Credenciales inválidas o error en el servidor."
+      );
     }
   };
 
