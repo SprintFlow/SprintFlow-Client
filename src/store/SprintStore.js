@@ -7,7 +7,6 @@ const useSprintStore = create((set, get) => ({
   isLoading: false,
   error: null,
 
-  // === Obtener todos los sprints ===
   fetchSprints: async () => {
     set({ isLoading: true, error: null });
     try {
@@ -21,7 +20,6 @@ const useSprintStore = create((set, get) => ({
     }
   },
 
-  // === Crear nuevo sprint ===
   createSprint: async (sprintData) => {
     set({ isLoading: true, error: null });
     try {
@@ -40,10 +38,7 @@ const useSprintStore = create((set, get) => ({
     }
   },
 
-  // === Seleccionar sprint activo ===
   setActiveSprint: (sprint) => set({ activeSprint: sprint }),
-
-  // === Limpiar errores ===
   clearError: () => set({ error: null }),
 }));
 

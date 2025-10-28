@@ -14,12 +14,10 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
-import AuthServices from "../services/AuthServices";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const setToken = useAuthStore((state) => state.setToken);
-  const setUser = useAuthStore((state) => state.setUser);
+  const register = useAuthStore((state) => state.register);
 
   const [form, setForm] = useState({
     name: "",
@@ -41,23 +39,16 @@ export default function RegisterPage() {
       return;
     }
 
-    try {
-      const data = await AuthServices.register({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-      });
+    const result = await register({
+      name: form.name,
+      email: form.email,
+      password: form.password,
+    });
 
-      // Guardamos token y usuario en el store
-      setToken(data.token);
-      setUser(data.user);
-
-      navigate("/"); // o dashboard
-    } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.message || "Error al registrarse. Inténtalo de nuevo."
-      );
+    if (result.success) {
+      navigate("/"); // redirige al home o dashboard
+    } else {
+      setError(useAuthStore.getState().error || "Error al registrarse. Inténtalo de nuevo.");
     }
   };
 
