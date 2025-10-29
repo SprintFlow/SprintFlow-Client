@@ -1,44 +1,38 @@
 import axios from "axios";
-
-// Se importa dinámicamente el store para evitar errores de carga
-let useAuthStore;
-(async () => {
-  const mod = await import("../store/authStore");
-  useAuthStore = mod.default;
-})();
+import useAuthStore from "../store/authStore";
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:4000/api",
   headers: { "Content-Type": "application/json" },
 });
 
-// === Interceptor de REQUEST ===
 axiosClient.interceptors.request.use(
   (config) => {
-    try {
-      const token = useAuthStore?.getState().token;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (err) {
-      console.error("Error al inyectar token:", err);
-    }
+    const token = useAuthStore.getState().token;
+    console.log("Token enviado:", token); // <- verifica que sea válido
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// === Interceptor de RESPONSE ===
+// Inyectar token automáticamente en cada request
+axiosClient.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Logout automático si el token expira
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      try {
-        useAuthStore?.getState().logout();
-        window.location.href = "/login";
-      } catch {
-        console.warn("Fallo en logout automático");
-      }
+      useAuthStore.getState().logout();
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

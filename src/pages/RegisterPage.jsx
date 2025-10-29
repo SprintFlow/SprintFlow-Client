@@ -17,8 +17,8 @@ import useAuthStore from "../store/authStore";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  console.log("useAuthStore:", useAuthStore());
   const register = useAuthStore((state) => state.register);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -33,6 +33,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
     if (form.password !== form.confirmPassword) {
       setError("Las contraseñas no coinciden");
       return;
@@ -44,10 +45,10 @@ export default function RegisterPage() {
       password: form.password,
     });
 
-    if (!result.success) {
-      setError("Error al registrarse. Inténtalo de nuevo.");
+    if (result.success) {
+      navigate("/"); // redirige al home o dashboard
     } else {
-      navigate("/"); // o directamente al dashboard
+      setError(useAuthStore.getState().error || "Error al registrarse. Inténtalo de nuevo.");
     }
   };
 

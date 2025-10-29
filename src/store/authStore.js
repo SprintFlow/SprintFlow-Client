@@ -17,8 +17,15 @@ const useAuthStore = create(
         try {
           const { data } = await axiosClient.post("/auth/login", credentials);
 
+          // Guardar toda la información del usuario
           set({
-            user: data.user,
+            user: {
+              id: data.user.id,
+              name: data.user.name,
+              email: data.user.email,
+              role: data.user.role,
+              isAdmin: data.user.isAdmin  // IMPORTANTE
+            },
             token: data.token,
             isAuthenticated: true,
             isLoading: false,
@@ -41,7 +48,13 @@ const useAuthStore = create(
           const { data } = await axiosClient.post("/auth/register", userData);
 
           set({
-            user: data.user,
+            user: {
+              id: data.user.id,
+              name: data.user.name,
+              email: data.user.email,
+              role: data.user.role,
+              isAdmin: data.user.isAdmin
+            },
             token: data.token,
             isAuthenticated: true,
             isLoading: false,
@@ -72,6 +85,12 @@ const useAuthStore = create(
       checkAuth: () => {
         const token = get().token;
         return !!token;
+      },
+
+      // ✅ Añadir helper para verificar si es admin
+      isAdmin: () => {
+        const user = get().user;
+        return user?.isAdmin === true;
       },
 
       // === CLEAR ERROR ===

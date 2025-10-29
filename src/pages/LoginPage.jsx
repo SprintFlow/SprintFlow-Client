@@ -26,10 +26,10 @@ export default function LoginPage() {
   const handleLogin = async () => {
     const result = await login({ email, password });
 
-    if (!result.success) {
-      setError("Credenciales inválidas o error en el servidor.");
-    } else {
+    if (result.success) {
       navigate("/"); // redirige al home o dashboard
+    } else {
+      setError(useAuthStore.getState().error || "Credenciales inválidas o error en el servidor.");
     }
   };
 
