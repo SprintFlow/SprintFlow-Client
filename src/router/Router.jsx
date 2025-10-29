@@ -11,6 +11,7 @@ import Configuration from "../pages/Configuration";
 import Home from "../pages/Home";
 import CreateEditSprint from "../pages/CreateEditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
+import Stories from "../pages/Stories";
 
 const routerSprint = createBrowserRouter([{
     path: "/",
@@ -48,6 +49,10 @@ const routerSprint = createBrowserRouter([{
         path: "/configuration",
         element: <Configuration />,
       },
+      {
+        path: "/stories",
+        element: <Stories/>
+      }
       // {
       //   path: "admin-profile",
       //   element: <AdminProfile />,
