@@ -11,6 +11,7 @@ import Configuration from "../pages/Configuration";
 import Home from "../pages/Home";
 import CreateEditSprint from "../pages/CreateEditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
+import SprintDetail from "../pages/SprintDetail";
 
 const routerSprint = createBrowserRouter([{
     path: "/",
@@ -35,6 +36,10 @@ const routerSprint = createBrowserRouter([{
       {
         path: "/create-edit-sprint",
         element: <CreateEditSprint />,
+      },
+      { 
+        path: "/sprint-detail/:id", 
+        element: <SprintDetail /> 
       },
       {
         path: "/results",

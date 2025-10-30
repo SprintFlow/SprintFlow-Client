@@ -1,86 +1,498 @@
-import React from "react";
-// import { Footer } from "../components/Footer";
-// import { NavBar } from "../components/Navbar";
-// import { AdminDashboard } from "../pages/AdminDashboard";
-// import { UserDashboard } from "../pages/UserDashboard";
-// import { CreateEditSprint } from "../pages/CreateEditSprint";
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Grid,
+  Chip,
+  CircularProgress,
+  Alert,
+  LinearProgress,
+  Divider,
+  Paper,
+  Avatar,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  TrendingUp,
+  CheckCircle,
+  Schedule,
+  Group,
+  CalendarToday,
+  Assessment,
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import useSprintStore from "../store/SprintStore";
+import useAuthStore from "../store/authStore";
 
 export default function AdminDashboard() {
-  const NavigationFor = (role) => (
-    <Navigation
-      currentView="dashboard"
-      onNavigate={() => {}}
-      onLogout={() => {}}
-      role={role}
-    />
-  );
+  const navigate = useNavigate();
+  const { sprints, isLoading, error, fetchSprints } = useSprintStore();
+  const { user, logout } = useAuthStore();
+
+  useEffect(() => {
+    fetchSprints();
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const handleCreateSprint = () => {
+    navigate("/create-sprint");
+  };
+
+  const handleViewSprint = (sprintId) => {
+    navigate(`/sprint-detail/${sprintId}`);
+  };
+
+  // Filtrar sprints por estado
+  const activeSprints = sprints.filter((s) => s.status === "Activo");
+  const plannedSprints = sprints.filter((s) => s.status === "Planificado");
+  const completedSprints = sprints.filter((s) => s.status === "Completado");
+
+  const activeSprint = activeSprints[0];
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Activo":
+        return "success";
+      case "Planificado":
+        return "info";
+      case "Completado":
+        return "default";
+      default:
+        return "default";
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const calculateDuration = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    return diff + 1;
+  };
+
+  const getDaysRemaining = (endDate) => {
+    const end = new Date(endDate);
+    const today = new Date();
+    const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diff);
+  };
+
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-8">
-      <div className="max-w-[1200px] mx-auto space-y-8">
+    <Box sx={{ minHeight: "100vh", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", py: 4 }}>
+      <Box sx={{ maxWidth: 1400, mx: "auto", px: 3 }}>
         {/* Header */}
-        <header className="text-center space-y-3 mb-12">
-          <h1 className="text-3xl font-semibold">SprintFlow</h1>
-          <p className="text-muted-foreground">Wireframes y mockups para la gestión de sprints</p>
-        </header>
+        <Box
+          sx={{
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(10px)",
+            borderRadius: 3,
+            p: 3,
+            mb: 3,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+          }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box>
+              <Typography variant="h4" fontWeight="800" sx={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Dashboard de Administrador
+              </Typography>
+              <Typography variant="body1" color="text.secondary" mt={0.5}>
+                Bienvenido de nuevo, {user?.name || "Admin"} 👋
+              </Typography>
+            </Box>
+            <Box display="flex" gap={2}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<AddIcon />}
+                onClick={handleCreateSprint}
+                sx={{
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 3,
+                  boxShadow: "0 4px 20px rgba(102, 126, 234, 0.4)",
+                  "&:hover": {
+                    boxShadow: "0 6px 30px rgba(102, 126, 234, 0.6)",
+                  },
+                }}
+              >
+                Crear Nuevo Sprint
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleLogout}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                Cerrar Sesión
+              </Button>
+            </Box>
+          </Box>
+        </Box>
 
-        {/* Screen: Login */}
-        <ScreenFrame title="Login" description="Acceso al sistema">
-          <div className="scale-95 origin-top">
-            <LoginPage onLogin={() => {}} />
-          </div>
-        </ScreenFrame>
+        {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
-        {/* Screen: Admin Dashboard */}
-        <ScreenFrame title="Admin Dashboard" description="Vista general (Admin)">
-          <div className="bg-background min-h-screen">
-            {NavigationFor("admin")}
-            <div className="container mx-auto px-6 py-8">
-              <AdminDashboard onCreateSprint={() => {}} onViewSprint={() => {}} />
-            </div>
-          </div>
-        </ScreenFrame>
+        {/* Métricas principales */}
+        <Grid container spacing={3} mb={3}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              elevation={0}
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white",
+                borderRadius: 3,
+                transition: "transform 0.3s",
+                "&:hover": { transform: "translateY(-5px)" },
+              }}
+            >
+              <CardContent>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 56, height: 56 }}>
+                    <TrendingUp />
+                  </Avatar>
+                  <Typography variant="h3" fontWeight="700">
+                    {activeSprints.length}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Sprint Activo
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                  {activeSprint ? activeSprint.name : "Ninguno activo"}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {/* Screen: Create / Edit Sprint */}
-        <ScreenFrame title="Crear / Editar Sprint" description="Formulario para sprints">
-          <div className="bg-background min-h-screen">
-            {NavigationFor("admin")}
-            <div className="container mx-auto px-6 py-8">
-              <CreateEditSprint onBack={() => {}} />
-            </div>
-          </div>
-        </ScreenFrame>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              elevation={0}
+              sx={{
+                background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                color: "white",
+                borderRadius: 3,
+                transition: "transform 0.3s",
+                "&:hover": { transform: "translateY(-5px)" },
+              }}
+            >
+              <CardContent>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 56, height: 56 }}>
+                    <CheckCircle />
+                  </Avatar>
+                  <Typography variant="h3" fontWeight="700">
+                    {completedSprints.length}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Completados
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                  Este año
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {/* Screen: User Dashboard */}
-        <ScreenFrame title="User Dashboard" description="Vista personal del desarrollador">
-          <div className="bg-background min-h-screen">
-            {NavigationFor("user")}
-            <div className="container mx-auto px-6 py-8">
-              <UserDashboard onViewResults={() => {}} />
-            </div>
-          </div>
-        </ScreenFrame>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              elevation={0}
+              sx={{
+                background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                color: "white",
+                borderRadius: 3,
+                transition: "transform 0.3s",
+                "&:hover": { transform: "translateY(-5px)" },
+              }}
+            >
+              <CardContent>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 56, height: 56 }}>
+                    <Schedule />
+                  </Avatar>
+                  <Typography variant="h3" fontWeight="700">
+                    {plannedSprints.length}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Planificados
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                  Próximos
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {/* Footer */}
-        <footer className="text-center py-8 text-sm text-muted-foreground">
-          SprintFlow © {new Date().getFullYear()} Cohispania
-        </footer>
-      </div>
-    </div>
-  );
-}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              elevation={0}
+              sx={{
+                background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                color: "white",
+                borderRadius: 3,
+                transition: "transform 0.3s",
+                "&:hover": { transform: "translateY(-5px)" },
+              }}
+            >
+              <CardContent>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 56, height: 56 }}>
+                    <Group />
+                  </Avatar>
+                  <Typography variant="h3" fontWeight="700">
+                    {activeSprint ? activeSprint.usersAssigned?.length || 0 : 0}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Equipo Total
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                  Miembros activos
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
-function ScreenFrame({ title, description, children }) {
-  return (
-    <section className="space-y-4">
-      <div className="space-y-1">
-        <h2 className="text-xl font-medium">{title}</h2>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
+        {/* Sprint Activo Destacado */}
+        {activeSprint && (
+          <Card
+            elevation={0}
+            sx={{
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(10px)",
+              borderRadius: 3,
+              mb: 3,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Box>
+                  <Typography variant="h5" fontWeight="700" gutterBottom>
+                    🚀 Sprint Activo
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Seguimiento en tiempo real
+                  </Typography>
+                </Box>
+                <Chip
+                  label="EN CURSO"
+                  color="success"
+                  sx={{ fontWeight: 700, px: 2, py: 2.5, fontSize: "0.875rem" }}
+                />
+              </Box>
 
-      <div className="border-2 border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-lg bg-white dark:bg-slate-950">
-        {children}
-      </div>
-    </section>
+              <Box mb={3}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h4" fontWeight="700">
+                    {activeSprint.name}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => handleViewSprint(activeSprint._id)}
+                    sx={{
+                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      textTransform: "none",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Ver Detalle Completo
+                  </Button>
+                </Box>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <CalendarToday fontSize="small" color="action" />
+                    <Typography variant="body2" color="text.secondary">
+                      {formatDate(activeSprint.startDate)} - {formatDate(activeSprint.endDate)}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={`${calculateDuration(activeSprint.startDate, activeSprint.endDate)} días totales`}
+                    size="small"
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={`${getDaysRemaining(activeSprint.endDate)} días restantes`}
+                    size="small"
+                    color="warning"
+                  />
+                </Box>
+              </Box>
+
+              <Box mb={3}>
+                <Box display="flex" justifyContent="space-between" mb={1}>
+                  <Typography variant="body2" fontWeight={600}>Progreso del Sprint</Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    0 / {activeSprint.plannedTotalPoints} puntos
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={0}
+                  sx={{
+                    height: 12,
+                    borderRadius: 2,
+                    backgroundColor: "#e0e0e0",
+                    "& .MuiLinearProgress-bar": {
+                      background: "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" mt={0.5}>
+                  0% completado
+                </Typography>
+              </Box>
+
+              <Divider sx={{ my: 3 }} />
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={3}>
+                  <Box textAlign="center" p={2} sx={{ background: "#f5f5f5", borderRadius: 2 }}>
+                    <Assessment sx={{ fontSize: 40, color: "primary.main", mb: 1 }} />
+                    <Typography variant="h4" fontWeight="700">{activeSprint.plannedTotalPoints}</Typography>
+                    <Typography variant="caption" color="text.secondary">Puntos Planificados</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <Box textAlign="center" p={2} sx={{ background: "#f5f5f5", borderRadius: 2 }}>
+                    <Group sx={{ fontSize: 40, color: "success.main", mb: 1 }} />
+                    <Typography variant="h4" fontWeight="700">{activeSprint.usersAssigned?.length || 0}</Typography>
+                    <Typography variant="caption" color="text.secondary">Miembros del Equipo</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <Box textAlign="center" p={2} sx={{ background: "#f5f5f5", borderRadius: 2 }}>
+                    <Schedule sx={{ fontSize: 40, color: "info.main", mb: 1 }} />
+                    <Typography variant="h4" fontWeight="700">
+                      {activeSprint.plannedStories?.reduce((sum, story) => sum + story.quantity, 0) || 0}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">Historias Planificadas</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <Box textAlign="center" p={2} sx={{ background: "#f5f5f5", borderRadius: 2 }}>
+                    <CalendarToday sx={{ fontSize: 40, color: "warning.main", mb: 1 }} />
+                    <Typography variant="h4" fontWeight="700">{getDaysRemaining(activeSprint.endDate)}</Typography>
+                    <Typography variant="caption" color="text.secondary">Días Restantes</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Lista de Todos los Sprints */}
+        <Card
+          elevation={0}
+          sx={{
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(10px)",
+            borderRadius: 3,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+          }}
+        >
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant="h5" fontWeight="700" mb={3}>
+              📋 Todos los Sprints
+            </Typography>
+
+            {sprints.length === 0 ? (
+              <Box textAlign="center" py={8}>
+                <Typography variant="h6" color="text.secondary" mb={3}>
+                  No hay sprints creados todavía
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateSprint}
+                  sx={{
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    textTransform: "none",
+                    fontWeight: 600,
+                    px: 4,
+                  }}
+                >
+                  Crear tu Primer Sprint
+                </Button>
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {sprints.map((sprint) => (
+                  <Grid item xs={12} key={sprint._id}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        cursor: "pointer",
+                        border: "2px solid transparent",
+                        borderRadius: 2,
+                        transition: "all 0.3s",
+                        "&:hover": {
+                          borderColor: "#667eea",
+                          transform: "translateX(5px)",
+                          boxShadow: "0 4px 20px rgba(102, 126, 234, 0.2)",
+                        },
+                      }}
+                      onClick={() => handleViewSprint(sprint._id)}
+                    >
+                      <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Box flex={1}>
+                          <Typography variant="h6" fontWeight="700" gutterBottom>
+                            {sprint.name}
+                          </Typography>
+                          <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+                            <Typography variant="body2" color="text.secondary">
+                              📅 {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
+                            </Typography>
+                            <Chip label={`${sprint.plannedTotalPoints} pts`} size="small" color="primary" variant="outlined" />
+                            <Chip
+                              label={`${sprint.usersAssigned?.length || 0} miembros`}
+                              size="small"
+                              variant="outlined"
+                            />
+                          </Box>
+                        </Box>
+                        <Chip
+                          label={sprint.status}
+                          color={getStatusColor(sprint.status)}
+                          sx={{ fontWeight: 600, ml: 2 }}
+                        />
+                      </Box>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   );
 }
