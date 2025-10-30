@@ -29,7 +29,10 @@ export default function LoginPage() {
     if (result.success) {
       navigate("/"); // redirige al home o dashboard
     } else {
-      setError(useAuthStore.getState().error || "Credenciales inválidas o error en el servidor.");
+      setError(
+        useAuthStore.getState().error ||
+          "Credenciales inválidas o error en el servidor."
+      );
     }
   };
 
@@ -52,7 +55,7 @@ export default function LoginPage() {
               <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
                 <TrackChangesIcon sx={{ fontSize: 32 }} />
               </Avatar>
-              <Typography variant="h4" component="h1">
+              <Typography variant="h4" component="div">
                 SprintFlow
               </Typography>
             </Stack>
@@ -60,7 +63,11 @@ export default function LoginPage() {
           subheader="Gestión ágil de sprints para Cohispania"
         />
         <CardContent>
-          <Stack spacing={3} sx={{ mt: 2 }}>
+          <Stack spacing={3}>
+            <Typography variant="h5" component="h1" align="center">
+              Iniciar sesión
+            </Typography>
+
             <TextField
               id="email"
               label="Correo electrónico"
@@ -88,16 +95,14 @@ export default function LoginPage() {
               </Typography>
             )}
 
-            <Stack spacing={1.5} sx={{ pt: 1 }}>
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                onClick={handleLogin}
-              >
-                Iniciar sesión
-              </Button>
-            </Stack>
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={handleLogin}
+            >
+              Iniciar sesión
+            </Button>
 
             <Typography variant="body2" align="center">
               <Link href="#" underline="hover">
