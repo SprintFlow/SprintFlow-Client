@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography, Button, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import SprintFlowLogo from "../components/SprintFlowLogo";
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
@@ -18,7 +18,9 @@ export default function NotFoundPage() {
           textAlign: "center",
         }}
       >
-        <ReportProblemIcon sx={{ fontSize: 80, color: 'warning.main', mb: 2 }} />
+        <Box sx={{ mb: 4 }}>
+          <SprintFlowLogo />
+        </Box>
         <Typography variant="h3" component="h1" gutterBottom>
           404
         </Typography>
