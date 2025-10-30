@@ -72,7 +72,7 @@ export default function RegisterPage() {
                 <PersonAddIcon sx={{ fontSize: 32 }} />
               </Avatar>
               <Typography variant="h4" component="h1">
-                Crear una cuenta
+                Crear cuenta
               </Typography>
             </Stack>
           }
