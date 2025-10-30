@@ -11,9 +11,28 @@ import {
   Avatar,
 } from "@mui/material";
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
-import PropTypes from "prop-types";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../store/authStore";
 
-export default function LoginPage({ onLogin }) {
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = async () => {
+    const result = await login({ email, password });
+
+    if (result.success) {
+      navigate("/"); // redirige al home o dashboard
+    } else {
+      setError(useAuthStore.getState().error || "Credenciales inválidas o error en el servidor.");
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -21,7 +40,7 @@ export default function LoginPage({ onLogin }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(to bottom right, #f0f7ff, #e0f2fe)", // Gradiente similar al original
+        background: "linear-gradient(to bottom right, #f0f7ff, #e0f2fe)",
         p: 4,
       }}
     >
@@ -49,6 +68,8 @@ export default function LoginPage({ onLogin }) {
               placeholder="nombre@cohispania.com"
               variant="outlined"
               fullWidth
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <TextField
               id="password"
@@ -57,24 +78,24 @@ export default function LoginPage({ onLogin }) {
               placeholder="••••••••"
               variant="outlined"
               fullWidth
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
+
+            {error && (
+              <Typography color="error" align="center">
+                {error}
+              </Typography>
+            )}
 
             <Stack spacing={1.5} sx={{ pt: 1 }}>
               <Button
                 variant="contained"
                 size="large"
                 fullWidth
-                onClick={() => onLogin("admin")}
+                onClick={handleLogin}
               >
-                Entrar como Admin
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                fullWidth
-                onClick={() => onLogin("user")}
-              >
-                Entrar como Desarrollador
+                Iniciar sesión
               </Button>
             </Stack>
 
@@ -83,13 +104,20 @@ export default function LoginPage({ onLogin }) {
                 ¿Olvidaste tu contraseña?
               </Link>
             </Typography>
+
+            <Typography variant="body2" align="center">
+              ¿No tienes cuenta?{" "}
+              <Link
+                component="button"
+                underline="hover"
+                onClick={() => navigate("/register")}
+              >
+                Regístrate aquí
+              </Link>
+            </Typography>
           </Stack>
         </CardContent>
       </Card>
     </Box>
   );
 }
-
-LoginPage.propTypes = {
-  onLogin: PropTypes.func.isRequired,
-};

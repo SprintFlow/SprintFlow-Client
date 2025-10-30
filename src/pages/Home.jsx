@@ -97,7 +97,7 @@ const Home = () => {
         <Button 
           variant="contained" 
           size="large"
-          onClick={() => navigate('/user-dashboard')}
+          onClick={() => navigate('/login')}
           sx={{ minWidth: 200, py: 1.5 }}
         >
           Comenzar
