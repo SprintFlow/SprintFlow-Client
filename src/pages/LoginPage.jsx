@@ -14,6 +14,7 @@ import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
+import SprintFlowLogo from "../components/SprintFlowLogo";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -25,99 +26,145 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     const result = await login({ email, password });
-
     if (result.success) {
-      navigate("/"); // redirige al home o dashboard
+      navigate("/");
     } else {
-      setError(useAuthStore.getState().error || "Credenciales inválidas o error en el servidor.");
+      setError(
+        useAuthStore.getState().error ||
+          "Credenciales inválidas o error en el servidor."
+      );
     }
   };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") handleLogin();
+  };
+
+  // Color verde de la "S" animada
+  const greenS = "#4CAF50"; // reemplaza con el verde exacto de tu imagen
+  const greenShover = "#45A049"; // un verde ligeramente más oscuro para hover
+  const backgroundMint = "#e6f2ed"; // verde menta suave para fondo
 
   return (
     <Box
       sx={{
         minHeight: "100vh",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(to bottom right, #f0f7ff, #e0f2fe)",
-        p: 4,
+        width: "100vw",
+        backgroundColor: backgroundMint,
+        overflow: "hidden", // evita scroll innecesario
       }}
     >
-      <Card sx={{ width: "100%", maxWidth: 450, boxShadow: 6 }}>
-        <CardHeader
-          sx={{ textAlign: "center", pb: 0 }}
-          title={
-            <Stack alignItems="center" spacing={2}>
-              <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
-                <TrackChangesIcon sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Typography variant="h4" component="h1">
-                SprintFlow
-              </Typography>
-            </Stack>
-          }
-          subheader="Gestión ágil de sprints para Cohispania"
-        />
-        <CardContent>
-          <Stack spacing={3} sx={{ mt: 2 }}>
-            <TextField
-              id="email"
-              label="Correo electrónico"
-              type="email"
-              placeholder="nombre@cohispania.com"
-              variant="outlined"
-              fullWidth
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextField
-              id="password"
-              label="Contraseña"
-              type="password"
-              placeholder="••••••••"
-              variant="outlined"
-              fullWidth
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+      {/* Lado izquierdo: animación */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <SprintFlowLogo />
+      </Box>
 
-            {error && (
-              <Typography color="error" align="center">
-                {error}
-              </Typography>
-            )}
-
-            <Stack spacing={1.5} sx={{ pt: 1 }}>
-              <Button
-                variant="contained"
-                size="large"
+      {/* Lado derecho: formulario */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          p: 2,
+        }}
+      >
+        <Card sx={{ width: "100%", maxWidth: 450, boxShadow: 6 }}>
+          <CardHeader
+            sx={{ textAlign: "center", pb: 0 }}
+            title={
+              <Stack alignItems="center" spacing={2}>
+                <Avatar sx={{ bgcolor: greenS, width: 56, height: 56 }}>
+                  <TrackChangesIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Typography
+                  variant="h4"
+                  component="h1"
+                  color="text.primary"
+                >
+                  SprintFlow
+                </Typography>
+              </Stack>
+            }
+            subheader="Gestión ágil de sprints para Cohispania"
+          />
+          <CardContent>
+            <Stack spacing={3} sx={{ mt: 2 }}>
+              <TextField
+                id="email"
+                label="Correo electrónico"
+                type="email"
+                placeholder="nombre@cohispania.com"
+                variant="outlined"
                 fullWidth
-                onClick={handleLogin}
-              >
-                Iniciar sesión
-              </Button>
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+              <TextField
+                id="password"
+                label="Contraseña"
+                type="password"
+                placeholder="••••••••"
+                variant="outlined"
+                fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+
+              {error && (
+                <Typography color="error" align="center">
+                  {error}
+                </Typography>
+              )}
+
+              <Stack spacing={1.5} sx={{ pt: 1 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  onClick={handleLogin}
+                  sx={{
+                    backgroundColor: greenS,
+                    '&:hover': { backgroundColor: greenShover },
+                  }}
+                >
+                  Iniciar sesión
+                </Button>
+              </Stack>
+
+              <Typography variant="body2" align="center">
+                <Link href="#" underline="hover" color="primary">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </Typography>
+
+              <Typography variant="body2" align="center">
+                ¿No tienes cuenta?{" "}
+                <Link
+                  component="button"
+                  underline="hover"
+                  color="primary"
+                  onClick={() => navigate("/register")}
+                >
+                  Regístrate aquí
+                </Link>
+              </Typography>
             </Stack>
-
-            <Typography variant="body2" align="center">
-              <Link href="#" underline="hover">
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </Typography>
-
-            <Typography variant="body2" align="center">
-              ¿No tienes cuenta?{" "}
-              <Link
-                component="button"
-                underline="hover"
-                onClick={() => navigate("/register")}
-              >
-                Regístrate aquí
-              </Link>
-            </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Box>
     </Box>
   );
 }
