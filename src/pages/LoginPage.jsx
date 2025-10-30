@@ -9,11 +9,13 @@ import {
   Stack,
   Link,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -22,17 +24,24 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    const result = await login({ email, password });
+    setIsLoading(true);
+    setError("");
+    try {
+      const result = await login({ email, password });
 
-    if (result.success) {
-      navigate("/"); // redirige al home o dashboard
-    } else {
-      setError(
-        useAuthStore.getState().error ||
-          "Credenciales inválidas o error en el servidor."
-      );
+      if (result.success) {
+        navigate("/"); // redirige al home o dashboard
+      } else {
+        setError(
+          useAuthStore.getState().error ||
+            "Credenciales inválidas o error en el servidor."
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -47,6 +56,7 @@ export default function LoginPage() {
         p: 4,
       }}
     >
+      <LoadingOverlay open={isLoading} />
       <Card sx={{ width: "100%", maxWidth: 450, boxShadow: 6 }}>
         <CardHeader
           sx={{ textAlign: "center", pb: 0 }}
@@ -100,6 +110,7 @@ export default function LoginPage() {
               size="large"
               fullWidth
               onClick={handleLogin}
+              disabled={isLoading}
             >
               Iniciar sesión
             </Button>
