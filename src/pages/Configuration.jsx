@@ -8,10 +8,6 @@ import {
   Button,
   Switch,
   FormControlLabel,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Table,
   TableBody,
   TableCell,
@@ -33,9 +29,9 @@ import {
 
 const Configuration = () => {
   const [personalInfo, setPersonalInfo] = useState({
-    fullName: 'María Rodríguez',
-    email: 'maria.rodriguez@cohispania.com',
-    role: 'Scrum Master',
+    fullName: '',
+    email: '',
+    role: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -43,8 +39,7 @@ const Configuration = () => {
   const [preferences, setPreferences] = useState({
     theme: 'light',
     emailNotifications: true,
-    dailyReminders: true,
-    timezone: 'Europe/Madrid (GMT+1)'
+    dailyReminders: true
   });
 
   const [users] = useState([
@@ -87,13 +82,26 @@ const Configuration = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+    <Box sx={{ 
+      maxWidth: 1200, 
+      mx: 'auto', 
+      p: 3,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center'
+    }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        mb: 4,
+        width: '100%',
+        justifyContent: 'flex-start'
+      }}>
         <IconButton sx={{ mr: 2 }}>
           <ArrowBack />
         </IconButton>
-        <Box>
+        <Box sx={{ textAlign: 'center', flex: 1 }}>
           <Typography variant="h4" fontWeight="bold">
             Configuración
           </Typography>
@@ -103,15 +111,15 @@ const Configuration = () => {
         </Box>
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ width: '100%', justifyContent: 'center' }}>
         {/* Información Personal */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card sx={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" fontWeight="bold" mb={2}>
+              <Typography variant="h6" fontWeight="bold" mb={2} textAlign="center">
                 Información Personal
               </Typography>
-              <Typography variant="body2" color="text.secondary" mb={3}>
+              <Typography variant="body2" color="text.secondary" mb={3} textAlign="center">
                 Actualiza tus datos de perfil
               </Typography>
 
@@ -130,19 +138,12 @@ const Configuration = () => {
                   fullWidth
                 />
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <TextField
-                    label="Rol"
-                    value={personalInfo.role}
-                    onChange={(e) => handlePersonalInfoChange('role', e.target.value)}
-                    fullWidth
-                  />
-                  <Chip 
-                    label="Admin" 
-                    color="error" 
-                    size="small"
-                  />
-                </Box>
+                <TextField
+                  label="Rol"
+                  value={personalInfo.role}
+                  onChange={(e) => handlePersonalInfoChange('role', e.target.value)}
+                  fullWidth
+                />
 
                 <TextField
                   label="Nueva contraseña"
@@ -168,12 +169,12 @@ const Configuration = () => {
 
         {/* Preferencias */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card sx={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" fontWeight="bold" mb={2}>
+              <Typography variant="h6" fontWeight="bold" mb={2} textAlign="center">
                 Preferencias
               </Typography>
-              <Typography variant="body2" color="text.secondary" mb={3}>
+              <Typography variant="body2" color="text.secondary" mb={3} textAlign="center">
                 Personaliza tu experiencia
               </Typography>
 
@@ -231,22 +232,6 @@ const Configuration = () => {
                     label=""
                   />
                 </Box>
-
-                <Box>
-                  <Typography variant="body2" fontWeight="medium" mb={1}>
-                    Zona horaria
-                  </Typography>
-                  <FormControl fullWidth>
-                    <Select
-                      value={preferences.timezone}
-                      onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
-                    >
-                      <MenuItem value="Europe/Madrid (GMT+1)">Europe/Madrid (GMT+1)</MenuItem>
-                      <MenuItem value="America/New_York (GMT-5)">America/New_York (GMT-5)</MenuItem>
-                      <MenuItem value="Asia/Tokyo (GMT+9)">Asia/Tokyo (GMT+9)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
               </Box>
             </CardContent>
           </Card>
@@ -254,22 +239,32 @@ const Configuration = () => {
       </Grid>
 
       {/* Botón Guardar */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-start' }}>
+      <Box sx={{ 
+        mt: 4, 
+        mb: 3,
+        display: 'flex', 
+        justifyContent: 'center',
+        width: '100%'
+      }}>
         <Button
           variant="contained"
           startIcon={<Save />}
           onClick={handleSaveChanges}
-          sx={{ minWidth: 200 }}
+          sx={{ 
+            minWidth: 250,
+            py: 1.5,
+            fontSize: '1.1rem'
+          }}
         >
           Guardar cambios
         </Button>
       </Box>
 
       {/* Gestión de Usuarios */}
-      <Card sx={{ mt: 4 }}>
+      <Card sx={{ mt: 2, width: '100%' }}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Box>
+          <Box sx={{ position: 'relative', mb: 3 }}>
+            <Box sx={{ textAlign: 'center', pr: 12 }}>
               <Typography variant="h6" fontWeight="bold">
                 Gestión de Usuarios
               </Typography>
@@ -280,7 +275,13 @@ const Configuration = () => {
             <Button
               variant="contained"
               startIcon={<PersonAdd />}
-              sx={{ bgcolor: '#3f51b5' }}
+              sx={{ 
+                bgcolor: '#3f51b5',
+                position: 'absolute',
+                right: 0,
+                top: '50%',
+                transform: 'translateY(-50%)'
+              }}
             >
               Nuevo usuario
             </Button>
