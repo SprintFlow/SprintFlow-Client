@@ -3,23 +3,23 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import './UserDashboard.css'
 import Grid from '@mui/material/Grid';
 import { Calendar, Target, TrendingUp, Clock } from "lucide-react";
 import { LinearProgress } from '@mui/material';
 import Chip from '@mui/material/Chip';
 import { Divider } from "@mui/material";
+import { Link } from 'react-router-dom';
 
 const UserDashboard = () => {
     return (
         <>
-            <Card component='main' sx={{ bgcolor: 'white', color: 'black', textAlign: 'justify', borderRadius: '10px', p: '5% 3%' }}>
+            <Card component='main' sx={{ bgcolor: '#f5f5f5', color: 'black', textAlign: 'justify', borderRadius: '10px', p: '5% 3%' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Box >
                         <Typography variant='h5'>Mi Dashboard - Desarrollador</Typography>
                         <Typography sx={{ color: 'grey' }}> Bienvenido, <span>Carlos Ruiz</span></Typography>
                     </Box>
-                    <Button variant='contained' size='small' sx={{
+                    <Button component={Link} to="/register-points" variant='contained' size='small' sx={{
                         bgcolor: 'black', color: 'white', fontSize: '0.75rem',
                         padding: '2px 10px',
                         minWidth: 'auto'
@@ -154,7 +154,7 @@ const UserDashboard = () => {
                             textAlign: "justify",
                             gap: 0,
                         }}>
-                            <Grid item xs={6} >
+                            <Grid>
                                 <Typography variant="subtitle2" color="text.secondary">
                                     Mis Puntos
                                 </Typography>
@@ -163,7 +163,7 @@ const UserDashboard = () => {
                                 </Typography>
                             </Grid>
 
-                            <Grid item xs={6}>
+                            <Grid>
                                 <Typography variant="subtitle2" color="text.secondary">
                                     Equipo Total
                                 </Typography>
