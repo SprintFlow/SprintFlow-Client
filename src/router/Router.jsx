@@ -12,6 +12,9 @@ import Home from "../pages/Home";
 import CreateEditSprint from "../pages/CreateEditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
 import SprintDetail from "../pages/SprintDetail";
+import NotFoundPage from "../pages/NotFoundPage";
+import TestAnimationPage from "../pages/TestAnimationPage";
+
 
 const routerSprint = createBrowserRouter([{
     path: "/",
@@ -52,6 +55,14 @@ const routerSprint = createBrowserRouter([{
       {
         path: "/configuration",
         element: <Configuration />,
+      },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
+          {
+        path: "/testanimationpage",
+        element: <TestAnimationPage />,
       },
       // {
       //   path: "admin-profile",
