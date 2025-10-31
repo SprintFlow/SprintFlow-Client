@@ -69,6 +69,7 @@ export default function RegisterPage() {
         overflow: "hidden",
       }}
     >
+
       {/* Lado izquierdo: animación */}
       <Box
         sx={{
