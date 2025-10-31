@@ -5,328 +5,215 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import './UserDashboard.css'
 import Grid from '@mui/material/Grid';
-import { Send, Calendar, Target, TrendingUp, Badge } from "lucide-react";
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
+import { Calendar, Target, TrendingUp, Clock } from "lucide-react";
 import { LinearProgress } from '@mui/material';
-import Input from '@mui/material/Input';
 import Chip from '@mui/material/Chip';
-import { SendIcon } from 'lucide-react';
+import { Divider } from "@mui/material";
 
 const UserDashboard = () => {
     return (
         <>
-            <main className="user-dashboard-container">
-                <h1>Mi Dashboard - Desarrollador</h1>
-                <p className='text-muted-foreground grey'>Gestiona tus tareas y actualiza el progreso</p>
+            <Card component='main' sx={{ bgcolor: 'white', color: 'black', textAlign: 'justify', borderRadius: '10px', p: '5% 3%' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Box >
+                        <Typography variant='h5'>Mi Dashboard - Desarrollador</Typography>
+                        <Typography sx={{ color: 'grey' }}> Bienvenido, <span>Carlos Ruiz</span></Typography>
+                    </Box>
+                    <Button variant='contained' size='small' sx={{
+                        bgcolor: 'black', color: 'white', fontSize: '0.75rem',
+                        padding: '2px 10px',
+                        minWidth: 'auto'
+                    }}>Registrar puntos</Button>
+                </Box>
 
                 {/* Stats Cards */}
-                <Grid container gap={3} columns={3} sx={{ mt: 4 }}>
-                    <Card sx={{
-                        minWidth: {
-                            xs: 200,
-                            sm: 275,
-                            md: 360
-                        }
+                <Grid container spacing={3}
+                    sx={{
+                        mt: 4,
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: 'repeat(2, 1fr)',  // 2 columnas en móvil
+                            md: 'repeat(4, 1fr)'   // 4 columnas en pantallas >= 768px
+                        },
+                        gap: 3
                     }}>
+                    {/* Sprint actual */}
+                    <Card>
                         <CardContent>
                             <div className="card-header">
                                 <Typography gutterBottom sx={{ fontSize: 17 }}>
-                                    Puntos Planificados
+                                    Sprint actual
                                 </Typography>
-                                <Target className="h-4 w-4 text-muted-foreground" />
+                                <Target style={{ color: '#9e9e9e'}} />
                             </div>
-                            <p className='stats-pts'><span>34</span> pts</p>
-                            <p className="grey sprint-actual-p">Sprint actual</p>
+                            <Typography sx={{ mt: '30px', fontSize: '35px' }}>1</Typography>
+                            <Typography sx={{ fontSize: '12px', color: 'grey' }}>En progreso</Typography>
                         </CardContent>
                     </Card>
 
-                    <Card sx={{
-                        minWidth: {
-                            xs: 200,
-                            sm: 275,
-                            md: 360
-                        }
-                    }}>
+                    {/* Mis Puntos (Sprint) */}
+                    <Card>
                         <CardContent>
                             <div className="card-header">
                                 <Typography gutterBottom sx={{ fontSize: 17 }}>
-                                    Puntos Completados
+                                    Mis Puntos (Sprint)
                                 </Typography>
-                                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                <TrendingUp style={{ color: '#9e9e9e'}} />
                             </div>
-                            <p className='stats-pts'><span>21</span> pts</p>
-                            <p className="grey sprint-actual-p"> <span>62</span>% del objetivo</p>
+                            <Typography sx={{ mt: '30px', fontSize: '35px' }}>7.0</Typography>
+                            <Typography sx={{ fontSize: '12px', color: 'grey' }}>Este sprint</Typography>
                         </CardContent>
                     </Card>
 
-                    {/* <Card sx={{ minWidth: 360 }}> */}
-                    <Card sx={{
-                        minWidth: {
-                            xs: 200,
-                            sm: 275,
-                            md: 360
-                        }
-                    }}>
+                    {/* Puntos Totales  */}
+                    <Card>
+                        <CardContent>
+                            <div className="card-header">
+                                <Typography gutterBottom sx={{ fontSize: 17 }}>
+                                    Puntos Totales
+                                </Typography>
+                                <Calendar style={{ color: '#9e9e9e'}} />
+                            </div>
+                            <Typography sx={{ mt: '30px', fontSize: '35px' }}>7.0</Typography>
+                            <Typography sx={{ fontSize: '12px', color: 'grey' }}>Todos los sprints</Typography>
+                        </CardContent>
+                    </Card>
+
+                    {/* Días Restantes  */}
+                    <Card>
                         <CardContent>
                             <div className="card-header">
                                 <Typography gutterBottom sx={{ fontSize: 17 }}>
                                     Días Restantes
                                 </Typography>
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <Clock style={{ color: '#9e9e9e'}}></Clock>
                             </div>
-                            <p className='stats-pts'><span>5</span> días</p>
-                            <p className="grey sprint-actual-p">Hasta fin de sprint</p>
+                            <Typography sx={{ mt: '30px', fontSize: '35px' }}>0</Typography>
+                            <Typography sx={{ fontSize: '12px', color: 'grey' }}>Para finalizar sprint</Typography>
                         </CardContent>
                     </Card>
                     {/* </div> */}
                 </Grid>
 
                 {/* Active Sprint */}
-                <Card sx={{ mt: 4, py: 2.7, px: 2 }}>
-                    <div className="header-sprint">
+                <Card sx={{ mt: 4, py: 2.7, px: 2, borderRadius: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-
-                        <div>
-                            <Typography variant='h4' sx={{ fontSize: 17, fontWeight: 600 }}>Sprint 24</Typography>
-                            <p className='grey'> <span className="start-date">2025-10-06</span> <span className="finish-date">2025-10-20</span> </p>
-                        </div>
-                        <Chip label="En curso" color='primary' />
+                        <Typography variant='h4' sx={{ fontSize: 17, fontWeight: 600 }}>Sprint Activo</Typography>
+                        <Chip label="Activo" sx={{ color: 'white', backgroundColor: 'black' }} />
                     </Box>
-                    </div>
-                    <Box sx={{ mt: 3 }}>
-                        <Typography
-                            variant="body2"
-                            fontWeight={500}
-                            color="text.secondary"
-                            sx={{ mb: 1 }}
-                        >
-                            Progreso general del sprint
-                        </Typography>
 
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Box sx={{ width: "100%" }}>
-                                <LinearProgress
-                                    variant="determinate"
-                                    value={56}
-                                    sx={{
-                                        height: 8,
-                                        borderRadius: 5,
-                                        backgroundColor: "#e5e7eb", 
-                                        "& .MuiLinearProgress-bar": {
-                                            backgroundColor: "#1e40af", 
-                                        },
-                                    }}
-                                />
-                            </Box>
-                            <Typography variant="body2" sx={{ minWidth: 40, textAlign: "right" }}>
-                                <span>56</span> %
+                    <Box sx={{ mt: 4 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography>Sprint 2- Enero 2025</Typography>
+                            <Button variant='outlined' >Ver Detalle</Button>
+                        </Box>
+                        <Typography sx={{ color: 'grey.600', fontSize: 14, mt: 0.5 }}><span>2025-01-13</span>  -  <span>2025-01-17</span> <span>(5 días)</span></Typography>
+                    </Box>
+
+                    {/* Progreso del equipo - Sprint Activo  */}
+                    <Box sx={{ mt: 3 }}>
+                        <Box sx={{ display: "flex", justifyContent: 'space-between', alignItems: "center", gap: 1 }}>
+                            <Typography
+                                variant="body2"
+                                fontWeight={500}
+                                color="text.secondary"
+                                sx={{ mb: 1 }}
+                            >
+                                Progreso del Equipo
+                            </Typography>
+                            <Typography variant='body2'><span>14.0</span> / <span>64.5</span> puntos</Typography>
+                        </Box>
+
+                        <Box sx={{ width: "100%" }}>
+                            <LinearProgress
+                                variant="determinate"
+                                value={21}
+                                sx={{
+                                    height: 8,
+                                    borderRadius: 5,
+                                    backgroundColor: "#e5e7eb",
+                                    "& .MuiLinearProgress-bar": {
+                                        backgroundColor: "#1e40af",
+                                    },
+                                }}
+                            />
+                        </Box>
+                        <Typography variant="body2" sx={{ minWidth: 40, textAlign: "justify", mt: 1 }}>
+                            <span>21.7</span> %
+                        </Typography>
+                    </Box>
+
+                    <Divider sx={{ my: 3 }} />
+
+                    <Box elevation={1} sx={{ mx: "auto", backgroundColor: "transparent" }}>
+                        {/* Puntos */}
+                        <Grid container spacing={6} sx={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            alignItems: "center",
+                            textAlign: "justify",
+                            gap: 0,
+                        }}>
+                            <Grid item xs={6} >
+                                <Typography variant="subtitle2" color="text.secondary">
+                                    Mis Puntos
+                                </Typography>
+                                <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28 }}>
+                                    7.0
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={6}>
+                                <Typography variant="subtitle2" color="text.secondary">
+                                    Equipo Total
+                                </Typography>
+                                <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28 }}>
+                                    14.0
+                                </Typography>
+                            </Grid>
+                        </Grid>
+
+                        <Divider sx={{ my: 2 }} />
+
+                        {/* Observaciones */}
+                        <Box>
+                            <Typography
+                                variant="subtitle1"
+                                fontWeight="bold"
+                                sx={{ mb: 0.5 }}
+                            >
+                                Observaciones:
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" sx={{ fontSize: 14 }}>
+                                Sprint enfocado en features del producto principal.
                             </Typography>
                         </Box>
                     </Box>
+                </Card>
 
-                    <h3 className='user-history-title'>Mis historias de Usuario</h3>
-
-                    <TableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 600 }}>Historia</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Planificado</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Completado</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
-                                </TableRow>
-                            </TableHead>
-
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell>
-                                        <Box>
-                                            <p>US-1</p>
-                                            <p className='grey'>Implementar login usuarios</p>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell><span>8</span> pts</TableCell>
-                                    <TableCell>
-                                        <Input type='number' defaultValue={8} min={0} max={10} sx={{
-                                            width: '5rem', backgroundColor: '#f0f0f0', borderRadius: '0.25rem', padding: '0.2rem 0.5rem', border: '1px solid #ccc', 
-                                            '& input': {
-                                                borderRadius: '0.25rem', 
-                                                padding: '0.2rem 0.5rem'
-                                            }
-                                        }} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label="Completado"
-                                            color="success"
-                                            size="small"
-                                        />
-                                    </TableCell>
-                                    <TableCell></TableCell>
-                                </TableRow>
-
-                                <TableRow>
-                                    <TableCell>
-                                        <Box>
-                                            <p>US-2</p>
-                                            <p className='grey'>Crear dashboard principal</p>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell><span>13</span> pts</TableCell>
-                                    <TableCell>
-                                        <Input type='number' defaultValue={8} min={0} max={10} sx={{
-                                            width: '5rem', backgroundColor: '#f0f0f0', borderRadius: '0.25rem', padding: '0.2rem 0.5rem', border: '1px solid #ccc', 
-                                            '& input': {
-                                                borderRadius: '0.25rem', 
-                                                padding: '0.2rem 0.5rem'
-                                            }
-                                        }} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label="En progreso"
-                                            color="warning"
-                                            size="small"
-                                        />
-                                    </TableCell>
-                                    <TableCell></TableCell>
-                                </TableRow>
-
-                                <TableRow>
-                                    <TableCell>
-                                        <Box>
-                                            <p>US-3</p>
-                                            <p className='grey'>Integrar API de pagos</p>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell><span>5</span> pts</TableCell>
-                                    <TableCell>
-                                        <Input type='number' defaultValue={0} min={0} max={10} sx={{
-                                            width: '5rem', backgroundColor: '#f0f0f0', borderRadius: '0.25rem', padding: '0.2rem 0.5rem', border: '1px solid #ccc',
-                                            '& input': {
-                                                borderRadius: '0.25rem', 
-                                                padding: '0.2rem 0.5rem'
-                                            }
-                                        }} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label="Pendiente"
-                                            color="outilined"
-                                            size="small"
-                                        />
-                                    </TableCell>
-                                    <TableCell></TableCell>
-                                </TableRow>
-
-                                <TableRow>
-                                    <TableCell><strong>Total</strong></TableCell>
-                                    <TableCell><strong><span>26</span> pts</strong></TableCell>
-                                    <TableCell><strong><span>16</span> pts</strong></TableCell>
-                                    <TableCell><Chip label="62%" color='outlined' size='small' /></TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 4 }}>
-                        <Button variant='"outline' >Ver resultados</Button>
-                        <Button
-                            variant="contained"
-                            startIcon={<SendIcon />}
-                        >
-                            Guardar progreso
-                        </Button>
+                {/* My Recent Records */}
+                <Card sx={{ mt: 4, py: 2.7, px: 2, borderRadius: 3 }}>
+                    <Typography variant='h4' sx={{ fontSize: 17, fontWeight: 600 }}>Mis Registros</Typography>
+                    <Box sx={{
+                        my: 2, p: 2, borderRadius: 2,
+                        border: "1px solid",
+                        borderColor: "grey.200",
+                        bgcolor: "background.default"
+                    }}>
+                        <Typography><span>2</span> historia(s) de <span>1</span> punto(s)</Typography>
+                        <Typography component="span" sx={{ color: 'grey', fontSize: '14px' }}>14 de enero</Typography>
+                    </Box>
+                    <Box sx={{
+                        my: 2, p: 2, borderRadius: 2,
+                        border: "1px solid",
+                        borderColor: "grey.200",
+                        bgcolor: "background.default"
+                    }}>
+                        <Typography><span>1</span> historia(s) de <span>5</span> punto(s)</Typography>
+                        <Typography component="span" sx={{ color: 'grey', fontSize: '14px' }}>15 de enero</Typography>
                     </Box>
                 </Card>
-
-                {/* Sprint History */}
-                <Card sx={{ mt: 4, py: 2.7, px: 2 }}>
-                    <div className="header-sprint-history">
-                        <Typography variant='h4' sx={{ fontSize: 17, fontWeight: 600 }}>Historial de Sprints</Typography>
-                        <p className="grey">Sprints anteriores completados</p>
-                    </div>
-
-                    <TableContainer sx={{ mt: 4 }}>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 600 }}>Sprint</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Planificado</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Completado</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Cumplimiento</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Acciones</TableCell>
-                                </TableRow>
-                            </TableHead>
-
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell>Sprint 23</TableCell>
-                                    <TableCell><span>32</span> pts</TableCell>
-                                    <TableCell><span>30</span> pts</TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            <Box sx={{ width: "40%" }}>
-                                                <LinearProgress
-                                                    variant="determinate"
-                                                    value={94}
-                                                    sx={{
-                                                        height: 8,
-                                                        borderRadius: 5,
-                                                        "& .MuiLinearProgress-bar": {
-                                                            backgroundColor: "#1e40af",
-                                                        },
-                                                    }}
-                                                />
-                                            </Box>
-                                            <p><span>94</span> %</p>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost"
-                                            size="sm"
-                                        >Ver detalle</Button>
-                                    </TableCell>
-                                </TableRow>
-
-                                <TableRow>
-                                    <TableCell>Sprint 22</TableCell>
-                                    <TableCell><span>28</span> pts</TableCell>
-                                    <TableCell><span>28</span> pts</TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            <Box sx={{ width: "40%" }}>
-                                                <LinearProgress
-                                                    variant="determinate"
-                                                    value={100}
-                                                    sx={{
-                                                        height: 8,
-                                                        borderRadius: 5,
-                                                        "& .MuiLinearProgress-bar": {
-                                                            backgroundColor: "#1e40af", 
-                                                        },
-                                                    }}
-                                                />
-                                            </Box>
-                                            <p><span>100</span> %</p>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost"
-                                            size="sm"
-                                        >Ver detalle</Button>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Card>
-            </main>
+            </Card>
         </>
     )
 }
