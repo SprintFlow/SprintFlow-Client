@@ -179,7 +179,7 @@ export default function RegisterPage() {
                     component="button"
                     underline="hover"
                     color="primary"
-                    onClick={() => navigate("/login")}
+                    onClick={() => navigate("/")}
                   >
                     Inicia sesión
                   </Link>

@@ -1,7 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import Layout from "../layout/Layout";
-
 import App from "../App";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
@@ -12,7 +11,8 @@ import CreateEditSprint from "../pages/CreateEditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
 import SprintDetail from "../pages/SprintDetail";
 import NotFoundPage from "../pages/NotFoundPage";
-import TestAnimationPage from "../pages/TestAnimationPage";
+import RegisterPoints from "../pages/RegisterPoints";
+// import TestAnimationPage from "../pages/TestAnimationPage";
 
 
 const routerSprint = createBrowserRouter([{
@@ -30,6 +30,10 @@ const routerSprint = createBrowserRouter([{
       {
         path: "/user-dashboard",
         element: <UserDashboard />,
+      },
+      {
+        path: "/register-points",
+        element: <RegisterPoints/>
       },
       {
         path: "/create-edit-sprint",
@@ -55,10 +59,10 @@ const routerSprint = createBrowserRouter([{
         path: "*",
         element: <NotFoundPage />,
       },
-          {
-        path: "/testanimationpage",
-        element: <TestAnimationPage />,
-      },
+      //     {
+      //   path: "/testanimationpage",
+      //   element: <TestAnimationPage />,
+      // },
       // {
       //   path: "admin-profile",
       //   element: <AdminProfile />,
