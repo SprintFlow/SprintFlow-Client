@@ -9,14 +9,12 @@ import {
   Stack,
   Link,
   Avatar,
-  CircularProgress,
 } from "@mui/material";
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import SprintFlowLogo from "../components/SprintFlowLogo";
-import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -25,10 +23,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-
     const result = await login({ email, password });
     if (result.success) {
       navigate("/");
@@ -37,23 +33,6 @@ export default function LoginPage() {
         useAuthStore.getState().error ||
           "Credenciales inválidas o error en el servidor."
       );
-
-    setIsLoading(true);
-    setError("");
-    try {
-      const result = await login({ email, password });
-
-      if (result.success) {
-        navigate("/"); // redirige al home o dashboard
-      } else {
-        setError(
-          useAuthStore.getState().error ||
-            "Credenciales inválidas o error en el servidor."
-        );
-      }
-    } finally {
-      setIsLoading(false);
-
     }
   };
 
@@ -76,7 +55,6 @@ export default function LoginPage() {
         overflow: "hidden", // evita scroll innecesario
       }}
     >
-
       {/* Lado izquierdo: animación */}
       <Box
         sx={{
@@ -144,66 +122,6 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyPress={handleKeyPress}
               />
-
-      <LoadingOverlay open={isLoading} />
-      <Card sx={{ width: "100%", maxWidth: 450, boxShadow: 6 }}>
-        <CardHeader
-          sx={{ textAlign: "center", pb: 0 }}
-          title={
-            <Stack alignItems="center" spacing={2}>
-              <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
-                <TrackChangesIcon sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Typography variant="h4" component="div">
-                SprintFlow
-              </Typography>
-            </Stack>
-          }
-          subheader="Gestión ágil de sprints para Cohispania"
-        />
-        <CardContent>
-          <Stack spacing={3}>
-            <Typography variant="h5" component="h1" align="center">
-              Iniciar sesión
-            </Typography>
-
-            <TextField
-              id="email"
-              label="Correo electrónico"
-              type="email"
-              placeholder="nombre@cohispania.com"
-              variant="outlined"
-              fullWidth
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextField
-              id="password"
-              label="Contraseña"
-              type="password"
-              placeholder="••••••••"
-              variant="outlined"
-              fullWidth
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-            {error && (
-              <Typography color="error" align="center">
-                {error}
-              </Typography>
-            )}
-
-            <Button
-              variant="contained"
-              size="large"
-              fullWidth
-              onClick={handleLogin}
-              disabled={isLoading}
-            >
-              Iniciar sesión
-            </Button>
-
 
               {error && (
                 <Typography color="error" align="center">
