@@ -8,7 +8,6 @@ import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
 import UserDashboard from "../pages/UserDashboard";
 import Configuration from "../pages/Configuration";
-import Home from "../pages/Home";
 import CreateEditSprint from "../pages/CreateEditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
 import SprintDetail from "../pages/SprintDetail";
@@ -22,10 +21,6 @@ const routerSprint = createBrowserRouter([{
     children: [
       {
         index: true, 
-        element: <Home />,
-      },
-      {
-        path: "/login",
         element: <LoginPage />,
       },
       {
