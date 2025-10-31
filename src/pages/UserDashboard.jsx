@@ -105,7 +105,7 @@ const UserDashboard = () => {
                     <Box sx={{ mt: 4 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                             <Typography>Sprint 2- Enero 2025</Typography>
-                            <Button variant='outlined' >Ver Detalle</Button>
+                            <Button component={Link} to="/sprint-detail/:id" variant='outlined' >Ver Detalle</Button>
                         </Box>
                         <Typography sx={{ color: 'grey.600', fontSize: 14, mt: 0.5 }}><span>2025-01-13</span>  -  <span>2025-01-17</span> <span>(5 días)</span></Typography>
                     </Box>

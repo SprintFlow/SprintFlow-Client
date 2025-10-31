@@ -55,7 +55,7 @@ const RegisterPoints = () => {
         <>
             <Card component='main' sx={{ bgcolor: '#f5f5f5', color: 'black', textAlign: 'justify', borderRadius: '10px', p: '4% 3%' }}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button sx={{ color: 'black' }}><ArrowLeft></ArrowLeft> Volver</Button>
+                    <Button component={Link} to="/user-dashboard" sx={{ color: 'black' }}><ArrowLeft></ArrowLeft> Volver</Button>
 
                     <Box>
                         <Typography variant='h5'>Registrar Puntos Completados</Typography>
