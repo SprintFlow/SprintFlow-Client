@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import SprintFlowLogo from "../components/SprintFlowLogo";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -29,26 +30,28 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
     
-    const result = await login({ email, password });
-    
-    if (result.success) {
-      // Obtener el usuario actualizado del store
-      const currentUser = useAuthStore.getState().user;
+    try {
+      const result = await login({ email, password });
       
-      // Redirigir según el rol del usuario
-      if (currentUser?.isAdmin) {
-        navigate("/admin-dashboard");
+      if (result.success) {
+        // Obtener el usuario actualizado del store
+        const currentUser = useAuthStore.getState().user;
+        
+        // Redirigir según el rol del usuario
+        if (currentUser?.isAdmin) {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/user-dashboard");
+        }
       } else {
-        navigate("/user-dashboard");
+        setError(
+          useAuthStore.getState().error ||
+            "Credenciales inválidas o error en el servidor."
+        );
       }
-    } else {
-      setError(
-        useAuthStore.getState().error ||
-          "Credenciales inválidas o error en el servidor."
-      );
+    } finally { // Garantiza que loading se desactive
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const handleKeyPress = (e) => {
@@ -72,6 +75,9 @@ export default function LoginPage() {
         overflow: "hidden",
       }}
     >
+      {/* LoadingOverlay sobre toda la página */}
+      <LoadingOverlay open={isLoading} />
+
       {/* Lado izquierdo: animación */}
       <Box
         sx={{
