@@ -1,7 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import Layout from "../layout/Layout";
-import App from "../App";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
@@ -12,66 +11,87 @@ import AdminDashboard from "../pages/AdminDashboard";
 import SprintDetail from "../pages/SprintDetail";
 import NotFoundPage from "../pages/NotFoundPage";
 import RegisterPoints from "../pages/RegisterPoints";
-// import TestAnimationPage from "../pages/TestAnimationPage";
+import ProtectedRoute from "../components/ProtectedRoute";
 
-
-const routerSprint = createBrowserRouter([{
+const routerSprint = createBrowserRouter([
+  {
     path: "/",
     element: <Layout />,
     children: [
       {
-        index: true, 
+        index: true,
         element: <LoginPage />,
       },
       {
         path: "/register",
         element: <RegisterPage />,
       },
+      // ========== RUTAS DE USUARIO (Developer) ==========
       {
         path: "/user-dashboard",
-        element: <UserDashboard />,
+        element: (
+          <ProtectedRoute requireAdmin={false}>
+            <UserDashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/register-points",
-        element: <RegisterPoints/>
+        element: (
+          <ProtectedRoute requireAdmin={false}>
+            <RegisterPoints />
+          </ProtectedRoute>
+        ),
+      },
+      // ========== RUTAS DE ADMIN ==========
+      {
+        path: "/admin-dashboard",
+        element: (
+          <ProtectedRoute requireAdmin={true}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/create-edit-sprint",
-        element: <CreateEditSprint />,
-      },
-      { 
-        path: "/sprint-detail/:id", 
-        element: <SprintDetail /> 
-      },
-      {
-        path: "/results",
-        element: <Results />,
-      },
-      {
-        path: "/admin-dashboard", 
-        element: <AdminDashboard />,
+        element: (
+          <ProtectedRoute requireAdmin={true}>
+            <CreateEditSprint />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/configuration",
-        element: <Configuration />,
+        element: (
+          <ProtectedRoute requireAdmin={true}>
+            <Configuration />
+          </ProtectedRoute>
+        ),
       },
+      // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
+      {
+        path: "/sprint-detail/:id",
+        element: (
+          <ProtectedRoute>
+            <SprintDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/results",
+        element: (
+          <ProtectedRoute>
+            <Results />
+          </ProtectedRoute>
+        ),
+      },
+      // ========== 404 ==========
       {
         path: "*",
         element: <NotFoundPage />,
       },
-      //     {
-      //   path: "/testanimationpage",
-      //   element: <TestAnimationPage />,
-      // },
-      // {
-      //   path: "admin-profile",
-      //   element: <AdminProfile />,
-      // },
-      // {
-      //   path: "user-profile",
-      //   element: <UserProfile />,
-      // }
-    ]
-}]);
+    ],
+  },
+]);
 
 export default routerSprint;
