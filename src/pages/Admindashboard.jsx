@@ -52,8 +52,8 @@ export default function AdminDashboard() {
     navigate("/login");
   };
 
-  const handleCreateSprint = () => {
-    navigate("/create-sprint");
+  const handleCreateEditSprint = () => {
+    navigate("/create-edit-sprint");
   };
 
   const handleViewSprint = (sprintId) => {
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
                 variant="contained"
                 size="large"
                 startIcon={<AddIcon />}
-                onClick={handleCreateSprint}
+                onClick={handleCreateEditSprint}
                 sx={{
                   background: theme.gradient,
                   textTransform: "none",
@@ -169,22 +169,6 @@ export default function AdminDashboard() {
                 }}
               >
                 Crear Nuevo Sprint
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={handleLogout}
-                sx={{ 
-                  textTransform: "none", 
-                  fontWeight: 600,
-                  borderColor: theme.primary,
-                  color: theme.primary,
-                  "&:hover": {
-                    borderColor: theme.primaryDark,
-                    backgroundColor: "rgba(76, 175, 80, 0.04)",
-                  }
-                }}
-              >
-                Cerrar Sesión
               </Button>
             </Box>
           </Box>
@@ -501,7 +485,7 @@ export default function AdminDashboard() {
                   variant="contained"
                   size="large"
                   startIcon={<AddIcon />}
-                  onClick={handleCreateSprint}
+                  onClick={handleCreateEditSprint}
                   sx={{
                     background: theme.gradient,
                     textTransform: "none",
