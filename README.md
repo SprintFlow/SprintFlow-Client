@@ -1,9 +1,11 @@
-# SprintFlow Frontend
+# SprintFlow- Frontend
 
-![SprintFlow Logo Animado](/SprintFlow-green.gif)
+<div align="center">
+  <img src="public/SprintFlow-green.gif" alt="SprintFlow Logo Animado" width="600" style="border-radius: 30px;">
+</div>
 
 ## Descripción
-Frontend de SprintFlow encargado de la creación y asignación de usuarios, gestión de sprints, visualización y planificación de equipos. 
+SprintFlow es una aplicación encargada de la creación y asignación de usuarios, gestión de sprints, visualización y planificación de equipos. 
 Se integra con el backend real, usando autenticación JWT y control de roles (admin/developer).
 
 ---
