@@ -1,6 +1,6 @@
 # SprintFlow Frontend
 
-![SprintFlow Logo Animado](./assets/SprintFlow-green.gif)
+![SprintFlow Logo Animado](/SprintFlow-green.gif)
 
 ## Descripción
 Frontend de SprintFlow encargado de la creación y asignación de usuarios, gestión de sprints, visualización y planificación de equipos. 
