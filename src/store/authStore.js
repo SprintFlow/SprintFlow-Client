@@ -93,6 +93,17 @@ const useAuthStore = create(
         return user?.isAdmin === true;
       },
 
+      // ✅ Actualizar información del usuario
+      updateUser: (userData) => {
+        const currentUser = get().user;
+        set({
+          user: {
+            ...currentUser,
+            ...userData
+          }
+        });
+      },
+
       // === CLEAR ERROR ===
       clearError: () => set({ error: null }),
     }),
