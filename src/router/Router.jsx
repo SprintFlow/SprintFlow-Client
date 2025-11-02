@@ -7,7 +7,7 @@ import Results from "../pages/Results";
 import UserDashboard from "../pages/UserDashboard";
 import Configuration from "../pages/Configuration";
 import CreateEditSprint from "../pages/CreateEditSprint";
-import AdminDashboard from "../pages/AdminDashboard";
+import AdminDashboard from "../pages/Admindashboard";
 import SprintDetail from "../pages/SprintDetail";
 import NotFoundPage from "../pages/NotFoundPage";
 import RegisterPoints from "../pages/RegisterPoints";
@@ -23,29 +23,29 @@ const routerSprint = createBrowserRouter([
         element: <LoginPage />,
       },
       {
-        path: "/register",
+        path: "register",
         element: <RegisterPage />,
       },
       // ========== RUTAS DE USUARIO (Developer) ==========
       {
-        path: "/user-dashboard",
+        path: "user-dashboard",
         element: (
-          <ProtectedRoute requireAdmin={false}>
+          <ProtectedRoute requireAdmin={false} requireUser={true}>
             <UserDashboard />
           </ProtectedRoute>
         ),
       },
       {
-        path: "/register-points",
+        path: "register-points",
         element: (
-          <ProtectedRoute requireAdmin={false}>
+          <ProtectedRoute requireAdmin={false} requireUser={true}>
             <RegisterPoints />
           </ProtectedRoute>
         ),
       },
       // ========== RUTAS DE ADMIN ==========
       {
-        path: "/admin-dashboard",
+        path: "admin-dashboard",
         element: (
           <ProtectedRoute requireAdmin={true}>
             <AdminDashboard />
@@ -53,7 +53,7 @@ const routerSprint = createBrowserRouter([
         ),
       },
       {
-        path: "/create-edit-sprint",
+        path: "create-edit-sprint",
         element: (
           <ProtectedRoute requireAdmin={true}>
             <CreateEditSprint />
@@ -61,7 +61,15 @@ const routerSprint = createBrowserRouter([
         ),
       },
       {
-        path: "/configuration",
+        path: "create-edit-sprint/:id",
+        element: (
+          <ProtectedRoute requireAdmin={true}>
+            <CreateEditSprint />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "configuration",
         element: (
           <ProtectedRoute requireAdmin={true}>
             <Configuration />
@@ -70,17 +78,17 @@ const routerSprint = createBrowserRouter([
       },
       // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
       {
-        path: "/sprint-detail/:id",
+        path: "sprint-detail/:id",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute> {/* ✅ SIN requireAdmin ni requireUser - acceso para todos los autenticados */}
             <SprintDetail />
           </ProtectedRoute>
         ),
       },
       {
-        path: "/results",
+        path: "results",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute> {/* ✅ SIN requireAdmin ni requireUser - acceso para todos los autenticados */}
             <Results />
           </ProtectedRoute>
         ),
