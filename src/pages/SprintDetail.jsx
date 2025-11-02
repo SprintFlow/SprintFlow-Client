@@ -23,6 +23,7 @@ import {
   DialogContent,
   DialogActions,
   Snackbar,
+  Paper,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -31,6 +32,10 @@ import {
   Assessment,
   Edit,
   Delete,
+  TrendingUp,
+  Speed,
+  Warning,
+  Person,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import useSprintStore from "../store/SprintStore";
@@ -42,22 +47,57 @@ export default function SprintDetail() {
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [completions, setCompletions] = useState([]);
+  const [completionsLoading, setCompletionsLoading] = useState(true);
 
-  // Tema verde menta profesional (IGUAL que AdminDashboard)
+  // Tema verde menta profesional
   const theme = {
     primary: "#4CAF50",
     primaryDark: "#45A049",
     primaryLight: "#81C784",
     background: "#e6f2ed",
     cardBg: "#ffffff",
-    sprintCardBg: "#e6f2ed",
     gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
     gradientAlt: "linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)",
   };
 
+  // Colores para estados de sprints
+  const statusColors = {
+    Activo: "#1976D2",
+    Planificado: "#7B1FA2", 
+    Completado: "#2E7D32",
+    "Completado Parcial": "#FF9800",
+  };
+
+  // Puntos de Fibonacci para la tabla
+  const fibonacciPoints = [0.5, 1, 2, 3, 5, 8, 13, 21];
+
+  // Fetch completions data
+  const fetchCompletions = async (sprintId) => {
+    try {
+      setCompletionsLoading(true);
+      const response = await fetch(`/api/completions/sprint/${sprintId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCompletions(data.completions || []);
+      } else {
+        setCompletions([]);
+      }
+    } catch (error) {
+      console.error("Error fetching completions:", error);
+      setCompletions([]);
+    } finally {
+      setCompletionsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (id) {
-      fetchSprintById(id);
+      fetchSprintById(id).then(sprint => {
+        if (sprint) {
+          fetchCompletions(id);
+        }
+      });
     }
   }, [id, fetchSprintById]);
 
@@ -84,6 +124,38 @@ export default function SprintDetail() {
     }
   };
 
+  // Función para calcular estado automático
+  const calculateSprintStatus = (sprint) => {
+    const today = new Date();
+    const startDate = new Date(sprint.startDate);
+    const endDate = new Date(sprint.endDate);
+    
+    let status;
+    if (today < startDate) {
+      status = "Planificado";
+    } else if (today >= startDate && today <= endDate) {
+      status = "Activo";
+    } else {
+      status = "Completado";
+    }
+    
+    // Si está completado, verificar si alcanzó los puntos planificados
+    if (status === "Completado") {
+      const plannedPoints = sprint.plannedTotalPoints || 0;
+      const completedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
+      
+      if (plannedPoints > 0 && completedPoints < plannedPoints) {
+        return "Completado Parcial";
+      }
+    }
+    
+    return status;
+  };
+
+  const getSprintStatus = (sprint) => {
+    return sprint.calculatedStatus || calculateSprintStatus(sprint);
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("es-ES", {
@@ -100,31 +172,164 @@ export default function SprintDetail() {
     return diff + 1;
   };
 
-  const getDaysElapsed = (startDate) => {
+  // CORREGIDO: Los días transcurridos deben parar en la fecha de fin
+  const getDaysElapsed = (startDate, endDate) => {
     const start = new Date(startDate);
+    const end = new Date(endDate);
     const today = new Date();
+    
+    // Si el sprint ya terminó, usar la fecha de fin
+    if (today > end) {
+      const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      return Math.max(0, diff + 1); // +1 para incluir el día de inicio
+    }
+    
+    // Si el sprint está activo, calcular días desde inicio hasta hoy
     const diff = Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, diff);
+    return Math.max(0, diff + 1); // +1 para incluir el día de inicio
   };
 
   const getDaysRemaining = (endDate) => {
     const end = new Date(endDate);
     const today = new Date();
+    // Si el sprint ya terminó, mostrar 0 días restantes
+    if (today > end) return 0;
+    
     const diff = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0, diff);
   };
 
+  const getProgressPercentage = (sprint) => {
+    const plannedPoints = sprint.plannedTotalPoints || 0;
+    const completedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
+    if (plannedPoints === 0) return 0;
+    return Math.min(100, Math.round((completedPoints / plannedPoints) * 100));
+  };
+
   const getStatusColor = (status) => {
-    switch (status) {
+    const actualStatus = status.calculatedStatus || status;
+    switch (actualStatus) {
       case "Activo":
-        return "success";
+        return "primary";
       case "Planificado":
-        return "info";
+        return "secondary";
       case "Completado":
-        return "default";
+        return "success";
+      case "Completado Parcial":
+        return "warning";
       default:
         return "default";
     }
+  };
+
+  // Cálculos para la sección de Velocidad
+  const calculateVelocityMetrics = (sprint) => {
+    const duration = calculateDuration(sprint.startDate, sprint.endDate);
+    const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
+    const plannedPoints = sprint.plannedTotalPoints || 0;
+    const completedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
+    
+    // Velocidad ideal (puntos por día según planificación)
+    const idealVelocity = duration > 0 ? (plannedPoints / duration).toFixed(1) : 0;
+    
+    // Velocidad equivalente (puntos por día realmente completados)
+    const equivalentVelocity = daysElapsed > 0 ? (completedPoints / daysElapsed).toFixed(1) : 0;
+    
+    // Días con interrupciones (días sin progreso)
+    const interruptionDays = Math.max(0, daysElapsed - (completedPoints / (plannedPoints / duration)));
+    
+    return {
+      idealVelocity,
+      equivalentVelocity,
+      interruptionDays: Math.round(interruptionDays)
+    };
+  };
+
+  // Calcular puntos completados por tamaño basado en los datos reales
+  const getCompletedPointsBySize = (sprint) => {
+    const planned = Array(8).fill(0);
+    const completed = Array(8).fill(0);
+
+    // Calcular puntos planificados
+    if (sprint.plannedStories) {
+      sprint.plannedStories.forEach(story => {
+        const index = fibonacciPoints.indexOf(story.score);
+        if (index !== -1) {
+          planned[index] = story.quantity;
+        }
+      });
+    }
+
+    // Calcular puntos completados basado en los completions
+    completions.forEach(completion => {
+      if (completion.completedStories) {
+        completion.completedStories.forEach(story => {
+          const index = fibonacciPoints.indexOf(story.score);
+          if (index !== -1) {
+            completed[index] += story.completedCount || 0;
+          }
+        });
+      }
+    });
+
+    return { planned, completed };
+  };
+
+  // Obtener registros recientes de puntos desde los completions
+  const getRecentRecords = () => {
+    const records = [];
+    
+    completions.forEach(completion => {
+      if (completion.completedStories) {
+        completion.completedStories.forEach(story => {
+          if (story.completedCount > 0) {
+            records.push({
+              developer: completion.userId?.name || 'Usuario',
+              points: story.score * story.completedCount,
+              story: `Completado: ${story.completedCount} de ${story.score}pts`,
+              time: new Date(completion.updatedAt).toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              }),
+              date: completion.updatedAt
+            });
+          }
+        });
+      }
+    });
+
+    // Ordenar por fecha más reciente y limitar a 5 registros
+    return records
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+  };
+
+  // Calcular progreso individual de desarrolladores
+  const getDeveloperProgress = (sprint) => {
+    if (!sprint.usersAssigned || !sprint.usersAssigned.length) return [];
+    
+    return sprint.usersAssigned.map((member) => {
+      const user = member.userId || {};
+      const userCompletion = completions.find(c => c.userId?._id === user._id);
+      const completedPoints = userCompletion?.totalAchievedPoints || 0;
+      
+      // Calcular puntos asignados (distribución proporcional basada en horas)
+      const totalHours = sprint.usersAssigned.reduce((sum, m) => sum + m.hours, 0);
+      const assignedPoints = totalHours > 0 
+        ? Math.round((member.hours / totalHours) * sprint.plannedTotalPoints)
+        : Math.round(sprint.plannedTotalPoints / sprint.usersAssigned.length);
+      
+      return {
+        id: user._id || member._id,
+        name: user.name || `Usuario ${member._id}`,
+        email: user.email || '',
+        avatar: user.name ? user.name.charAt(0).toUpperCase() : 'U',
+        completed: completedPoints,
+        assigned: assignedPoints,
+        role: user.role || 'Developer',
+        completion: userCompletion
+      };
+    });
   };
 
   if (isLoading || !currentSprint) {
@@ -142,19 +347,32 @@ export default function SprintDetail() {
   }
 
   const sprint = currentSprint;
+  const sprintStatus = getSprintStatus(sprint);
   const duration = calculateDuration(sprint.startDate, sprint.endDate);
-  const daysElapsed = getDaysElapsed(sprint.startDate);
+  const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
   const daysRemaining = getDaysRemaining(sprint.endDate);
-  const progress = sprint.status === "Activo" ? (daysElapsed / duration) * 100 : sprint.status === "Completado" ? 100 : 0;
+  const pointsProgress = getProgressPercentage(sprint);
+  const velocityMetrics = calculateVelocityMetrics(sprint);
+  const pointsData = getCompletedPointsBySize(sprint);
+  const recentRecords = getRecentRecords();
+  const developerProgress = getDeveloperProgress(sprint);
+  const totalCompletedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
+  
+  // Calcular progreso temporal CORREGIDO
+  const timeProgress = sprintStatus === "Completado" || sprintStatus === "Completado Parcial" 
+    ? 100 
+    : Math.min(100, (daysElapsed / duration) * 100);
 
   return (
     <Box sx={{ 
       minHeight: "100vh", 
       backgroundColor: theme.background,
-      width: "100%",
+      width: "100vw",
       margin: 0,
       padding: 0,
+      overflowX: 'hidden'
     }}>
+      {/* Container principal sin maxWidth para ocupar todo el ancho */}
       <Box sx={{ 
         width: "100%",
         px: { xs: 2, sm: 3, md: 4 },
@@ -164,10 +382,11 @@ export default function SprintDetail() {
         <Box
           sx={{
             background: theme.cardBg,
-            borderRadius: 3,
+            borderRadius: 2,
             p: 3,
             mb: 3,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+            border: `1px solid #e0e0e0`,
           }}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
@@ -195,15 +414,21 @@ export default function SprintDetail() {
                   {sprint.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Detalle completo del sprint
+                  Detalle completo del sprint - {totalCompletedPoints} pts completados
                 </Typography>
               </Box>
             </Box>
             <Box display="flex" gap={2} flexWrap="wrap">
               <Chip
-                label={sprint.status}
-                color={getStatusColor(sprint.status)}
-                sx={{ fontWeight: 700, px: 2, py: 2.5 }}
+                label={sprintStatus}
+                color={getStatusColor(sprint)}
+                sx={{ 
+                  fontWeight: 700, 
+                  px: 2, 
+                  py: 2.5,
+                  backgroundColor: statusColors[sprintStatus],
+                  color: 'white'
+                }}
               />
               <Button
                 startIcon={<Edit />}
@@ -243,20 +468,21 @@ export default function SprintDetail() {
           </Box>
         </Box>
 
-        {/* Información Principal */}
+        {/* PRIMERA FILA: Tres tarjetas en la misma línea */}
         <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} md={8}>
-            {/* Progreso del Sprint */}
+          {/* 📊 Progreso del Sprint */}
+          <Grid item xs={12} md={6}>
             <Card
               elevation={0}
               sx={{
                 background: theme.cardBg,
-                borderRadius: 3,
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-                mb: 3,
+                borderRadius: 2,
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                border: `1px solid #e0e0e0`,
+                height: '100%'
               }}
             >
-              <CardContent sx={{ p: 4 }}>
+              <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
                   📊 Progreso del Sprint
                 </Typography>
@@ -272,7 +498,7 @@ export default function SprintDetail() {
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={progress}
+                    value={timeProgress}
                     sx={{
                       height: 10,
                       borderRadius: 2,
@@ -283,7 +509,7 @@ export default function SprintDetail() {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary" mt={0.5}>
-                    {progress.toFixed(1)}% del tiempo transcurrido
+                    {timeProgress.toFixed(1)}% del tiempo transcurrido
                   </Typography>
                 </Box>
 
@@ -293,12 +519,12 @@ export default function SprintDetail() {
                       Puntos Completados
                     </Typography>
                     <Typography variant="body2" fontWeight={600}>
-                      0 / {sprint.plannedTotalPoints} puntos
+                      {totalCompletedPoints} / {sprint.plannedTotalPoints} puntos
                     </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={0}
+                    value={pointsProgress}
                     sx={{
                       height: 10,
                       borderRadius: 2,
@@ -309,12 +535,13 @@ export default function SprintDetail() {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary" mt={0.5}>
-                    0% completado
+                    {pointsProgress}% completado
                   </Typography>
                 </Box>
 
                 <Divider sx={{ my: 3 }} />
 
+                {/* Cuadros de métricas */}
                 <Grid container spacing={2}>
                   <Grid item xs={6} sm={3}>
                     <Box textAlign="center" p={2} sx={{ background: "#F1F8E9", borderRadius: 2 }}>
@@ -359,17 +586,191 @@ export default function SprintDetail() {
                 </Grid>
               </CardContent>
             </Card>
+          </Grid>
 
-            {/* Historias Planificadas */}
+          {/* 🚀 Velocidad del Sprint */}
+          <Grid item xs={12} md={3}>
             <Card
               elevation={0}
               sx={{
                 background: theme.cardBg,
-                borderRadius: 3,
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+                borderRadius: 2,
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                border: `1px solid #e0e0e0`,
+                height: '100%'
               }}
             >
-              <CardContent sx={{ p: 4 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
+                  🚀 Velocidad del Sprint
+                </Typography>
+
+                {/* Velocidad Ideal */}
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <Avatar sx={{ bgcolor: "#4CAF50", width: 40, height: 40 }}>
+                    <TrendingUp />
+                  </Avatar>
+                  <Box flex={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Velocidad Ideal
+                    </Typography>
+                    <Typography variant="body1" fontWeight="600">
+                      {velocityMetrics.idealVelocity} pts/día
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Velocidad Equivalente */}
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <Avatar sx={{ bgcolor: "#2196F3", width: 40, height: 40 }}>
+                    <Speed />
+                  </Avatar>
+                  <Box flex={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Velocidad Equivalente
+                    </Typography>
+                    <Typography variant="body1" fontWeight="600">
+                      {velocityMetrics.equivalentVelocity} pts/día
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Días con Interrupciones */}
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                  <Avatar sx={{ bgcolor: "#FF9800", width: 40, height: 40 }}>
+                    <Warning />
+                  </Avatar>
+                  <Box flex={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Días con Interrupciones
+                    </Typography>
+                    <Typography variant="body1" fontWeight="600">
+                      {velocityMetrics.interruptionDays} días
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                {/* Indicador de Rendimiento */}
+                <Box 
+                  sx={{ 
+                    p: 2, 
+                    borderRadius: 2,
+                    background: velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity 
+                      ? "#E8F5E9" 
+                      : "#FFF3E0"
+                  }}
+                >
+                  <Typography variant="body2" fontWeight="600" sx={{ 
+                    color: velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity 
+                      ? "#2E7D32" 
+                      : "#F57F17"
+                  }}>
+                    {velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity 
+                      ? "✅ En camino de completar a tiempo" 
+                      : "⚠️ Necesita acelerar el ritmo"
+                    }
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* ℹ️ Información General */}
+          <Grid item xs={12} md={3}>
+            <Card
+              elevation={0}
+              sx={{
+                background: theme.cardBg,
+                borderRadius: 2,
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                border: `1px solid #e0e0e0`,
+                height: '100%'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
+                  ℹ️ Información General
+                </Typography>
+
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <Avatar sx={{ bgcolor: theme.primary, width: 40, height: 40 }}>
+                    <CalendarToday />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Fecha de Inicio
+                    </Typography>
+                    <Typography variant="body1" fontWeight="600">
+                      {formatDate(sprint.startDate)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <Avatar sx={{ bgcolor: "#f44336", width: 40, height: 40 }}>
+                    <CalendarToday />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Fecha de Fin
+                    </Typography>
+                    <Typography variant="body1" fontWeight="600">
+                      {formatDate(sprint.endDate)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                  <Avatar sx={{ bgcolor: theme.primary, width: 40, height: 40 }}>
+                    <Assessment />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Estado del Sprint
+                    </Typography>
+                    <Typography variant="body1" fontWeight="600" sx={{ color: statusColors[sprintStatus] }}>
+                      {sprintStatus}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Avatar sx={{ bgcolor: "#7B1FA2", width: 40, height: 40 }}>
+                    <Group />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Miembros del Equipo
+                    </Typography>
+                    <Typography variant="body1" fontWeight="600">
+                      {sprint.usersAssigned?.length || 0}
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* SEGUNDA FILA: Historias Planificadas y Puntos Completados */}
+        <Grid container spacing={3} mb={3}>
+          {/* 📝 Historias Planificadas */}
+          <Grid item xs={12} md={6}>
+            <Card
+              elevation={0}
+              sx={{
+                background: theme.cardBg,
+                borderRadius: 2,
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                border: `1px solid #e0e0e0`,
+                height: '100%'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
                   📝 Historias Planificadas
                 </Typography>
@@ -430,160 +831,299 @@ export default function SprintDetail() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            {/* Información del Sprint */}
+          {/* 📈 Puntos Completados */}
+          <Grid item xs={12} md={6}>
             <Card
               elevation={0}
               sx={{
                 background: theme.cardBg,
-                borderRadius: 3,
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-                mb: 3,
+                borderRadius: 2,
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                border: `1px solid #e0e0e0`,
+                height: '100%'
               }}
             >
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
-                  ℹ️ Información General
+                  📈 Puntos Completados
                 </Typography>
 
-                <Box display="flex" alignItems="center" gap={2} mb={3}>
-                  <Avatar sx={{ bgcolor: theme.primary }}>
-                    <CalendarToday />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Fecha de Inicio
-                    </Typography>
-                    <Typography variant="body1" fontWeight="600">
-                      {formatDate(sprint.startDate)}
-                    </Typography>
-                  </Box>
-                </Box>
+                <TableContainer component={Paper} elevation={0}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 700 }}>Puntuación</TableCell>
+                        {fibonacciPoints.map(point => (
+                          <TableCell key={point} align="center" sx={{ fontWeight: 700 }}>
+                            {point}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 700 }}>Planificado</TableCell>
+                        {pointsData.planned.map((count, index) => (
+                          <TableCell key={index} align="center">
+                            <Chip 
+                              label={count} 
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontWeight: 600 }}
+                            />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 700 }}>Completado</TableCell>
+                        {pointsData.completed.map((count, index) => (
+                          <TableCell key={index} align="center">
+                            <Chip 
+                              label={count} 
+                              size="small"
+                              sx={{
+                                backgroundColor: count > 0 ? theme.primaryLight : "#f5f5f5",
+                                color: count > 0 ? "white" : "text.secondary",
+                                fontWeight: 600
+                              }}
+                            />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
 
-                <Box display="flex" alignItems="center" gap={2} mb={3}>
-                  <Avatar sx={{ bgcolor: "#f44336" }}>
-                    <CalendarToday />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Fecha de Fin
-                    </Typography>
-                    <Typography variant="body1" fontWeight="600">
-                      {formatDate(sprint.endDate)}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Avatar sx={{ bgcolor: theme.primary }}>
-                    <Assessment />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Estado del Sprint
-                    </Typography>
-                    <Typography variant="body1" fontWeight="600">
-                      {sprint.status}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-
-            {/* Equipo Asignado */}
-            <Card
-              elevation={0}
-              sx={{
-                background: theme.cardBg,
-                borderRadius: 3,
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-                mb: 3,
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
-                  👥 Equipo Asignado
-                </Typography>
-
-                <Box display="flex" flexDirection="column" gap={2}>
-                  {sprint.usersAssigned?.map((member, index) => (
-                    <Box
-                      key={index}
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      p={2}
-                      sx={{ background: "#F1F8E9", borderRadius: 2 }}
-                    >
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar sx={{ bgcolor: theme.primary }}>
-                          {member.userId?.name?.charAt(0).toUpperCase() || index + 1}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body2" fontWeight="600">
-                            {member.userId?.name || `Miembro ${index + 1}`}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {member.userId?.email || 'Sin email'}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Chip 
-                        label={`${member.hours}h`} 
-                        size="small" 
-                        sx={{
-                          backgroundColor: theme.primary,
-                          color: "white",
-                          fontWeight: 600
-                        }}
-                      />
-                    </Box>
-                  ))}
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2" fontWeight="600">
-                    Total de Horas
-                  </Typography>
-                  <Typography variant="h5" fontWeight="700" sx={{ color: theme.primary }}>
-                    {sprint.usersAssigned?.reduce((sum, m) => sum + m.hours, 0) || 0}h
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-
-            {/* Observaciones */}
-            {sprint.observations && (
-              <Card
-                elevation={0}
-                sx={{
-                  background: theme.cardBg,
-                  borderRadius: 3,
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
+                <Box mt={3}>
                   <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: theme.primary }}>
-                    📋 Observaciones
+                    📋 Registros Recientes
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {sprint.observations}
-                  </Typography>
-                </CardContent>
-              </Card>
-            )}
+                  {recentRecords.length > 0 ? (
+                    <Box display="flex" flexDirection="column" gap={1}>
+                      {recentRecords.map((record, index) => (
+                        <Box
+                          key={index}
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          p={1.5}
+                          sx={{ 
+                            background: "#F8F9FA", 
+                            borderRadius: 1,
+                            border: "1px solid #e9ecef"
+                          }}
+                        >
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: theme.primary, fontSize: '0.8rem' }}>
+                              {record.developer?.split(' ').map(n => n[0]).join('') || 'U'}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" fontWeight="600">
+                                {record.developer}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {record.story}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Box textAlign="right">
+                            <Chip 
+                              label={`${record.points} pts`} 
+                              size="small"
+                              sx={{
+                                backgroundColor: theme.primary,
+                                color: "white",
+                                fontWeight: 600
+                              }}
+                            />
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              {record.time}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Box 
+                      sx={{ 
+                        p: 3, 
+                        textAlign: 'center', 
+                        background: "#F8F9FA", 
+                        borderRadius: 1,
+                        border: "1px solid #e9ecef"
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {completionsLoading ? "Cargando registros..." : "No hay registros recientes. Los puntos completados por los desarrolladores aparecerán aquí."}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* TERCERA FILA: Progreso de Miembros y Observaciones */}
+        <Grid container spacing={3}>
+          {/* 👥 Progreso de Miembros */}
+          <Grid item xs={12} md={8}>
+            <Card
+              elevation={0}
+              sx={{
+                background: theme.cardBg,
+                borderRadius: 2,
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                border: `1px solid #e0e0e0`,
+                height: '100%'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
+                  👥 Progreso de Miembros
+                </Typography>
+
+                {developerProgress.length > 0 ? (
+                  <Grid container spacing={2}>
+                    {developerProgress.map((dev) => (
+                      <Grid item xs={12} sm={6} key={dev.id}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                            background: "#F8F9FA",
+                            height: '100%'
+                          }}
+                        >
+                          <Box display="flex" alignItems="center" gap={2} mb={2}>
+                            <Avatar sx={{ bgcolor: theme.primary }}>
+                              {dev.avatar}
+                            </Avatar>
+                            <Box flex={1}>
+                              <Typography variant="body1" fontWeight="600">
+                                {dev.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {dev.role} • {dev.completed} / {dev.assigned} puntos
+                              </Typography>
+                            </Box>
+                          </Box>
+                          
+                          <LinearProgress
+                            variant="determinate"
+                            value={dev.assigned > 0 ? (dev.completed / dev.assigned) * 100 : 0}
+                            sx={{
+                              height: 8,
+                              borderRadius: 1,
+                              backgroundColor: "#E0E0E0",
+                              "& .MuiLinearProgress-bar": {
+                                background: theme.gradient,
+                              },
+                            }}
+                          />
+                          
+                          <Box display="flex" justifyContent="space-between" mt={1}>
+                            <Typography variant="caption" color="text.secondary">
+                              Progreso
+                            </Typography>
+                            <Typography variant="caption" fontWeight="600" sx={{ color: theme.primary }}>
+                              {dev.assigned > 0 ? Math.round((dev.completed / dev.assigned) * 100) : 0}%
+                            </Typography>
+                          </Box>
+
+                          <Box display="flex" gap={1} mt={1} flexWrap="wrap">
+                            <Chip 
+                              label={`Completado: ${dev.completed}pts`} 
+                              size="small"
+                              variant="outlined"
+                            />
+                            <Chip 
+                              label={`Restante: ${Math.max(0, dev.assigned - dev.completed)}pts`} 
+                              size="small"
+                              variant="outlined"
+                            />
+                          </Box>
+
+                          {dev.completion?.notes && (
+                            <Box mt={1}>
+                              <Typography variant="caption" color="text.secondary">
+                                <strong>Notas:</strong> {dev.completion.notes}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                ) : (
+                  <Box 
+                    sx={{ 
+                      p: 4, 
+                      textAlign: 'center', 
+                      background: "#F8F9FA", 
+                      borderRadius: 2,
+                      border: "1px solid #e9ecef"
+                    }}
+                  >
+                    <Typography variant="body1" color="text.secondary">
+                      No hay miembros asignados a este sprint.
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* 📋 Observaciones */}
+          <Grid item xs={12} md={4}>
+            <Card
+              elevation={0}
+              sx={{
+                background: theme.cardBg,
+                borderRadius: 2,
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                border: `1px solid #e0e0e0`,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: theme.primary }}>
+                  📋 Observaciones
+                </Typography>
+                <Box 
+                  sx={{ 
+                    flex: 1,
+                    minHeight: '200px',
+                    p: 2,
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 1,
+                    backgroundColor: "#F8F9FA",
+                    overflow: 'auto'
+                  }}
+                >
+                  {sprint.observations ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {sprint.observations}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                      No hay observaciones registradas para este sprint.
+                    </Typography>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
       </Box>
 
       {/* Dialog de confirmación de eliminación */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle sx={{ color: theme.primary, fontWeight: 700 }}>
-          ¿Eliminar Sprint?
+        <DialogTitle sx={{ color: '#d32f2f', fontWeight: 600 }}>
+          Confirmar Eliminación
         </DialogTitle>
         <DialogContent>
           <Typography>
@@ -591,16 +1131,13 @@ export default function SprintDetail() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: theme.primary }}>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
             Cancelar
           </Button>
           <Button 
             onClick={handleDeleteConfirm} 
+            color="error"
             variant="contained"
-            sx={{ 
-              bgcolor: "#f44336",
-              "&:hover": { bgcolor: "#d32f2f" }
-            }}
           >
             Eliminar
           </Button>
