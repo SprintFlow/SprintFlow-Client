@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tooltip,
+  Snackbar,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -31,89 +31,60 @@ import {
   Assessment,
   Edit,
   Delete,
-  CheckCircle,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import useSprintStore from "../store/SprintStore";
-import useAuthStore from "../store/authStore";
 
 export default function SprintDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { 
-    currentSprint, 
-    isLoading, 
-    error, 
-    fetchSprintById, 
-    deleteSprint,
-    clearError 
-  } = useSprintStore();
-  const { user } = useAuthStore();
+  const { currentSprint, isLoading, fetchSprintById, deleteSprint } = useSprintStore();
   
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, sprint: null });
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  // Tema verde profesional
+  // Tema verde menta profesional (IGUAL que AdminDashboard)
   const theme = {
     primary: "#4CAF50",
     primaryDark: "#45A049",
     primaryLight: "#81C784",
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    cardBg: "rgba(255, 255, 255, 0.95)",
+    background: "#e6f2ed",
+    cardBg: "#ffffff",
+    sprintCardBg: "#e6f2ed",
+    gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
+    gradientAlt: "linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)",
   };
 
   useEffect(() => {
-    console.log("📥 SprintDetail - ID recibido:", id);
-    console.log("👤 Usuario:", user);
-    
-    // Verificar si el usuario es admin
-    setIsAdmin(user?.role === 'admin' || user?.isAdmin);
-    
     if (id) {
-      console.log("🔄 Cargando sprint con ID:", id);
       fetchSprintById(id);
     }
-    
-    return () => {
-      clearError();
-    };
-  }, [id, user, fetchSprintById, clearError]);
-
-  // Debug
-  console.log("📊 SprintDetail - Estado actual:");
-  console.log("   - currentSprint:", currentSprint);
-  console.log("   - isLoading:", isLoading);
-  console.log("   - error:", error);
-  console.log("   - isAdmin:", isAdmin);
+  }, [id, fetchSprintById]);
 
   const handleBack = () => {
     navigate("/admin-dashboard");
   };
 
-  const handleEditSprint = () => {
-    navigate(`/create-edit-sprint/${id}`);
+  const handleEdit = () => {
+    navigate(`/edit-sprint/${id}`);
   };
 
-  const handleDeleteSprint = async () => {
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
       await deleteSprint(id);
-      setDeleteDialog({ open: false, sprint: null });
-      navigate("/admin-dashboard");
+      setSnackbar({ open: true, message: 'Sprint eliminado exitosamente', severity: 'success' });
+      setDeleteDialogOpen(false);
+      setTimeout(() => navigate('/admin-dashboard'), 1500);
     } catch (error) {
-      console.error("Error deleting sprint:", error);
+      setSnackbar({ open: true, message: 'Error al eliminar sprint', severity: 'error' });
     }
   };
 
-  const openDeleteDialog = () => {
-    setDeleteDialog({ open: true, sprint: currentSprint });
-  };
-
-  const closeDeleteDialog = () => {
-    setDeleteDialog({ open: false, sprint: null });
-  };
-
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("es-ES", {
       day: "2-digit",
@@ -123,35 +94,28 @@ export default function SprintDetail() {
   };
 
   const calculateDuration = (startDate, endDate) => {
-    if (!startDate || !endDate) return 0;
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     return diff + 1;
   };
 
   const getDaysElapsed = (startDate) => {
-    if (!startDate) return 0;
     const start = new Date(startDate);
     const today = new Date();
-    const diff = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
+    const diff = Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0, diff);
   };
 
   const getDaysRemaining = (endDate) => {
-    if (!endDate) return 0;
     const end = new Date(endDate);
     const today = new Date();
-    const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+    const diff = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0, diff);
   };
 
   const getStatusColor = (status) => {
-    const normalizedStatus = status === 'planned' ? 'Planificado' : 
-                            status === 'active' ? 'Activo' :
-                            status === 'completed' ? 'Completado' : status;
-    
-    switch (normalizedStatus) {
+    switch (status) {
       case "Activo":
         return "success";
       case "Planificado":
@@ -163,100 +127,72 @@ export default function SprintDetail() {
     }
   };
 
-  // ✅ FUNCIÓN PARA CORREGIR ESTADOS (igual que en AdminDashboard)
-  const getCorrectedStatus = (sprint) => {
-    if (!sprint) return "Planificado";
-    
-    const today = new Date();
-    const startDate = new Date(sprint.startDate);
-    const endDate = new Date(sprint.endDate);
-    
-    // Normalizar status
-    const normalizedStatus = sprint.status === 'planned' ? 'Planificado' : 
-                            sprint.status === 'active' ? 'Activo' :
-                            sprint.status === 'completed' ? 'Completado' : sprint.status;
-    
-    if (normalizedStatus === 'Activo' || normalizedStatus === 'Completado') {
-      return normalizedStatus;
-    }
-    
-    if (today >= startDate && today <= endDate) {
-      return 'Activo';
-    } else if (today > endDate) {
-      return 'Completado';
-    } else {
-      return 'Planificado';
-    }
-  };
-
-  if (isLoading) {
+  if (isLoading || !currentSprint) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress size={60} sx={{ color: "#4CAF50" }} />
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="100vh"
+        sx={{ backgroundColor: theme.background }}
+      >
+        <CircularProgress size={60} sx={{ color: theme.primary }} />
       </Box>
     );
   }
 
-  if (!currentSprint && !isLoading) {
-    return (
-      <Box sx={{ minHeight: "100vh", background: theme.background, py: 4 }}>
-        <Box sx={{ maxWidth: 1400, mx: "auto", px: 3 }}>
-          <Alert severity="error">
-            No se pudo cargar el sprint solicitado.
-          </Alert>
-          <Button 
-            startIcon={<ArrowBack />} 
-            onClick={handleBack}
-            sx={{ mt: 2 }}
-          >
-            Volver al Dashboard
-          </Button>
-        </Box>
-      </Box>
-    );
-  }
-
-  if (!currentSprint) {
-    return null;
-  }
-
-  const duration = calculateDuration(currentSprint.startDate, currentSprint.endDate);
-  const daysElapsed = getDaysElapsed(currentSprint.startDate);
-  const daysRemaining = getDaysRemaining(currentSprint.endDate);
-  const progress = getCorrectedStatus(currentSprint) === "Activo" ? 
-    (daysElapsed / duration) * 100 : 
-    getCorrectedStatus(currentSprint) === "Completado" ? 100 : 0;
-
-  const correctedStatus = getCorrectedStatus(currentSprint);
+  const sprint = currentSprint;
+  const duration = calculateDuration(sprint.startDate, sprint.endDate);
+  const daysElapsed = getDaysElapsed(sprint.startDate);
+  const daysRemaining = getDaysRemaining(sprint.endDate);
+  const progress = sprint.status === "Activo" ? (daysElapsed / duration) * 100 : sprint.status === "Completado" ? 100 : 0;
 
   return (
-    <Box sx={{ minHeight: "100vh", background: theme.background, py: 4 }}>
-      <Box sx={{ maxWidth: 1400, mx: "auto", px: 3 }}>
+    <Box sx={{ 
+      minHeight: "100vh", 
+      backgroundColor: theme.background,
+      width: "100%",
+      margin: 0,
+      padding: 0,
+    }}>
+      <Box sx={{ 
+        width: "100%",
+        px: { xs: 2, sm: 3, md: 4 },
+        py: 4,
+      }}>
         {/* Header */}
         <Box
           sx={{
             background: theme.cardBg,
-            backdropFilter: "blur(10px)",
             borderRadius: 3,
             p: 3,
             mb: 3,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
           }}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
-            <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+            <Box display="flex" alignItems="center" gap={2}>
               <Button
                 startIcon={<ArrowBack />}
                 onClick={handleBack}
                 variant="outlined"
-                sx={{ textTransform: "none", fontWeight: 600 }}
+                sx={{ 
+                  textTransform: "none", 
+                  fontWeight: 600,
+                  borderColor: theme.primary,
+                  color: theme.primary,
+                  "&:hover": {
+                    borderColor: theme.primaryDark,
+                    backgroundColor: "rgba(76, 175, 80, 0.04)",
+                  }
+                }}
               >
                 Volver al Dashboard
               </Button>
               <Divider orientation="vertical" flexItem />
               <Box>
-                <Typography variant="h4" fontWeight="800" sx={{ color: "#4CAF50" }}>
-                  {currentSprint.name}
+                <Typography variant="h4" fontWeight="700" sx={{ color: theme.primary }}>
+                  {sprint.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Detalle completo del sprint
@@ -265,58 +201,46 @@ export default function SprintDetail() {
             </Box>
             <Box display="flex" gap={2} flexWrap="wrap">
               <Chip
-                label={correctedStatus}
-                color={getStatusColor(currentSprint.status)}
-                sx={{ fontWeight: 700, px: 2, py: 2.5, fontSize: "0.875rem" }}
+                label={sprint.status}
+                color={getStatusColor(sprint.status)}
+                sx={{ fontWeight: 700, px: 2, py: 2.5 }}
               />
-              
-              {/* Solo mostrar botones de edición/eliminación para admins */}
-              {isAdmin && (
-                <>
-                  <Tooltip title="Editar Sprint">
-                    <Button
-                      startIcon={<Edit />}
-                      variant="contained"
-                      onClick={handleEditSprint}
-                      sx={{
-                        textTransform: "none",
-                        background: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
-                        "&:hover": {
-                          background: "linear-gradient(135deg, #45A049 0%, #66BB6A 100%)",
-                        }
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  </Tooltip>
-                  
-                  <Tooltip title="Eliminar Sprint">
-                    <Button
-                      startIcon={<Delete />}
-                      variant="outlined"
-                      color="error"
-                      onClick={openDeleteDialog}
-                      sx={{ textTransform: "none" }}
-                    >
-                      Eliminar
-                    </Button>
-                  </Tooltip>
-                </>
-              )}
+              <Button
+                startIcon={<Edit />}
+                variant="outlined"
+                onClick={handleEdit}
+                sx={{ 
+                  textTransform: "none",
+                  borderColor: theme.primary,
+                  color: theme.primary,
+                  fontWeight: 600,
+                  "&:hover": {
+                    borderColor: theme.primaryDark,
+                    backgroundColor: "rgba(76, 175, 80, 0.04)",
+                  }
+                }}
+              >
+                Editar
+              </Button>
+              <Button
+                startIcon={<Delete />}
+                variant="outlined"
+                onClick={handleDeleteClick}
+                sx={{ 
+                  textTransform: "none",
+                  borderColor: "#f44336",
+                  color: "#f44336",
+                  fontWeight: 600,
+                  "&:hover": {
+                    borderColor: "#d32f2f",
+                    backgroundColor: "rgba(244, 67, 54, 0.04)",
+                  }
+                }}
+              >
+                Eliminar
+              </Button>
             </Box>
           </Box>
-
-          {error && (
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mt: 2,
-                borderRadius: 2,
-              }}
-            >
-              {error}
-            </Alert>
-          )}
         </Box>
 
         {/* Información Principal */}
@@ -327,14 +251,13 @@ export default function SprintDetail() {
               elevation={0}
               sx={{
                 background: theme.cardBg,
-                backdropFilter: "blur(10px)",
                 borderRadius: 3,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
                 mb: 3,
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: "#4CAF50" }}>
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
                   📊 Progreso del Sprint
                 </Typography>
 
@@ -351,11 +274,11 @@ export default function SprintDetail() {
                     variant="determinate"
                     value={progress}
                     sx={{
-                      height: 12,
+                      height: 10,
                       borderRadius: 2,
-                      backgroundColor: "#e0e0e0",
+                      backgroundColor: "#E8F5E9",
                       "& .MuiLinearProgress-bar": {
-                        background: "linear-gradient(90deg, #4CAF50 0%, #81C784 100%)",
+                        background: theme.gradient,
                       },
                     }}
                   />
@@ -370,18 +293,18 @@ export default function SprintDetail() {
                       Puntos Completados
                     </Typography>
                     <Typography variant="body2" fontWeight={600}>
-                      0 / {currentSprint.plannedTotalPoints} puntos
+                      0 / {sprint.plannedTotalPoints} puntos
                     </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
                     value={0}
                     sx={{
-                      height: 12,
+                      height: 10,
                       borderRadius: 2,
-                      backgroundColor: "#e0e0e0",
+                      backgroundColor: "#E8F5E9",
                       "& .MuiLinearProgress-bar": {
-                        background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
+                        background: theme.gradient,
                       },
                     }}
                   />
@@ -394,8 +317,8 @@ export default function SprintDetail() {
 
                 <Grid container spacing={2}>
                   <Grid item xs={6} sm={3}>
-                    <Box textAlign="center" p={2} sx={{ background: "#E8F5E9", borderRadius: 2 }}>
-                      <Typography variant="h4" fontWeight="700" sx={{ color: "#4CAF50" }}>
+                    <Box textAlign="center" p={2} sx={{ background: "#F1F8E9", borderRadius: 2 }}>
+                      <Typography variant="h4" fontWeight="700" sx={{ color: theme.primary }}>
                         {duration}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -405,7 +328,7 @@ export default function SprintDetail() {
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Box textAlign="center" p={2} sx={{ background: "#E8F5E9", borderRadius: 2 }}>
-                      <Typography variant="h4" fontWeight="700" sx={{ color: "#4CAF50" }}>
+                      <Typography variant="h4" fontWeight="700" sx={{ color: "#26A69A" }}>
                         {daysElapsed}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -425,8 +348,8 @@ export default function SprintDetail() {
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Box textAlign="center" p={2} sx={{ background: "#E3F2FD", borderRadius: 2 }}>
-                      <Typography variant="h4" fontWeight="700" sx={{ color: "#1976D2" }}>
-                        {currentSprint.plannedTotalPoints}
+                      <Typography variant="h4" fontWeight="700" sx={{ color: "#42A5F5" }}>
+                        {sprint.plannedTotalPoints}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Puntos Totales
@@ -442,13 +365,12 @@ export default function SprintDetail() {
               elevation={0}
               sx={{
                 background: theme.cardBg,
-                backdropFilter: "blur(10px)",
                 borderRadius: 3,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: "#4CAF50" }}>
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
                   📝 Historias Planificadas
                 </Typography>
 
@@ -466,17 +388,17 @@ export default function SprintDetail() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {currentSprint.plannedStories?.map((story, index) => (
+                      {sprint.plannedStories?.map((story, index) => (
                         <TableRow key={index}>
                           <TableCell>
                             <Chip 
                               label={`${story.score} pts`} 
-                              sx={{ 
-                                backgroundColor: "#4CAF50",
-                                color: 'white',
+                              size="small"
+                              sx={{
+                                backgroundColor: "#E8F5E9",
+                                color: theme.primary,
                                 fontWeight: 600
-                              }} 
-                              size="small" 
+                              }}
                             />
                           </TableCell>
                           <TableCell align="center">
@@ -485,19 +407,19 @@ export default function SprintDetail() {
                             </Typography>
                           </TableCell>
                           <TableCell align="right">
-                            <Typography variant="h6" fontWeight="700" sx={{ color: "#4CAF50" }}>
+                            <Typography variant="h6" fontWeight="700" sx={{ color: theme.primary }}>
                               {(story.score * story.quantity).toFixed(1)} pts
                             </Typography>
                           </TableCell>
                         </TableRow>
                       ))}
-                      <TableRow sx={{ backgroundColor: "#E8F5E9" }}>
+                      <TableRow sx={{ backgroundColor: "#F1F8E9" }}>
                         <TableCell colSpan={2} sx={{ fontWeight: 700 }}>
                           TOTAL
                         </TableCell>
                         <TableCell align="right">
-                          <Typography variant="h5" fontWeight="800" sx={{ color: "#4CAF50" }}>
-                            {currentSprint.plannedTotalPoints} pts
+                          <Typography variant="h5" fontWeight="800" sx={{ color: theme.primary }}>
+                            {sprint.plannedTotalPoints} pts
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -514,19 +436,18 @@ export default function SprintDetail() {
               elevation={0}
               sx={{
                 background: theme.cardBg,
-                backdropFilter: "blur(10px)",
                 borderRadius: 3,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
                 mb: 3,
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: "#4CAF50" }}>
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
                   ℹ️ Información General
                 </Typography>
 
                 <Box display="flex" alignItems="center" gap={2} mb={3}>
-                  <Avatar sx={{ bgcolor: "#4CAF50" }}>
+                  <Avatar sx={{ bgcolor: theme.primary }}>
                     <CalendarToday />
                   </Avatar>
                   <Box>
@@ -534,13 +455,13 @@ export default function SprintDetail() {
                       Fecha de Inicio
                     </Typography>
                     <Typography variant="body1" fontWeight="600">
-                      {formatDate(currentSprint.startDate)}
+                      {formatDate(sprint.startDate)}
                     </Typography>
                   </Box>
                 </Box>
 
                 <Box display="flex" alignItems="center" gap={2} mb={3}>
-                  <Avatar sx={{ bgcolor: "#F44336" }}>
+                  <Avatar sx={{ bgcolor: "#f44336" }}>
                     <CalendarToday />
                   </Avatar>
                   <Box>
@@ -548,39 +469,23 @@ export default function SprintDetail() {
                       Fecha de Fin
                     </Typography>
                     <Typography variant="body1" fontWeight="600">
-                      {formatDate(currentSprint.endDate)}
+                      {formatDate(sprint.endDate)}
                     </Typography>
                   </Box>
                 </Box>
 
-                {currentSprint.description && (
-                  <Box display="flex" alignItems="flex-start" gap={2} mb={3}>
-                    <Avatar sx={{ bgcolor: "#2196F3" }}>
-                      <Assessment />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Descripción
-                      </Typography>
-                      <Typography variant="body2" fontWeight="600">
-                        {currentSprint.description}
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-
                 <Divider sx={{ my: 2 }} />
 
                 <Box display="flex" alignItems="center" gap={2}>
-                  <Avatar sx={{ bgcolor: "#4CAF50" }}>
-                    <CheckCircle />
+                  <Avatar sx={{ bgcolor: theme.primary }}>
+                    <Assessment />
                   </Avatar>
                   <Box>
                     <Typography variant="caption" color="text.secondary">
                       Estado del Sprint
                     </Typography>
                     <Typography variant="body1" fontWeight="600">
-                      {correctedStatus}
+                      {sprint.status}
                     </Typography>
                   </Box>
                 </Box>
@@ -592,48 +497,47 @@ export default function SprintDetail() {
               elevation={0}
               sx={{
                 background: theme.cardBg,
-                backdropFilter: "blur(10px)",
                 borderRadius: 3,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
                 mb: 3,
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: "#4CAF50" }}>
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: theme.primary }}>
                   👥 Equipo Asignado
                 </Typography>
 
                 <Box display="flex" flexDirection="column" gap={2}>
-                  {currentSprint.usersAssigned?.map((member, index) => (
+                  {sprint.usersAssigned?.map((member, index) => (
                     <Box
                       key={index}
                       display="flex"
                       alignItems="center"
                       justifyContent="space-between"
                       p={2}
-                      sx={{ background: "#F5F5F5", borderRadius: 2 }}
+                      sx={{ background: "#F1F8E9", borderRadius: 2 }}
                     >
                       <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar sx={{ bgcolor: "#4CAF50", fontSize: '0.875rem' }}>
-                          {index + 1}
+                        <Avatar sx={{ bgcolor: theme.primary }}>
+                          {member.userId?.name?.charAt(0).toUpperCase() || index + 1}
                         </Avatar>
                         <Box>
                           <Typography variant="body2" fontWeight="600">
-                            Miembro {index + 1}
+                            {member.userId?.name || `Miembro ${index + 1}`}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            ID: {member.userId?.slice(0, 8)}...
+                            {member.userId?.email || 'Sin email'}
                           </Typography>
                         </Box>
                       </Box>
                       <Chip 
                         label={`${member.hours}h`} 
                         size="small" 
-                        sx={{ 
-                          backgroundColor: "#4CAF50",
-                          color: 'white',
+                        sx={{
+                          backgroundColor: theme.primary,
+                          color: "white",
                           fontWeight: 600
-                        }} 
+                        }}
                       />
                     </Box>
                   ))}
@@ -645,30 +549,29 @@ export default function SprintDetail() {
                   <Typography variant="body2" fontWeight="600">
                     Total de Horas
                   </Typography>
-                  <Typography variant="h5" fontWeight="700" sx={{ color: "#4CAF50" }}>
-                    {currentSprint.usersAssigned?.reduce((sum, m) => sum + m.hours, 0) || 0}h
+                  <Typography variant="h5" fontWeight="700" sx={{ color: theme.primary }}>
+                    {sprint.usersAssigned?.reduce((sum, m) => sum + m.hours, 0) || 0}h
                   </Typography>
                 </Box>
               </CardContent>
             </Card>
 
             {/* Observaciones */}
-            {currentSprint.observations && (
+            {sprint.observations && (
               <Card
                 elevation={0}
                 sx={{
                   background: theme.cardBg,
-                  backdropFilter: "blur(10px)",
                   borderRadius: 3,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: "#4CAF50" }}>
+                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: theme.primary }}>
                     📋 Observaciones
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {currentSprint.observations}
+                    {sprint.observations}
                   </Typography>
                 </CardContent>
               </Card>
@@ -677,36 +580,43 @@ export default function SprintDetail() {
         </Grid>
       </Box>
 
-      {/* Dialog de Confirmación para Eliminar */}
-      <Dialog
-        open={deleteDialog.open}
-        onClose={closeDeleteDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle sx={{ color: '#f44336', fontWeight: 600 }}>
-          🚨 Confirmar Eliminación
+      {/* Dialog de confirmación de eliminación */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle sx={{ color: theme.primary, fontWeight: 700 }}>
+          ¿Eliminar Sprint?
         </DialogTitle>
         <DialogContent>
           <Typography>
-            ¿Estás seguro de que quieres eliminar el sprint "{deleteDialog.sprint?.name}"? 
-            Esta acción no se puede deshacer y se perderán todos los datos asociados.
+            ¿Estás seguro de que quieres eliminar el sprint "{sprint.name}"? Esta acción no se puede deshacer.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDeleteDialog} color="primary">
+          <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: theme.primary }}>
             Cancelar
           </Button>
           <Button 
-            onClick={handleDeleteSprint} 
-            color="error"
+            onClick={handleDeleteConfirm} 
             variant="contained"
-            startIcon={<Delete />}
+            sx={{ 
+              bgcolor: "#f44336",
+              "&:hover": { bgcolor: "#d32f2f" }
+            }}
           >
-            Sí, Eliminar Sprint
+            Eliminar
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar para notificaciones */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

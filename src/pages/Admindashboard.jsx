@@ -98,9 +98,9 @@ export default function AdminDashboard() {
     }
   }, [sprints]);
 
-  const handleCreateEditSprint = () => {
+  const handleCreateSprint = () => {
     console.log("➕ Creando nuevo sprint");
-    navigate("/create-edit-sprint");
+    navigate("/create-sprint");
   };
 
   const handleViewSprint = (sprintId) => {
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
 
   const handleEditSprint = (sprintId) => {
     console.log("✏️ Editando sprint:", sprintId);
-    navigate(`/create-edit-sprint/${sprintId}`);
+    navigate(`/edit-sprint/${sprintId}`);
   };
 
   const handleDeleteSprint = async (sprintId) => {
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
                 variant="contained"
                 size="large"
                 startIcon={<AddIcon />}
-                onClick={handleCreateEditSprint}
+                onClick={handleCreateSprint}
                 sx={{
                   background: theme.gradient,
                   textTransform: "none",
@@ -713,7 +713,7 @@ export default function AdminDashboard() {
                     variant="contained"
                     size="large"
                     startIcon={<AddIcon />}
-                    onClick={handleCreateEditSprint}
+                    onClick={handleCreateSprint}
                     sx={{
                       background: theme.gradient,
                       textTransform: "none",

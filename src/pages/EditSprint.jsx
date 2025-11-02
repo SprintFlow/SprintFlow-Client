@@ -20,12 +20,23 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import { ArrowLeft, Save } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowBack, Save } from "@mui/icons-material";
+import { useNavigate, useParams } from "react-router-dom";
 import UserService from "../services/UserService";
 import useSprintStore from "../store/SprintStore";
 
-// Escala Fibonacci con ponderaciones
+// Tema verde menta profesional
+const theme = {
+  primary: "#4CAF50",
+  primaryDark: "#45A049",
+  primaryLight: "#81C784",
+  background: "#e6f2ed",
+  cardBg: "#ffffff",
+  gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
+  gradientAlt: "linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)",
+};
+
+// Escala Fibonacci
 const FIBONACCI_SCALE = [
   { points: 0.5, weight: 1.0 },
   { points: 1, weight: 1.1 },
@@ -37,15 +48,16 @@ const FIBONACCI_SCALE = [
   { points: 21, weight: 2.5 },
 ];
 
-export default function CreateSprint() {
+export default function EditSprint() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { currentSprint, fetchSprintById, updateSprint } = useSprintStore();
 
-  // Estados principales
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  // Datos del sprint
   const [sprintData, setSprintData] = useState({
     name: "",
     startDate: "",
@@ -53,69 +65,86 @@ export default function CreateSprint() {
     observations: "",
   });
 
-  // Puntuaciones planificadas (cantidad por cada valor Fibonacci)
   const [storyPoints, setStoryPoints] = useState({
-    0.5: 0,
-    1: 0,
-    2: 0,
-    3: 0,
-    5: 0,
-    8: 0,
-    13: 0,
-    21: 0,
+    0.5: 0, 1: 0, 2: 0, 3: 0, 5: 0, 8: 0, 13: 0, 21: 0,
   });
 
-  // Equipo asignado
   const [availableUsers, setAvailableUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [userHours, setUserHours] = useState({});
 
-  // Cargar usuarios disponibles
+  // Cargar datos del sprint
+  useEffect(() => {
+    const loadSprint = async () => {
+      try {
+        setLoadingData(true);
+        await fetchSprintById(id);
+      } catch (err) {
+        setError("No se pudo cargar el sprint");
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    loadSprint();
+  }, [id, fetchSprintById]);
+
+  // Cargar usuarios
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const users = await UserService.getAll();
         setAvailableUsers(users);
       } catch (err) {
-        console.error("Error cargando usuarios:", err);
-        setError("No se pudieron cargar los usuarios disponibles");
+        setError("No se pudieron cargar los usuarios");
       }
     };
     fetchUsers();
   }, []);
 
-  // Calcular duración del sprint en días
-  const getSprintDuration = () => {
-    if (!sprintData.startDate || !sprintData.endDate) return 0;
-    const start = new Date(sprintData.startDate);
-    const end = new Date(sprintData.endDate);
-    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return diff + 1; // Incluir día final
-  };
+  // Llenar formulario con datos del sprint
+  useEffect(() => {
+    if (currentSprint) {
+      setSprintData({
+        name: currentSprint.name || "",
+        startDate: currentSprint.startDate?.split('T')[0] || "",
+        endDate: currentSprint.endDate?.split('T')[0] || "",
+        observations: currentSprint.observations || "",
+      });
 
-  // Calcular velocidad ideal (con ponderación)
-  const calculateIdealVelocity = () => {
-    return FIBONACCI_SCALE.reduce((total, fib) => {
-      const count = storyPoints[fib.points] || 0;
-      return total + (fib.points * count * fib.weight);
-    }, 0);
-  };
+      // Story points
+      const newStoryPoints = { 0.5: 0, 1: 0, 2: 0, 3: 0, 5: 0, 8: 0, 13: 0, 21: 0 };
+      if (currentSprint.plannedStories) {
+        currentSprint.plannedStories.forEach((story) => {
+          newStoryPoints[story.score] = story.quantity;
+        });
+      }
+      setStoryPoints(newStoryPoints);
 
-  // Calcular total de puntos planificados (sin ponderación)
+      // Usuarios
+      if (currentSprint.usersAssigned) {
+        const userIds = currentSprint.usersAssigned.map((u) => u.userId._id || u.userId);
+        const hours = {};
+        currentSprint.usersAssigned.forEach((u) => {
+          const userId = u.userId._id || u.userId;
+          hours[userId] = u.hours;
+        });
+        setSelectedUsers(userIds);
+        setUserHours(hours);
+      }
+    }
+  }, [currentSprint]);
+
   const calculateTotalPoints = () => {
     return FIBONACCI_SCALE.reduce((total, fib) => {
-      const count = storyPoints[fib.points] || 0;
-      return total + (fib.points * count);
+      return total + (fib.points * (storyPoints[fib.points] || 0));
     }, 0);
   };
 
-  // Manejar cambio en campos básicos
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setSprintData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Manejar cambio en cantidad de historias
   const handleStoryPointChange = (points, value) => {
     setStoryPoints((prev) => ({
       ...prev,
@@ -123,54 +152,42 @@ export default function CreateSprint() {
     }));
   };
 
-  // Manejar selección de usuarios
   const handleUserToggle = (userId) => {
     setSelectedUsers((prev) => {
       if (prev.includes(userId)) {
-        // Remover usuario
         const newSelected = prev.filter((id) => id !== userId);
         const newHours = { ...userHours };
         delete newHours[userId];
         setUserHours(newHours);
         return newSelected;
       } else {
-        // Añadir usuario con horas por defecto
         setUserHours((h) => ({ ...h, [userId]: 40 }));
         return [...prev, userId];
       }
     });
   };
 
-  // Manejar cambio de horas de usuario
   const handleHoursChange = (userId, hours) => {
     setUserHours((prev) => ({ ...prev, [userId]: parseInt(hours) || 0 }));
   };
 
-  // Función para volver
   const handleBack = () => {
-    navigate("/admin-dashboard");
+    navigate(`/sprint-detail/${id}`);
   };
 
-  // Guardar sprint
-  const handleSaveSprint = async () => {
-    // Validaciones
+  const handleSave = async () => {
     if (!sprintData.name || !sprintData.startDate || !sprintData.endDate) {
-      setError("Completa los campos obligatorios: nombre y fechas");
-      return;
-    }
-
-    if (new Date(sprintData.startDate) >= new Date(sprintData.endDate)) {
-      setError("La fecha de fin debe ser posterior a la fecha de inicio");
+      setError("Completa todos los campos obligatorios");
       return;
     }
 
     if (selectedUsers.length === 0) {
-      setError("Debes seleccionar al menos un miembro del equipo");
+      setError("Selecciona al menos un miembro del equipo");
       return;
     }
 
     if (calculateTotalPoints() === 0) {
-      setError("Debes planificar al menos una historia con puntuación");
+      setError("Planifica al menos una historia");
       return;
     }
 
@@ -178,7 +195,6 @@ export default function CreateSprint() {
       setLoading(true);
       setError(null);
 
-      // Preparar plannedStories en el formato del backend
       const plannedStories = FIBONACCI_SCALE
         .filter((fib) => storyPoints[fib.points] > 0)
         .map((fib) => ({
@@ -186,100 +202,81 @@ export default function CreateSprint() {
           quantity: storyPoints[fib.points],
         }));
 
-      // Preparar usersAssigned
       const usersAssigned = selectedUsers.map((userId) => ({
         userId,
         hours: userHours[userId] || 0,
       }));
 
-      // Crear payload
       const payload = {
-        name: sprintData.name,
-        startDate: sprintData.startDate,
-        endDate: sprintData.endDate,
-        status: "Planificado", // Siempre empieza como Planificado
-        observations: sprintData.observations,
+        ...sprintData,
+        status: currentSprint.status,
         plannedStories,
         usersAssigned,
       };
 
-      console.log("📤 Enviando sprint:", payload);
-
-      // Llamar al store para crear
-      const result = await useSprintStore.getState().createSprint(payload);
-
-      console.log("📥 Respuesta del servidor:", result);
-
-      if (result && result.success) {
-        setSuccess("¡Sprint creado exitosamente!");
-        console.log("✅ Sprint guardado:", result.sprint);
-        
-        setTimeout(() => {
-          navigate("/admin-dashboard");
-        }, 1500);
-      } else {
-        console.error("❌ Error al guardar sprint:", result);
-        setError("Error al crear el sprint. Verifica la consola del servidor.");
-      }
+      console.log("📤 Actualizando sprint:", payload);
+      await updateSprint(id, payload);
+      
+      setSuccess("¡Sprint actualizado exitosamente!");
+      setTimeout(() => {
+        navigate(`/sprint-detail/${id}`);
+      }, 1500);
     } catch (err) {
-      console.error("❌ Error capturado:", err);
-      setError(`Error de conexión: ${err.message || "Error desconocido"}`);
+      console.error("❌ Error:", err);
+      setError(err.message || "Error al actualizar sprint");
     } finally {
       setLoading(false);
     }
   };
 
-  const totalPoints = calculateTotalPoints();
-  const idealVelocity = calculateIdealVelocity();
-  const duration = getSprintDuration();
+  if (loadingData) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" sx={{ backgroundColor: theme.background }}>
+        <CircularProgress size={60} sx={{ color: theme.primary }} />
+      </Box>
+    );
+  }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        p: 4,
-        backgroundColor: "#fafafa",
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", backgroundColor: theme.background, py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
       {/* Header */}
-      <Box display="flex" alignItems="center" gap={2} mb={4}>
-        <Button
-          startIcon={<ArrowLeft size={18} />}
-          variant="outlined"
-          onClick={handleBack}
-        >
-          Volver
-        </Button>
-        <Box>
-          <Typography variant="h5" fontWeight="600">
-            Crear Nuevo Sprint
-          </Typography>
-          <Typography color="text.secondary">
-            Planifica el sprint y asigna el equipo
-          </Typography>
+      <Box sx={{ background: theme.cardBg, borderRadius: 3, p: 3, mb: 3, boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)" }}>
+        <Box display="flex" alignItems="center" gap={2} mb={2}>
+          <Button
+            startIcon={<ArrowBack />}
+            variant="outlined"
+            onClick={handleBack}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderColor: theme.primary,
+              color: theme.primary,
+              "&:hover": { borderColor: theme.primaryDark, backgroundColor: "rgba(76, 175, 80, 0.04)" },
+            }}
+          >
+            Volver
+          </Button>
+          <Box>
+            <Typography variant="h4" fontWeight="700" sx={{ color: theme.primary }}>
+              Editar Sprint
+            </Typography>
+            <Typography color="text.secondary">
+              Modifica los datos del sprint
+            </Typography>
+          </Box>
         </Box>
       </Box>
 
-      {/* Mensajes */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
       <Box sx={{ maxWidth: 1200, mx: "auto", width: "100%" }}>
         {/* Información Básica */}
-        <Card sx={{ mb: 3 }}>
+        <Card elevation={0} sx={{ mb: 3, borderRadius: 3, boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)" }}>
           <CardHeader
             title="Información del Sprint"
-            subheader="Datos generales del sprint"
+            subheader="Datos generales"
+            sx={{ "& .MuiCardHeader-title": { color: theme.primary, fontWeight: 700 } }}
           />
           <CardContent>
             <Box display="flex" flexDirection="column" gap={2}>
@@ -288,11 +285,10 @@ export default function CreateSprint() {
                 name="name"
                 value={sprintData.name}
                 onChange={handleInputChange}
-                placeholder="Ej: Sprint Q1 2025"
                 required
                 fullWidth
               />
-              <Box display="flex" gap={2}>
+              <Box display="flex" gap={2} flexDirection={{ xs: "column", sm: "row" }}>
                 <TextField
                   label="Fecha de Inicio"
                   name="startDate"
@@ -314,11 +310,6 @@ export default function CreateSprint() {
                   fullWidth
                 />
               </Box>
-              {duration > 0 && (
-                <Alert severity="info">
-                  <strong>Duración del sprint:</strong> {duration} días
-                </Alert>
-              )}
               <TextField
                 label="Observaciones"
                 name="observations"
@@ -326,18 +317,18 @@ export default function CreateSprint() {
                 minRows={3}
                 value={sprintData.observations}
                 onChange={handleInputChange}
-                placeholder="Notas o comentarios sobre el sprint..."
                 fullWidth
               />
             </Box>
           </CardContent>
         </Card>
 
-        {/* Planificación de Historias con Fibonacci */}
-        <Card sx={{ mb: 3 }}>
+        {/* Historias Planificadas */}
+        <Card elevation={0} sx={{ mb: 3, borderRadius: 3, boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)" }}>
           <CardHeader
             title="Historias Planificadas"
-            subheader="Indica la cantidad de historias para cada puntuación Fibonacci"
+            subheader="Cantidad por puntuación Fibonacci"
+            sx={{ "& .MuiCardHeader-title": { color: theme.primary, fontWeight: 700 } }}
           />
           <CardContent>
             <TableContainer component={Paper} variant="outlined">
@@ -347,16 +338,13 @@ export default function CreateSprint() {
                     <TableCell sx={{ fontWeight: 600 }}>Puntuación</TableCell>
                     {FIBONACCI_SCALE.map((fib) => (
                       <TableCell key={fib.points} align="center">
-                        <Chip label={fib.points} color="primary" size="small" />
+                        <Chip label={fib.points} size="small" sx={{ backgroundColor: theme.primary, color: "white", fontWeight: 600 }} />
                       </TableCell>
                     ))}
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>
-                      Total
-                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600 }}>Total</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {/* Fila de Cantidad */}
                   <TableRow>
                     <TableCell sx={{ fontWeight: 500 }}>Nº Historias</TableCell>
                     {FIBONACCI_SCALE.map((fib) => (
@@ -365,77 +353,46 @@ export default function CreateSprint() {
                           type="number"
                           inputProps={{ min: 0, style: { textAlign: "center" } }}
                           value={storyPoints[fib.points]}
-                          onChange={(e) =>
-                            handleStoryPointChange(fib.points, e.target.value)
-                          }
+                          onChange={(e) => handleStoryPointChange(fib.points, e.target.value)}
                           sx={{ width: 70 }}
                         />
                       </TableCell>
                     ))}
                     <TableCell align="center" sx={{ fontWeight: 600, fontSize: 16 }}>
-                      {FIBONACCI_SCALE.reduce(
-                        (sum, fib) => sum + (storyPoints[fib.points] || 0),
-                        0
-                      )}
+                      {FIBONACCI_SCALE.reduce((sum, fib) => sum + (storyPoints[fib.points] || 0), 0)}
                     </TableCell>
                   </TableRow>
-
-                  {/* Fila de Ponderado */}
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    <TableCell sx={{ fontWeight: 500 }}>Ponderado</TableCell>
-                    {FIBONACCI_SCALE.map((fib) => (
-                      <TableCell key={fib.points} align="center" sx={{ color: "text.secondary" }}>
-                        {fib.weight.toFixed(1)}
-                      </TableCell>
-                    ))}
-                    <TableCell />
-                  </TableRow>
-
-                  {/* Fila de Subtotal */}
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 500 }}>Subtotal Puntos</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>Subtotal</TableCell>
                     {FIBONACCI_SCALE.map((fib) => {
-                      const count = storyPoints[fib.points] || 0;
-                      const subtotal = fib.points * count;
+                      const subtotal = fib.points * (storyPoints[fib.points] || 0);
                       return (
                         <TableCell key={fib.points} align="center" sx={{ fontWeight: 600 }}>
                           {subtotal.toFixed(1)}
                         </TableCell>
                       );
                     })}
-                    <TableCell align="center" sx={{ fontWeight: 600, fontSize: 16, color: "primary.main" }}>
-                      {totalPoints.toFixed(1)}
+                    <TableCell align="center" sx={{ fontWeight: 600, fontSize: 16, color: theme.primary }}>
+                      {calculateTotalPoints().toFixed(1)}
                     </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>
-
-            <Box mt={3} display="flex" gap={3}>
-              <Alert severity="success" sx={{ flex: 1 }}>
-                <Typography variant="body2">
-                  <strong>Total Puntos Planificados:</strong> {totalPoints.toFixed(1)} puntos
-                </Typography>
-              </Alert>
-              <Alert severity="info" sx={{ flex: 1 }}>
-                <Typography variant="body2">
-                  <strong>Velocidad Ideal (ponderada):</strong> {idealVelocity.toFixed(2)}
-                </Typography>
-              </Alert>
-            </Box>
           </CardContent>
         </Card>
 
-        {/* Equipo Asignado */}
-        <Card sx={{ mb: 3 }}>
+        {/* Equipo */}
+        <Card elevation={0} sx={{ mb: 3, borderRadius: 3, boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)" }}>
           <CardHeader
             title="Equipo Asignado"
-            subheader="Selecciona los miembros del equipo y sus horas dedicadas"
+            subheader="Miembros y horas dedicadas"
+            sx={{ "& .MuiCardHeader-title": { color: theme.primary, fontWeight: 700 } }}
           />
           <CardContent>
             {availableUsers.length === 0 ? (
               <Box display="flex" justifyContent="center" py={3}>
-                <CircularProgress />
+                <CircularProgress sx={{ color: theme.primary }} />
               </Box>
             ) : (
               <Box display="flex" flexDirection="column" gap={2}>
@@ -450,23 +407,21 @@ export default function CreateSprint() {
                       p={2}
                       border="1px solid #ddd"
                       borderRadius={2}
-                      sx={{
-                        backgroundColor: isSelected ? "#f0f7ff" : "white",
-                        transition: "all 0.2s",
-                      }}
+                      sx={{ backgroundColor: isSelected ? "#F1F8E9" : "white" }}
                     >
                       <FormControlLabel
                         control={
                           <Checkbox
                             checked={isSelected}
                             onChange={() => handleUserToggle(user._id)}
+                            sx={{ color: theme.primary, "&.Mui-checked": { color: theme.primary } }}
                           />
                         }
                         label={
                           <Box>
                             <Typography fontWeight="500">{user.name}</Typography>
                             <Typography variant="body2" color="text.secondary">
-                              {user.email} • {user.role}
+                              {user.email}
                             </Typography>
                           </Box>
                         }
@@ -488,31 +443,39 @@ export default function CreateSprint() {
                 })}
               </Box>
             )}
-
-            {selectedUsers.length > 0 && (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                <Typography variant="body2">
-                  <strong>Equipo seleccionado:</strong> {selectedUsers.length} miembros •{" "}
-                  <strong>Total horas:</strong>{" "}
-                  {Object.values(userHours).reduce((sum, h) => sum + h, 0)} horas
-                </Typography>
-              </Alert>
-            )}
           </CardContent>
         </Card>
 
-        {/* Botones de acción */}
-        <Box display="flex" justifyContent="space-between">
-          <Button variant="outlined" onClick={handleBack} disabled={loading}>
+        {/* Botones */}
+        <Box display="flex" justifyContent="space-between" gap={2}>
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            disabled={loading}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderColor: theme.primary,
+              color: theme.primary,
+              "&:hover": { borderColor: theme.primaryDark, backgroundColor: "rgba(76, 175, 80, 0.04)" },
+            }}
+          >
             Cancelar
           </Button>
           <Button
             variant="contained"
-            startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <Save size={18} />}
-            onClick={handleSaveSprint}
+            startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <Save />}
+            onClick={handleSave}
             disabled={loading}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              background: theme.gradient,
+              boxShadow: "0 4px 12px rgba(76, 175, 80, 0.25)",
+              "&:hover": { background: theme.gradientAlt, boxShadow: "0 6px 16px rgba(76, 175, 80, 0.35)" },
+            }}
           >
-            {loading ? "Guardando..." : "Crear Sprint"}
+            {loading ? "Guardando..." : "Actualizar Sprint"}
           </Button>
         </Box>
       </Box>
