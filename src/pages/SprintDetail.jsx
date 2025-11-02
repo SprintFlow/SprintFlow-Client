@@ -44,7 +44,7 @@ export default function SprintDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentSprint, isLoading, fetchSprintById, deleteSprint } = useSprintStore();
-  
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [completions, setCompletions] = useState([]);
@@ -64,7 +64,7 @@ export default function SprintDetail() {
   // Colores para estados de sprints
   const statusColors = {
     Activo: "#1976D2",
-    Planificado: "#7B1FA2", 
+    Planificado: "#7B1FA2",
     Completado: "#2E7D32",
     "Completado Parcial": "#FF9800",
   };
@@ -129,7 +129,7 @@ export default function SprintDetail() {
     const today = new Date();
     const startDate = new Date(sprint.startDate);
     const endDate = new Date(sprint.endDate);
-    
+
     let status;
     if (today < startDate) {
       status = "Planificado";
@@ -138,17 +138,17 @@ export default function SprintDetail() {
     } else {
       status = "Completado";
     }
-    
+
     // Si está completado, verificar si alcanzó los puntos planificados
     if (status === "Completado") {
       const plannedPoints = sprint.plannedTotalPoints || 0;
       const completedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
-      
+
       if (plannedPoints > 0 && completedPoints < plannedPoints) {
         return "Completado Parcial";
       }
     }
-    
+
     return status;
   };
 
@@ -177,13 +177,13 @@ export default function SprintDetail() {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const today = new Date();
-    
+
     // Si el sprint ya terminó, usar la fecha de fin
     if (today > end) {
       const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
       return Math.max(0, diff + 1); // +1 para incluir el día de inicio
     }
-    
+
     // Si el sprint está activo, calcular días desde inicio hasta hoy
     const diff = Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0, diff + 1); // +1 para incluir el día de inicio
@@ -194,7 +194,7 @@ export default function SprintDetail() {
     const today = new Date();
     // Si el sprint ya terminó, mostrar 0 días restantes
     if (today > end) return 0;
-    
+
     const diff = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0, diff);
   };
@@ -228,16 +228,16 @@ export default function SprintDetail() {
     const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
     const plannedPoints = sprint.plannedTotalPoints || 0;
     const completedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
-    
+
     // Velocidad ideal (puntos por día según planificación)
     const idealVelocity = duration > 0 ? (plannedPoints / duration).toFixed(1) : 0;
-    
+
     // Velocidad equivalente (puntos por día realmente completados)
     const equivalentVelocity = daysElapsed > 0 ? (completedPoints / daysElapsed).toFixed(1) : 0;
-    
+
     // Días con interrupciones (días sin progreso)
     const interruptionDays = Math.max(0, daysElapsed - (completedPoints / (plannedPoints / duration)));
-    
+
     return {
       idealVelocity,
       equivalentVelocity,
@@ -278,7 +278,7 @@ export default function SprintDetail() {
   // Obtener registros recientes de puntos desde los completions
   const getRecentRecords = () => {
     const records = [];
-    
+
     completions.forEach(completion => {
       if (completion.completedStories) {
         completion.completedStories.forEach(story => {
@@ -287,9 +287,9 @@ export default function SprintDetail() {
               developer: completion.userId?.name || 'Usuario',
               points: story.score * story.completedCount,
               story: `Completado: ${story.completedCount} de ${story.score}pts`,
-              time: new Date(completion.updatedAt).toLocaleTimeString('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+              time: new Date(completion.updatedAt).toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
               }),
               date: completion.updatedAt
             });
@@ -307,25 +307,19 @@ export default function SprintDetail() {
   // Calcular progreso individual de desarrolladores
   const getDeveloperProgress = (sprint) => {
     if (!sprint.usersAssigned || !sprint.usersAssigned.length) return [];
-    
+
     return sprint.usersAssigned.map((member) => {
       const user = member.userId || {};
       const userCompletion = completions.find(c => c.userId?._id === user._id);
       const completedPoints = userCompletion?.totalAchievedPoints || 0;
-      
-      // Calcular puntos asignados (distribución proporcional basada en horas)
-      const totalHours = sprint.usersAssigned.reduce((sum, m) => sum + m.hours, 0);
-      const assignedPoints = totalHours > 0 
-        ? Math.round((member.hours / totalHours) * sprint.plannedTotalPoints)
-        : Math.round(sprint.plannedTotalPoints / sprint.usersAssigned.length);
-      
+
       return {
         id: user._id || member._id,
         name: user.name || `Usuario ${member._id}`,
         email: user.email || '',
         avatar: user.name ? user.name.charAt(0).toUpperCase() : 'U',
         completed: completedPoints,
-        assigned: assignedPoints,
+        hours: member.hours || 0, // Horas reales del sprint
         role: user.role || 'Developer',
         completion: userCompletion
       };
@@ -334,10 +328,10 @@ export default function SprintDetail() {
 
   if (isLoading || !currentSprint) {
     return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         minHeight="100vh"
         sx={{ backgroundColor: theme.background }}
       >
@@ -357,15 +351,15 @@ export default function SprintDetail() {
   const recentRecords = getRecentRecords();
   const developerProgress = getDeveloperProgress(sprint);
   const totalCompletedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
-  
+
   // Calcular progreso temporal CORREGIDO
-  const timeProgress = sprintStatus === "Completado" || sprintStatus === "Completado Parcial" 
-    ? 100 
+  const timeProgress = sprintStatus === "Completado" || sprintStatus === "Completado Parcial"
+    ? 100
     : Math.min(100, (daysElapsed / duration) * 100);
 
   return (
-    <Box sx={{ 
-      minHeight: "100vh", 
+    <Box sx={{
+      minHeight: "100vh",
       backgroundColor: theme.background,
       width: "100vw",
       margin: 0,
@@ -373,7 +367,7 @@ export default function SprintDetail() {
       overflowX: 'hidden'
     }}>
       {/* Container principal sin maxWidth para ocupar todo el ancho */}
-      <Box sx={{ 
+      <Box sx={{
         width: "100%",
         px: { xs: 2, sm: 3, md: 4 },
         py: 4,
@@ -395,8 +389,8 @@ export default function SprintDetail() {
                 startIcon={<ArrowBack />}
                 onClick={handleBack}
                 variant="outlined"
-                sx={{ 
-                  textTransform: "none", 
+                sx={{
+                  textTransform: "none",
                   fontWeight: 600,
                   borderColor: theme.primary,
                   color: theme.primary,
@@ -422,9 +416,9 @@ export default function SprintDetail() {
               <Chip
                 label={sprintStatus}
                 color={getStatusColor(sprint)}
-                sx={{ 
-                  fontWeight: 700, 
-                  px: 2, 
+                sx={{
+                  fontWeight: 700,
+                  px: 2,
                   py: 2.5,
                   backgroundColor: statusColors[sprintStatus],
                   color: 'white'
@@ -434,7 +428,7 @@ export default function SprintDetail() {
                 startIcon={<Edit />}
                 variant="outlined"
                 onClick={handleEdit}
-                sx={{ 
+                sx={{
                   textTransform: "none",
                   borderColor: theme.primary,
                   color: theme.primary,
@@ -451,7 +445,7 @@ export default function SprintDetail() {
                 startIcon={<Delete />}
                 variant="outlined"
                 onClick={handleDeleteClick}
-                sx={{ 
+                sx={{
                   textTransform: "none",
                   borderColor: "#f44336",
                   color: "#f44336",
@@ -653,22 +647,22 @@ export default function SprintDetail() {
                 <Divider sx={{ my: 2 }} />
 
                 {/* Indicador de Rendimiento */}
-                <Box 
-                  sx={{ 
-                    p: 2, 
+                <Box
+                  sx={{
+                    p: 2,
                     borderRadius: 2,
-                    background: velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity 
-                      ? "#E8F5E9" 
+                    background: velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity
+                      ? "#E8F5E9"
                       : "#FFF3E0"
                   }}
                 >
-                  <Typography variant="body2" fontWeight="600" sx={{ 
-                    color: velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity 
-                      ? "#2E7D32" 
+                  <Typography variant="body2" fontWeight="600" sx={{
+                    color: velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity
+                      ? "#2E7D32"
                       : "#F57F17"
                   }}>
-                    {velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity 
-                      ? "✅ En camino de completar a tiempo" 
+                    {velocityMetrics.equivalentVelocity >= velocityMetrics.idealVelocity
+                      ? "✅ En camino de completar a tiempo"
                       : "⚠️ Necesita acelerar el ritmo"
                     }
                   </Typography>
@@ -792,8 +786,8 @@ export default function SprintDetail() {
                       {sprint.plannedStories?.map((story, index) => (
                         <TableRow key={index}>
                           <TableCell>
-                            <Chip 
-                              label={`${story.score} pts`} 
+                            <Chip
+                              label={`${story.score} pts`}
                               size="small"
                               sx={{
                                 backgroundColor: "#E8F5E9",
@@ -865,8 +859,8 @@ export default function SprintDetail() {
                         <TableCell sx={{ fontWeight: 700 }}>Planificado</TableCell>
                         {pointsData.planned.map((count, index) => (
                           <TableCell key={index} align="center">
-                            <Chip 
-                              label={count} 
+                            <Chip
+                              label={count}
                               size="small"
                               variant="outlined"
                               sx={{ fontWeight: 600 }}
@@ -878,8 +872,8 @@ export default function SprintDetail() {
                         <TableCell sx={{ fontWeight: 700 }}>Completado</TableCell>
                         {pointsData.completed.map((count, index) => (
                           <TableCell key={index} align="center">
-                            <Chip 
-                              label={count} 
+                            <Chip
+                              label={count}
                               size="small"
                               sx={{
                                 backgroundColor: count > 0 ? theme.primaryLight : "#f5f5f5",
@@ -907,8 +901,8 @@ export default function SprintDetail() {
                           alignItems="center"
                           justifyContent="space-between"
                           p={1.5}
-                          sx={{ 
-                            background: "#F8F9FA", 
+                          sx={{
+                            background: "#F8F9FA",
                             borderRadius: 1,
                             border: "1px solid #e9ecef"
                           }}
@@ -927,8 +921,8 @@ export default function SprintDetail() {
                             </Box>
                           </Box>
                           <Box textAlign="right">
-                            <Chip 
-                              label={`${record.points} pts`} 
+                            <Chip
+                              label={`${record.points} pts`}
                               size="small"
                               sx={{
                                 backgroundColor: theme.primary,
@@ -944,11 +938,11 @@ export default function SprintDetail() {
                       ))}
                     </Box>
                   ) : (
-                    <Box 
-                      sx={{ 
-                        p: 3, 
-                        textAlign: 'center', 
-                        background: "#F8F9FA", 
+                    <Box
+                      sx={{
+                        p: 3,
+                        textAlign: 'center',
+                        background: "#F8F9FA",
                         borderRadius: 1,
                         border: "1px solid #e9ecef"
                       }}
@@ -1005,16 +999,17 @@ export default function SprintDetail() {
                                 {dev.name}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                {dev.role} • {dev.completed} / {dev.assigned} puntos
+                                {dev.role} • {dev.hours} horas asignadas
                               </Typography>
                             </Box>
                           </Box>
-                          
+
+                          {/* Barra de progreso opcional - solo si quieres mostrar progreso vs algún objetivo */}
                           <LinearProgress
                             variant="determinate"
-                            value={dev.assigned > 0 ? (dev.completed / dev.assigned) * 100 : 0}
+                            value={dev.completed > 0 ? Math.min(100, (dev.completed / (dev.hours || 1)) * 10) : 0}
                             sx={{
-                              height: 8,
+                              height: 6,
                               borderRadius: 1,
                               backgroundColor: "#E0E0E0",
                               "& .MuiLinearProgress-bar": {
@@ -1022,29 +1017,25 @@ export default function SprintDetail() {
                               },
                             }}
                           />
-                          
+
                           <Box display="flex" justifyContent="space-between" mt={1}>
                             <Typography variant="caption" color="text.secondary">
-                              Progreso
+                              Puntos completados
                             </Typography>
                             <Typography variant="caption" fontWeight="600" sx={{ color: theme.primary }}>
-                              {dev.assigned > 0 ? Math.round((dev.completed / dev.assigned) * 100) : 0}%
+                              {dev.completed} pts
                             </Typography>
                           </Box>
 
+                          {/* Solo mostrar chip de completado */}
                           <Box display="flex" gap={1} mt={1} flexWrap="wrap">
-                            <Chip 
-                              label={`Completado: ${dev.completed}pts`} 
-                              size="small"
-                              variant="outlined"
-                            />
-                            <Chip 
-                              label={`Restante: ${Math.max(0, dev.assigned - dev.completed)}pts`} 
+                            <Chip
+                              label={`Completado: ${dev.completed}pts`}
                               size="small"
                               variant="outlined"
                             />
                           </Box>
-
+                          
                           {dev.completion?.notes && (
                             <Box mt={1}>
                               <Typography variant="caption" color="text.secondary">
@@ -1057,11 +1048,11 @@ export default function SprintDetail() {
                     ))}
                   </Grid>
                 ) : (
-                  <Box 
-                    sx={{ 
-                      p: 4, 
-                      textAlign: 'center', 
-                      background: "#F8F9FA", 
+                  <Box
+                    sx={{
+                      p: 4,
+                      textAlign: 'center',
+                      background: "#F8F9FA",
                       borderRadius: 2,
                       border: "1px solid #e9ecef"
                     }}
@@ -1093,8 +1084,8 @@ export default function SprintDetail() {
                 <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: theme.primary }}>
                   📋 Observaciones
                 </Typography>
-                <Box 
-                  sx={{ 
+                <Box
+                  sx={{
                     flex: 1,
                     minHeight: '200px',
                     p: 2,
@@ -1134,8 +1125,8 @@ export default function SprintDetail() {
           <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
             Cancelar
           </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
+          <Button
+            onClick={handleDeleteConfirm}
             color="error"
             variant="contained"
           >
