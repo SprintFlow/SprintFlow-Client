@@ -1,6 +1,35 @@
 import { create } from "zustand";
 import sprintService from "../services/sprintService";
 
+// Función para calcular el estado del sprint basado en fechas y puntos
+const calculateSprintStatus = (sprint) => {
+  const today = new Date();
+  const startDate = new Date(sprint.startDate);
+  const endDate = new Date(sprint.endDate);
+  
+  // Calcular estado basado en fechas
+  let status;
+  if (today < startDate) {
+    status = "Planificado";
+  } else if (today >= startDate && today <= endDate) {
+    status = "Activo";
+  } else {
+    status = "Completado";
+  }
+  
+  // Si está completado, verificar si alcanzó los puntos planificados
+  if (status === "Completado") {
+    const plannedPoints = sprint.plannedTotalPoints || 0;
+    const completedPoints = sprint.completedPoints || 0;
+    
+    if (plannedPoints > 0 && completedPoints < plannedPoints) {
+      return "Completado Parcial";
+    }
+  }
+  
+  return status;
+};
+
 const useSprintStore = create((set, get) => ({
   sprints: [],
   activeSprint: null,
@@ -12,7 +41,14 @@ const useSprintStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await sprintService.getAll();
-      set({ sprints: data, isLoading: false });
+      
+      // Calcular estado automático para cada sprint
+      const sprintsWithCalculatedStatus = data.map(sprint => ({
+        ...sprint,
+        calculatedStatus: calculateSprintStatus(sprint)
+      }));
+      
+      set({ sprints: sprintsWithCalculatedStatus, isLoading: false });
     } catch (err) {
       set({
         isLoading: false,
@@ -25,8 +61,15 @@ const useSprintStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await sprintService.getById(id);
-      set({ currentSprint: data, isLoading: false });
-      return { success: true, sprint: data };
+      
+      // Calcular estado automático
+      const sprintWithCalculatedStatus = {
+        ...data,
+        calculatedStatus: calculateSprintStatus(data)
+      };
+      
+      set({ currentSprint: sprintWithCalculatedStatus, isLoading: false });
+      return { success: true, sprint: sprintWithCalculatedStatus };
     } catch (err) {
       set({
         isLoading: false,
@@ -40,11 +83,18 @@ const useSprintStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await sprintService.create(sprintData);
+      
+      // Calcular estado automático para el nuevo sprint
+      const sprintWithCalculatedStatus = {
+        ...data,
+        calculatedStatus: calculateSprintStatus(data)
+      };
+      
       set((state) => ({
-        sprints: [...state.sprints, data],
+        sprints: [...state.sprints, sprintWithCalculatedStatus],
         isLoading: false,
       }));
-      return { success: true, sprint: data };
+      return { success: true, sprint: sprintWithCalculatedStatus };
     } catch (err) {
       set({
         isLoading: false,
@@ -58,14 +108,21 @@ const useSprintStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await sprintService.update(id, sprintData);
+      
+      // Calcular estado automático para el sprint actualizado
+      const sprintWithCalculatedStatus = {
+        ...data,
+        calculatedStatus: calculateSprintStatus(data)
+      };
+      
       set((state) => ({
         sprints: state.sprints.map(sprint => 
-          sprint._id === id ? data : sprint
+          sprint._id === id ? sprintWithCalculatedStatus : sprint
         ),
-        currentSprint: data,
+        currentSprint: sprintWithCalculatedStatus,
         isLoading: false,
       }));
-      return { success: true, sprint: data };
+      return { success: true, sprint: sprintWithCalculatedStatus };
     } catch (err) {
       set({
         isLoading: false,
@@ -91,6 +148,11 @@ const useSprintStore = create((set, get) => ({
       });
       return { success: false };
     }
+  },
+
+  // Función helper para obtener el estado actual de un sprint
+  getSprintStatus: (sprint) => {
+    return calculateSprintStatus(sprint);
   },
 
   setActiveSprint: (sprint) => set({ activeSprint: sprint }),
