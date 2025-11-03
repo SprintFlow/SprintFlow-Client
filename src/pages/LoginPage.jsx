@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import SprintFlowLogo from "../components/SprintFlowLogo";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -23,27 +24,46 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    const result = await login({ email, password });
-    if (result.success) {
-      navigate("/");
-    } else {
-      setError(
-        useAuthStore.getState().error ||
-          "Credenciales inválidas o error en el servidor."
-      );
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      const result = await login({ email, password });
+      
+      if (result.success) {
+        // Obtener el usuario actualizado del store
+        const currentUser = useAuthStore.getState().user;
+        
+        // Redirigir según el rol del usuario
+        if (currentUser?.isAdmin) {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/user-dashboard");
+        }
+      } else {
+        setError(
+          useAuthStore.getState().error ||
+            "Credenciales inválidas o error en el servidor."
+        );
+      }
+    } finally { // Garantiza que loading se desactive
+      setIsLoading(false);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") handleLogin();
+    if (e.key === "Enter" && !isLoading) {
+      handleLogin();
+    }
   };
 
   // Color verde de la "S" animada
-  const greenS = "#4CAF50"; // reemplaza con el verde exacto de tu imagen
-  const greenShover = "#45A049"; // un verde ligeramente más oscuro para hover
-  const backgroundMint = "#e6f2ed"; // verde menta suave para fondo
+  const greenS = "#4CAF50";
+  const greenShover = "#45A049";
+  const backgroundMint = "#e6f2ed";
 
   return (
     <Box
@@ -52,9 +72,12 @@ export default function LoginPage() {
         display: "flex",
         width: "100vw",
         backgroundColor: backgroundMint,
-        overflow: "hidden", // evita scroll innecesario
+        overflow: "hidden",
       }}
     >
+      {/* LoadingOverlay sobre toda la página */}
+      <LoadingOverlay open={isLoading} />
+
       {/* Lado izquierdo: animación */}
       <Box
         sx={{
@@ -87,11 +110,7 @@ export default function LoginPage() {
                 <Avatar sx={{ bgcolor: greenS, width: 56, height: 56 }}>
                   <TrackChangesIcon sx={{ fontSize: 32 }} />
                 </Avatar>
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  color="text.primary"
-                >
+                <Typography variant="h4" component="h1" color="text.primary">
                   SprintFlow
                 </Typography>
               </Stack>
@@ -110,6 +129,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyPress={handleKeyPress}
+                disabled={isLoading}
               />
               <TextField
                 id="password"
@@ -121,6 +141,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyPress={handleKeyPress}
+                disabled={isLoading}
               />
 
               {error && (
@@ -135,12 +156,13 @@ export default function LoginPage() {
                   size="large"
                   fullWidth
                   onClick={handleLogin}
+                  disabled={isLoading}
                   sx={{
                     backgroundColor: greenS,
-                    '&:hover': { backgroundColor: greenShover },
+                    "&:hover": { backgroundColor: greenShover },
                   }}
                 >
-                  Iniciar sesión
+                  {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
                 </Button>
               </Stack>
 
@@ -157,6 +179,7 @@ export default function LoginPage() {
                   underline="hover"
                   color="primary"
                   onClick={() => navigate("/register")}
+                  disabled={isLoading}
                 >
                   Regístrate aquí
                 </Link>
