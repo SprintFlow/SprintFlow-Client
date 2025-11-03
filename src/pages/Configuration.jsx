@@ -187,6 +187,13 @@ const Configuration = () => {
     navigate(-1);
   };
 
+  // Manejar Enter para guardar cambios
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !loading) {
+      handleSaveChanges();
+    }
+  };
+
   const handleNewUser = async () => {
     const name = prompt('Nombre del nuevo usuario:');
     const email = prompt('Email del nuevo usuario:');
@@ -457,6 +464,7 @@ const Configuration = () => {
                     type="password"
                     value={personalInfo.currentPassword}
                     onChange={(e) => handlePersonalInfoChange('currentPassword', e.target.value)}
+                    onKeyPress={handleKeyPress}
                     fullWidth
                     disabled={loading}
                   />
@@ -466,6 +474,7 @@ const Configuration = () => {
                     type="password"
                     value={personalInfo.newPassword}
                     onChange={(e) => handlePersonalInfoChange('newPassword', e.target.value)}
+                    onKeyPress={handleKeyPress}
                     placeholder="Mínimo 6 caracteres"
                     fullWidth
                     disabled={loading}
@@ -476,6 +485,7 @@ const Configuration = () => {
                     type="password"
                     value={personalInfo.confirmPassword}
                     onChange={(e) => handlePersonalInfoChange('confirmPassword', e.target.value)}
+                    onKeyPress={handleKeyPress}
                     placeholder="Repite la nueva contraseña"
                     fullWidth
                     disabled={loading}
