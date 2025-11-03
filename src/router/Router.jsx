@@ -45,14 +45,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: "configuration",
-        element: (
-          <ProtectedRoute requireAdmin={false} requireUser={true}>
-            <Configuration />
-          </ProtectedRoute>
-        ),
-      },
+      
       // ========== RUTAS DE ADMIN ==========
       {
         path: "admin-dashboard",
@@ -78,16 +71,16 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      
+      // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
       {
         path: "configuration",
         element: (
-          <ProtectedRoute requireAdmin={true}>
+          <ProtectedRoute>
             <Configuration />
           </ProtectedRoute>
         ),
       },
-      
-      // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
       {
         path: "sprint-detail/:id",
         element: (
