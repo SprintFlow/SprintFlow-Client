@@ -203,6 +203,69 @@ const Configuration = () => {
     }
   };
 
+  // Convertir imagen a Base64
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // Manejar cambio de avatar (desde input file o drag & drop)
+  const handleAvatarChange = async (file) => {
+    if (!file) return;
+
+    // Validar que sea una imagen
+    if (!file.type.startsWith('image/')) {
+      setError('Por favor selecciona un archivo de imagen válido');
+      return;
+    }
+
+    // Validar tamaño (máximo 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('La imagen no debe superar los 2MB');
+      return;
+    }
+
+    try {
+      const base64 = await convertToBase64(file);
+      handlePersonalInfoChange('avatar', base64);
+      setError(''); // Limpiar cualquier error previo
+    } catch (error) {
+      console.error('Error al convertir imagen:', error);
+      setError('Error al procesar la imagen');
+    }
+  };
+
+  // Manejar drag over
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // Manejar drop de imagen
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const file = e.dataTransfer.files[0];
+    handleAvatarChange(file);
+  };
+
+  // Manejar click en el botón de cámara
+  const handleAvatarClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      handleAvatarChange(file);
+    };
+    input.click();
+  };
+
   const handleNewUser = async () => {
     const name = prompt('Nombre del nuevo usuario:');
     const email = prompt('Email del nuevo usuario:');
@@ -415,50 +478,69 @@ const Configuration = () => {
                 </Typography>
 
                 {/* Avatar Section */}
-                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-                  <Badge
-                    overlap="circular"
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    badgeContent={
-                      <IconButton
-                        sx={{
-                          backgroundColor: theme.primary,
-                          color: 'white',
-                          width: 40,
-                          height: 40,
-                          '&:hover': {
-                            backgroundColor: theme.primaryDark,
-                          },
-                        }}
-                        onClick={() => {
-                          const newAvatar = prompt(
-                            'Ingresa la URL de tu avatar (o deja vacío para usar iniciales):',
-                            personalInfo.avatar || ''
-                          );
-                          if (newAvatar !== null) {
-                            handlePersonalInfoChange('avatar', newAvatar);
-                          }
-                        }}
-                        disabled={loading}
-                      >
-                        <PhotoCamera fontSize="small" />
-                      </IconButton>
-                    }
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    mb: 3,
+                  }}
+                >
+                  <Box
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    sx={{
+                      position: 'relative',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                      },
+                    }}
                   >
-                    <Avatar
-                      src={personalInfo.avatar}
-                      alt={personalInfo.fullName}
-                      sx={{
-                        width: 120,
-                        height: 120,
-                        fontSize: '3rem',
-                        backgroundColor: theme.primary,
-                        border: `4px solid ${theme.primary}`,
-                      }}
+                    <Badge
+                      overlap="circular"
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                      badgeContent={
+                        <IconButton
+                          sx={{
+                            backgroundColor: theme.primary,
+                            color: 'white',
+                            width: 40,
+                            height: 40,
+                            '&:hover': {
+                              backgroundColor: theme.primaryDark,
+                            },
+                          }}
+                          onClick={handleAvatarClick}
+                          disabled={loading}
+                        >
+                          <PhotoCamera fontSize="small" />
+                        </IconButton>
+                      }
                     >
-                      {!personalInfo.avatar && personalInfo.fullName.charAt(0).toUpperCase()}
-                    </Avatar>
-                  </Badge>
+                      <Avatar
+                        src={personalInfo.avatar}
+                        alt={personalInfo.fullName}
+                        sx={{
+                          width: 120,
+                          height: 120,
+                          fontSize: '3rem',
+                          backgroundColor: theme.primary,
+                          border: `4px solid ${theme.primary}`,
+                        }}
+                      >
+                        {!personalInfo.avatar && personalInfo.fullName.charAt(0).toUpperCase()}
+                      </Avatar>
+                    </Badge>
+                  </Box>
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary" 
+                    sx={{ mt: 1, textAlign: 'center' }}
+                  >
+                    Click o arrastra una imagen aquí
+                  </Typography>
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
