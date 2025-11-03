@@ -14,6 +14,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
+import SprintFlowLogo from "../components/SprintFlowLogo";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -46,108 +47,148 @@ export default function RegisterPage() {
     });
 
     if (result.success) {
-      navigate("/"); // redirige al home o dashboard
+      navigate("/"); 
     } else {
-      setError(useAuthStore.getState().error || "Error al registrarse. Inténtalo de nuevo.");
+      setError(
+        useAuthStore.getState().error || "Error al registrarse. Inténtalo de nuevo."
+      );
     }
   };
+
+  const greenS = "#4CAF50"; // verde igual que la "S"
+  const greenShover = "#45A049";
+  const backgroundMint = "#e6f2ed"; // fondo verde menta
 
   return (
     <Box
       sx={{
         minHeight: "100vh",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(to bottom right, #f0f7ff, #e0f2fe)",
-        p: 4,
+        width: "100vw",
+        backgroundColor: backgroundMint,
+        overflow: "hidden",
       }}
     >
-      <Card sx={{ width: "100%", maxWidth: 450, boxShadow: 6 }}>
-        <CardHeader
-          sx={{ textAlign: "center", pb: 0 }}
-          title={
-            <Stack alignItems="center" spacing={2}>
-              <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
-                <PersonAddIcon sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Typography variant="h4" component="h1">
-                Crear una cuenta
-              </Typography>
-            </Stack>
-          }
-          subheader="Únete a SprintFlow para empezar a gestionar tus proyectos"
-        />
-        <CardContent>
-          <Box component="form" noValidate sx={{ mt: 1 }}>
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              <TextField
-                id="name"
-                label="Nombre completo"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                fullWidth
-              />
-              <TextField
-                id="email"
-                label="Correo electrónico"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                fullWidth
-              />
-              <TextField
-                id="password"
-                label="Contraseña"
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-                fullWidth
-              />
-              <TextField
-                id="confirmPassword"
-                label="Confirmar contraseña"
-                name="confirmPassword"
-                type="password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                fullWidth
-              />
 
-              {error && (
-                <Typography color="error" align="center">
-                  {error}
-                </Typography>
-              )}
+      {/* Lado izquierdo: animación */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <SprintFlowLogo />
+      </Box>
 
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-                sx={{ mt: 3, mb: 2 }}
-                onClick={handleRegister}
-              >
-                Registrarse
-              </Button>
-
-              <Typography variant="body2" align="center">
-                ¿Ya tienes una cuenta?{" "}
-                <Link
-                  component="button"
-                  underline="hover"
-                  onClick={() => navigate("/login")}
+      {/* Lado derecho: formulario */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          p: 2,
+        }}
+      >
+        <Card sx={{ width: "100%", maxWidth: 450, boxShadow: 6 }}>
+          <CardHeader
+            sx={{ textAlign: "center", pb: 0 }}
+            title={
+              <Stack alignItems="center" spacing={2}>
+                <Avatar sx={{ bgcolor: greenS, width: 56, height: 56 }}>
+                  <PersonAddIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Typography
+                  variant="h5"
+                  color="text.primary"
                 >
-                  Inicia sesión
-                </Link>
-              </Typography>
-            </Stack>
-          </Box>
-        </CardContent>
-      </Card>
+                  Crear una cuenta
+                </Typography>
+              </Stack>
+            }
+            
+          />
+          <CardContent>
+            <Box component="form" noValidate sx={{ mt: 1 }}>
+              <Stack spacing={2} sx={{ mt: 2 }}>
+                <TextField
+                  id="name"
+                  label="Nombre completo"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  fullWidth
+                />
+                <TextField
+                  id="email"
+                  label="Correo electrónico"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  fullWidth
+                />
+                <TextField
+                  id="password"
+                  label="Contraseña"
+                  name="password"
+                  type="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  fullWidth
+                />
+                <TextField
+                  id="confirmPassword"
+                  label="Confirmar contraseña"
+                  name="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  fullWidth
+                />
+
+                {error && (
+                  <Typography color="error" align="center">
+                    {error}
+                  </Typography>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  sx={{
+                    mt: 3,
+                    mb: 2,
+                    backgroundColor: greenS,
+                    '&:hover': { backgroundColor: greenShover },
+                  }}
+                  onClick={handleRegister}
+                >
+                  Registrarse
+                </Button>
+
+                <Typography variant="body2" align="center">
+                  ¿Ya tienes una cuenta?{" "}
+                  <Link
+                    component="button"
+                    underline="hover"
+                    color="primary"
+                    onClick={() => navigate("/")}
+                  >
+                    Inicia sesión
+                  </Link>
+                </Typography>
+              </Stack>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
     </Box>
   );
 }

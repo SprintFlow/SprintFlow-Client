@@ -14,6 +14,8 @@ import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
+import SprintFlowLogo from "../components/SprintFlowLogo";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -22,102 +24,170 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    const result = await login({ email, password });
-
-    if (result.success) {
-      navigate("/"); // redirige al home o dashboard
-    } else {
-      setError(useAuthStore.getState().error || "Credenciales inválidas o error en el servidor.");
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      const result = await login({ email, password });
+      
+      if (result.success) {
+        // Obtener el usuario actualizado del store
+        const currentUser = useAuthStore.getState().user;
+        
+        // Redirigir según el rol del usuario
+        if (currentUser?.isAdmin) {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/user-dashboard");
+        }
+      } else {
+        setError(
+          useAuthStore.getState().error ||
+            "Credenciales inválidas o error en el servidor."
+        );
+      }
+    } finally { // Garantiza que loading se desactive
+      setIsLoading(false);
     }
   };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !isLoading) {
+      handleLogin();
+    }
+  };
+
+  // Color verde de la "S" animada
+  const greenS = "#4CAF50";
+  const greenShover = "#45A049";
+  const backgroundMint = "#e6f2ed";
 
   return (
     <Box
       sx={{
         minHeight: "100vh",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(to bottom right, #f0f7ff, #e0f2fe)",
-        p: 4,
+        width: "100vw",
+        backgroundColor: backgroundMint,
+        overflow: "hidden",
       }}
     >
-      <Card sx={{ width: "100%", maxWidth: 450, boxShadow: 6 }}>
-        <CardHeader
-          sx={{ textAlign: "center", pb: 0 }}
-          title={
-            <Stack alignItems="center" spacing={2}>
-              <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
-                <TrackChangesIcon sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Typography variant="h4" component="h1">
-                SprintFlow
-              </Typography>
-            </Stack>
-          }
-          subheader="Gestión ágil de sprints para Cohispania"
-        />
-        <CardContent>
-          <Stack spacing={3} sx={{ mt: 2 }}>
-            <TextField
-              id="email"
-              label="Correo electrónico"
-              type="email"
-              placeholder="nombre@cohispania.com"
-              variant="outlined"
-              fullWidth
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextField
-              id="password"
-              label="Contraseña"
-              type="password"
-              placeholder="••••••••"
-              variant="outlined"
-              fullWidth
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+      {/* LoadingOverlay sobre toda la página */}
+      <LoadingOverlay open={isLoading} />
 
-            {error && (
-              <Typography color="error" align="center">
-                {error}
-              </Typography>
-            )}
+      {/* Lado izquierdo: animación */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <SprintFlowLogo />
+      </Box>
 
-            <Stack spacing={1.5} sx={{ pt: 1 }}>
-              <Button
-                variant="contained"
-                size="large"
+      {/* Lado derecho: formulario */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          p: 2,
+        }}
+      >
+        <Card sx={{ width: "100%", maxWidth: 450, boxShadow: 6 }}>
+          <CardHeader
+            sx={{ textAlign: "center", pb: 0 }}
+            title={
+              <Stack alignItems="center" spacing={2}>
+                <Avatar sx={{ bgcolor: greenS, width: 56, height: 56 }}>
+                  <TrackChangesIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Typography variant="h4" component="h1" color="text.primary">
+                  SprintFlow
+                </Typography>
+              </Stack>
+            }
+            subheader="Gestión ágil de sprints para Cohispania"
+          />
+          <CardContent>
+            <Stack spacing={3} sx={{ mt: 2 }}>
+              <TextField
+                id="email"
+                label="Correo electrónico"
+                type="email"
+                placeholder="nombre@cohispania.com"
+                variant="outlined"
                 fullWidth
-                onClick={handleLogin}
-              >
-                Iniciar sesión
-              </Button>
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={isLoading}
+              />
+              <TextField
+                id="password"
+                label="Contraseña"
+                type="password"
+                placeholder="••••••••"
+                variant="outlined"
+                fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={isLoading}
+              />
+
+              {error && (
+                <Typography color="error" align="center">
+                  {error}
+                </Typography>
+              )}
+
+              <Stack spacing={1.5} sx={{ pt: 1 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  onClick={handleLogin}
+                  disabled={isLoading}
+                  sx={{
+                    backgroundColor: greenS,
+                    "&:hover": { backgroundColor: greenShover },
+                  }}
+                >
+                  {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
+                </Button>
+              </Stack>
+
+              <Typography variant="body2" align="center">
+                <Link href="#" underline="hover" color="primary">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </Typography>
+
+              <Typography variant="body2" align="center">
+                ¿No tienes cuenta?{" "}
+                <Link
+                  component="button"
+                  underline="hover"
+                  color="primary"
+                  onClick={() => navigate("/register")}
+                  disabled={isLoading}
+                >
+                  Regístrate aquí
+                </Link>
+              </Typography>
             </Stack>
-
-            <Typography variant="body2" align="center">
-              <Link href="#" underline="hover">
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </Typography>
-
-            <Typography variant="body2" align="center">
-              ¿No tienes cuenta?{" "}
-              <Link
-                component="button"
-                underline="hover"
-                onClick={() => navigate("/register")}
-              >
-                Regístrate aquí
-              </Link>
-            </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Box>
     </Box>
   );
 }
