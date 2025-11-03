@@ -11,8 +11,6 @@ import {
   Alert,
   LinearProgress,
   Divider,
-  Paper,
-  Avatar,
   TextField,
   InputAdornment,
   MenuItem,
@@ -65,71 +63,35 @@ export default function AdminDashboard() {
     gradientAlt: "linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)",
   };
 
+  // Colores para estados de sprints
+  const statusColors = {
+    Activo: "#1976D2", // Azul cuando está activo
+    Planificado: "#d13e8fff", // Lila si está planificado
+    Completado: "#2E7D32", // Verde si se ha cumplido o superado
+    "Completado Parcial": "#FF9800", // Naranja si no ha cumplido con los puntos planificados
+  };
+
+  const statusBackgrounds = {
+    Activo: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
+    Planificado: "linear-gradient(135deg, #F3E5F5 0%, #e7bedeff 100%)",
+    Completado: "linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)",
+    "Completado Parcial": "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
+  };
+
   useEffect(() => {
-    console.log("🔄 [DEBUG] Cargando sprints...");
     fetchSprints();
   }, [fetchSprints]);
 
-  useEffect(() => {
-    if (sprints.length > 0) {
-      console.log("📊 [DEBUG] Estado de sprints:");
-      console.log("   - Total sprints:", sprints.length);
-      console.log("   - Sprints data:", sprints);
-      console.log("   - Active sprints:", activeSprints);
-      console.log("   - Planned sprints:", plannedSprints);
-      console.log("   - Completed sprints:", completedSprints);
-
-      // Debug detallado de cada sprint
-      sprints.forEach((sprint, index) => {
-        const today = new Date();
-        const startDate = new Date(sprint.startDate);
-        const endDate = new Date(sprint.endDate);
-        
-        console.log(`🔍 Sprint ${index}: ${sprint.name}`);
-        console.log(`   - ID: ${sprint._id}`);
-        console.log(`   - Status actual: ${sprint.status}`);
-        console.log(`   - Start: ${startDate.toISOString()}`);
-        console.log(`   - End: ${endDate.toISOString()}`);
-        console.log(`   - Today: ${today.toISOString()}`);
-        console.log(`   - Should be active? ${today >= startDate && today <= endDate}`);
-        console.log(`   - Users: ${sprint.usersAssigned?.length || 0}`);
-        console.log(`   - Points: ${sprint.plannedTotalPoints}`);
-      });
-    }
-  }, [sprints]);
-
   const handleCreateSprint = () => {
-    console.log("➕ Creando nuevo sprint");
     navigate("/create-sprint");
   };
 
   const handleViewSprint = (sprintId) => {
-    console.log("🔗 [DEBUG] Iniciando navegación...");
-    console.log("📍 Sprint ID:", sprintId);
-    console.log("👤 Usuario:", user);
-    console.log("🔐 isAdmin:", user?.isAdmin);
-    
-    // Verifica que el ID sea válido
-    if (!sprintId) {
-      console.error("❌ ERROR: sprintId es undefined o null");
-      return;
-    }
-    
-    // Prueba con navigate
-    const destination = `/sprint-detail/${sprintId}`;
-    console.log("🎯 Navegando a:", destination);
-    
-    navigate(destination);
-    
-    // Si no funciona en 2 segundos, forzar recarga
-    setTimeout(() => {
-      console.log("⏰ Timeout - Forzando recarga...");
-      window.location.href = destination;
-    }, 2000);
+    if (!sprintId) return;
+    navigate(`/sprint-detail/${sprintId}`);
   };
 
   const handleEditSprint = (sprintId) => {
-    console.log("✏️ Editando sprint:", sprintId);
     navigate(`/edit-sprint/${sprintId}`);
   };
 
@@ -137,7 +99,6 @@ export default function AdminDashboard() {
     try {
       await deleteSprint(sprintId);
       setDeleteDialog({ open: false, sprint: null });
-      // Recargar los sprints después de eliminar
       fetchSprints();
     } catch (error) {
       console.error("Error deleting sprint:", error);
@@ -152,12 +113,47 @@ export default function AdminDashboard() {
     setDeleteDialog({ open: false, sprint: null });
   };
 
+  // Función para calcular estado automático basado en fechas
+  const calculateSprintStatus = (sprint) => {
+    const today = new Date();
+    const startDate = new Date(sprint.startDate);
+    const endDate = new Date(sprint.endDate);
+    
+    // Calcular estado basado en fechas
+    let status;
+    if (today < startDate) {
+      status = "Planificado";
+    } else if (today >= startDate && today <= endDate) {
+      status = "Activo";
+    } else {
+      status = "Completado";
+    }
+    
+    // Si está completado, verificar si alcanzó los puntos planificados
+    if (status === "Completado") {
+      const plannedPoints = sprint.plannedTotalPoints || 0;
+      const completedPoints = sprint.completedPoints || 0;
+      
+      if (plannedPoints > 0 && completedPoints < plannedPoints) {
+        return "Completado Parcial";
+      }
+    }
+    
+    return status;
+  };
+
+  // Determinar el estado real del sprint (usa calculatedStatus si existe, sino calcula)
+  const getSprintStatus = (sprint) => {
+    return sprint.calculatedStatus || calculateSprintStatus(sprint);
+  };
+
   // Filtrar y ordenar sprints
   const filteredAndSortedSprints = sprints
     .filter(sprint => {
       const matchesSearch = sprint.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            sprint.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === "all" || sprint.status === statusFilter;
+      const sprintStatus = getSprintStatus(sprint);
+      const matchesStatus = statusFilter === "all" || sprintStatus === statusFilter;
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
@@ -177,24 +173,12 @@ export default function AdminDashboard() {
     });
 
   // Filtrar sprints por estado para las métricas
-  const activeSprints = sprints.filter((s) => s.status === "Activo");
-  const plannedSprints = sprints.filter((s) => s.status === "Planificado");
-  const completedSprints = sprints.filter((s) => s.status === "Completado");
+  const activeSprints = sprints.filter((s) => getSprintStatus(s) === "Activo");
+  const plannedSprints = sprints.filter((s) => getSprintStatus(s) === "Planificado");
+  const completedSprints = sprints.filter((s) => getSprintStatus(s) === "Completado");
+  const partialSprints = sprints.filter((s) => getSprintStatus(s) === "Completado Parcial");
 
   const activeSprint = activeSprints[0];
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Activo":
-        return "success";
-      case "Planificado":
-        return "info";
-      case "Completado":
-        return "default";
-      default:
-        return "default";
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -222,6 +206,13 @@ export default function AdminDashboard() {
     return Math.max(0, diff);
   };
 
+  const getProgressPercentage = (sprint) => {
+    const plannedPoints = sprint.plannedTotalPoints || 0;
+    const completedPoints = sprint.completedPoints || 0;
+    if (plannedPoints === 0) return 0;
+    return Math.min(100, Math.round((completedPoints / plannedPoints) * 100));
+  };
+
   if (isLoading) {
     return (
       <Box 
@@ -240,34 +231,42 @@ export default function AdminDashboard() {
     <Box sx={{ 
       minHeight: "100vh", 
       backgroundColor: theme.background,
-      py: 4,
-      width: '100%'
+      py: 3,
+      width: '100vw', // Ocupa todo el ancho de la ventana
+      overflowX: 'hidden',
+      margin: 0,
+      padding: 0,
     }}>
-      <Box sx={{ maxWidth: 1400, mx: "auto", px: 3 }}>
+      {/* Container principal - SIN maxWidth para ocupar todo el ancho */}
+      <Box sx={{ 
+        width: '100%',
+        px: { xs: 2, sm: 3, md: 4 }, // Padding responsive
+      }}>
         {/* Header */}
         <Box
           sx={{
             background: theme.cardBg,
-            borderRadius: 3,
+            borderRadius: 2,
             p: 3,
             mb: 3,
-            boxShadow: "0 4px 20px rgba(76, 175, 80, 0.15)",
+            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+            border: `1px solid #e0e0e0`,
           }}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
             <Box>
               <Typography 
                 variant="h4" 
-                fontWeight="800" 
+                fontWeight="700" 
                 sx={{ 
-                  color: theme.primary,
+                  color: theme.primaryDark,
                   mb: 0.5
                 }}
               >
                 Dashboard de Administrador
               </Typography>
-              <Typography variant="h5" color="text.secondary">
-                Bienvenido de nuevo, {user?.name || "Admin"} 👋
+              <Typography variant="h6" color="text.secondary">
+                Bienvenido de nuevo, {user?.name || "Admin"} 😊
               </Typography>
             </Box>
             <Box display="flex" gap={2} flexWrap="wrap">
@@ -281,26 +280,12 @@ export default function AdminDashboard() {
                   textTransform: "none",
                   fontWeight: 600,
                   px: 3,
-                  boxShadow: "0 4px 15px rgba(76, 175, 80, 0.3)",
                   "&:hover": {
                     background: theme.gradientAlt,
-                    boxShadow: "0 6px 20px rgba(76, 175, 80, 0.4)",
                   },
                 }}
               >
                 Crear Nuevo Sprint
-              </Button>
-
-              {/* 🔧 BOTÓN DEBUG TEMPORAL */}
-              <Button 
-                variant="outlined" 
-                color="secondary"
-                onClick={() => {
-                  console.log("🔄 DEBUG: Recargando datos manualmente");
-                  fetchSprints();
-                }}
-              >
-                🔧 Recargar
               </Button>
             </Box>
           </Box>
@@ -312,7 +297,6 @@ export default function AdminDashboard() {
             sx={{ 
               mb: 3, 
               borderRadius: 2,
-              backgroundColor: "#ffebee",
             }}
           >
             {error}
@@ -324,9 +308,10 @@ export default function AdminDashboard() {
           elevation={0}
           sx={{
             background: theme.cardBg,
-            borderRadius: 3,
+            borderRadius: 2,
             mb: 3,
-            boxShadow: "0 4px 20px rgba(76, 175, 80, 0.12)",
+            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+            border: `1px solid #e0e0e0`,
           }}
         >
           <CardContent sx={{ p: 3 }}>
@@ -334,6 +319,7 @@ export default function AdminDashboard() {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
+                  size="small"
                   placeholder="Buscar por nombre o descripción..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -349,6 +335,7 @@ export default function AdminDashboard() {
               <Grid item xs={12} sm={6} md={2}>
                 <TextField
                   fullWidth
+                  size="small"
                   select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -358,11 +345,13 @@ export default function AdminDashboard() {
                   <MenuItem value="Activo">Activo</MenuItem>
                   <MenuItem value="Planificado">Planificado</MenuItem>
                   <MenuItem value="Completado">Completado</MenuItem>
+                  <MenuItem value="Completado Parcial">Completado Parcial</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   fullWidth
+                  size="small"
                   select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
@@ -378,6 +367,7 @@ export default function AdminDashboard() {
               <Grid item xs={12} sm={6} md={2}>
                 <TextField
                   fullWidth
+                  size="small"
                   select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
@@ -390,6 +380,7 @@ export default function AdminDashboard() {
               <Grid item xs={12} sm={6} md={1}>
                 <Button
                   fullWidth
+                  size="small"
                   variant="outlined"
                   startIcon={<FilterList />}
                   onClick={() => {
@@ -407,37 +398,44 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Métricas principales */}
-        <Grid container spacing={3} mb={3}>
+        <Grid container spacing={2} mb={3}>
           <Grid item xs={12} sm={6} md={3}>
             <Card
               elevation={0}
               sx={{
-                background: theme.gradient,
-                color: "white",
-                borderRadius: 3,
-                transition: "transform 0.3s",
-                boxShadow: "0 4px 15px rgba(76, 175, 80, 0.2)",
+                background: statusBackgrounds.Activo,
+                borderRadius: 2,
+                border: `1px solid ${statusColors.Activo}30`,
+                transition: "transform 0.2s",
                 "&:hover": { 
-                  transform: "translateY(-5px)",
-                  boxShadow: "0 8px 25px rgba(76, 175, 80, 0.3)",
+                  transform: "translateY(-2px)",
                 },
               }}
             >
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.25)", width: 56, height: 56 }}>
-                    <TrendingUp />
-                  </Avatar>
-                  <Typography variant="h3" fontWeight="700">
-                    {activeSprints.length}
-                  </Typography>
+              <CardContent sx={{ p: 2 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box sx={{ 
+                    backgroundColor: `${statusColors.Activo}20`, 
+                    borderRadius: '50%', 
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <TrendingUp sx={{ color: statusColors.Activo, fontSize: 24 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h4" fontWeight="700" color={statusColors.Activo}>
+                      {activeSprints.length}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: statusColors.Activo }}>
+                      Sprint Activo
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {activeSprint ? activeSprint.name : "Ninguno activo"}
+                    </Typography>
+                  </Box>
                 </Box>
-                <Typography variant="body2" sx={{ opacity: 0.95, fontWeight: 600 }}>
-                  Sprint Activo
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                  {activeSprint ? activeSprint.name : "Ninguno activo"}
-                </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -446,32 +444,39 @@ export default function AdminDashboard() {
             <Card
               elevation={0}
               sx={{
-                background: "linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)",
-                color: "white",
-                borderRadius: 3,
-                transition: "transform 0.3s",
-                boxShadow: "0 4px 15px rgba(38, 166, 154, 0.2)",
+                background: statusBackgrounds.Completado,
+                borderRadius: 2,
+                border: `1px solid ${statusColors.Completado}30`,
+                transition: "transform 0.2s",
                 "&:hover": { 
-                  transform: "translateY(-5px)",
-                  boxShadow: "0 8px 25px rgba(38, 166, 154, 0.3)",
+                  transform: "translateY(-2px)",
                 },
               }}
             >
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.25)", width: 56, height: 56 }}>
-                    <CheckCircle />
-                  </Avatar>
-                  <Typography variant="h3" fontWeight="700">
-                    {completedSprints.length}
-                  </Typography>
+              <CardContent sx={{ p: 2 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box sx={{ 
+                    backgroundColor: `${statusColors.Completado}20`, 
+                    borderRadius: '50%', 
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <CheckCircle sx={{ color: statusColors.Completado, fontSize: 24 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h4" fontWeight="700" color={statusColors.Completado}>
+                      {completedSprints.length}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: statusColors.Completado }}>
+                      Completados
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      Objetivo cumplido
+                    </Typography>
+                  </Box>
                 </Box>
-                <Typography variant="body2" sx={{ opacity: 0.95, fontWeight: 600 }}>
-                  Completados
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                  Este año
-                </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -480,32 +485,39 @@ export default function AdminDashboard() {
             <Card
               elevation={0}
               sx={{
-                background: "linear-gradient(135deg, #66BB6A 0%, #9CCC65 100%)",
-                color: "white",
-                borderRadius: 3,
-                transition: "transform 0.3s",
-                boxShadow: "0 4px 15px rgba(102, 187, 106, 0.2)",
+                background: statusBackgrounds.Planificado,
+                borderRadius: 2,
+                border: `1px solid ${statusColors.Planificado}30`,
+                transition: "transform 0.2s",
                 "&:hover": { 
-                  transform: "translateY(-5px)",
-                  boxShadow: "0 8px 25px rgba(102, 187, 106, 0.3)",
+                  transform: "translateY(-2px)",
                 },
               }}
             >
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.25)", width: 56, height: 56 }}>
-                    <Schedule />
-                  </Avatar>
-                  <Typography variant="h3" fontWeight="700">
-                    {plannedSprints.length}
-                  </Typography>
+              <CardContent sx={{ p: 2 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box sx={{ 
+                    backgroundColor: `${statusColors.Planificado}20`, 
+                    borderRadius: '50%', 
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Schedule sx={{ color: statusColors.Planificado, fontSize: 24 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h4" fontWeight="700" color={statusColors.Planificado}>
+                      {plannedSprints.length}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: statusColors.Planificado }}>
+                      Planificados
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      Próximos
+                    </Typography>
+                  </Box>
                 </Box>
-                <Typography variant="body2" sx={{ opacity: 0.95, fontWeight: 600 }}>
-                  Planificados
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                  Próximos
-                </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -514,253 +526,126 @@ export default function AdminDashboard() {
             <Card
               elevation={0}
               sx={{
-                background: "linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%)",
-                color: "white",
-                borderRadius: 3,
-                transition: "transform 0.3s",
-                boxShadow: "0 4px 15px rgba(66, 165, 245, 0.2)",
+                background: statusBackgrounds["Completado Parcial"],
+                borderRadius: 2,
+                border: `1px solid ${statusColors["Completado Parcial"]}30`,
+                transition: "transform 0.2s",
                 "&:hover": { 
-                  transform: "translateY(-5px)",
-                  boxShadow: "0 8px 25px rgba(66, 165, 245, 0.3)",
+                  transform: "translateY(-2px)",
                 },
               }}
             >
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.25)", width: 56, height: 56 }}>
-                    <Group />
-                  </Avatar>
-                  <Typography variant="h3" fontWeight="700">
-                    {activeSprint ? activeSprint.usersAssigned?.length || 0 : 0}
-                  </Typography>
+              <CardContent sx={{ p: 2 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box sx={{ 
+                    backgroundColor: `${statusColors["Completado Parcial"]}20`, 
+                    borderRadius: '50%', 
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Assessment sx={{ color: statusColors["Completado Parcial"], fontSize: 24 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h4" fontWeight="700" color={statusColors["Completado Parcial"]}>
+                      {partialSprints.length}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: statusColors["Completado Parcial"] }}>
+                      Incompletos
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      No alcanzados
+                    </Typography>
+                  </Box>
                 </Box>
-                <Typography variant="body2" sx={{ opacity: 0.95, fontWeight: 600 }}>
-                  Equipo Total
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                  Miembros activos
-                </Typography>
               </CardContent>
             </Card>
           </Grid>
         </Grid>
 
-        {/* Sprint Activo Destacado */}
-        {activeSprint && (
-          <Card
-            elevation={0}
-            sx={{
-              background: theme.cardBg,
-              borderRadius: 3,
-              mb: 3,
-              boxShadow: "0 4px 20px rgba(76, 175, 80, 0.12)",
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
-                <Box>
-                  <Typography variant="h5" fontWeight="700" gutterBottom sx={{ color: theme.primary }}>
-                    🚀 Sprint Activo
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Seguimiento en tiempo real
-                  </Typography>
-                </Box>
-                <Chip
-                  label="EN CURSO"
-                  color="success"
-                  sx={{ fontWeight: 700, px: 2, py: 2.5, fontSize: "0.875rem" }}
-                />
-              </Box>
-
-              <Box mb={3}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={2}>
-                  <Typography variant="h4" fontWeight="700">
-                    {activeSprint.name}
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleViewSprint(activeSprint._id)}
-                    sx={{
-                      background: theme.gradient,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      "&:hover": {
-                        background: theme.gradientAlt,
-                      }
-                    }}
-                  >
-                    Ver Detalle Completo
-                  </Button>
-                </Box>
-                <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-                  <Box display="flex" alignItems="center" gap={0.5}>
-                    <CalendarToday fontSize="small" sx={{ color: theme.primary }} />
-                    <Typography variant="body2" color="text.secondary">
-                      {formatDate(activeSprint.startDate)} - {formatDate(activeSprint.endDate)}
-                    </Typography>
-                  </Box>
-                  <Chip
-                    label={`${calculateDuration(activeSprint.startDate, activeSprint.endDate)} días totales`}
-                    size="small"
-                    variant="outlined"
-                    sx={{ borderColor: theme.primary, color: theme.primary }}
-                  />
-                  <Chip
-                    label={`${getDaysRemaining(activeSprint.endDate)} días restantes`}
-                    size="small"
-                    sx={{ 
-                      backgroundColor: "#FFF9C4",
-                      color: "#F57F17",
-                      fontWeight: 600
-                    }}
-                  />
-                </Box>
-              </Box>
-
-              <Box mb={3}>
-                <Box display="flex" justifyContent="space-between" mb={1}>
-                  <Typography variant="body2" fontWeight={600}>Progreso del Sprint</Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    0 / {activeSprint.plannedTotalPoints} puntos
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={0}
-                  sx={{
-                    height: 12,
-                    borderRadius: 2,
-                    backgroundColor: "#E8F5E9",
-                    "& .MuiLinearProgress-bar": {
-                      background: theme.gradient,
-                    },
-                  }}
-                />
-                <Typography variant="caption" color="text.secondary" mt={0.5}>
-                  0% completado
-                </Typography>
-              </Box>
-
-              <Divider sx={{ my: 3 }} />
-
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box textAlign="center" p={2} sx={{ background: "#F1F8E9", borderRadius: 2 }}>
-                    <Assessment sx={{ fontSize: 40, color: theme.primary, mb: 1 }} />
-                    <Typography variant="h4" fontWeight="700">{activeSprint.plannedTotalPoints}</Typography>
-                    <Typography variant="caption" color="text.secondary">Puntos Planificados</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box textAlign="center" p={2} sx={{ background: "#E8F5E9", borderRadius: 2 }}>
-                    <Group sx={{ fontSize: 40, color: "#26A69A", mb: 1 }} />
-                    <Typography variant="h4" fontWeight="700">{activeSprint.usersAssigned?.length || 0}</Typography>
-                    <Typography variant="caption" color="text.secondary">Miembros del Equipo</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box textAlign="center" p={2} sx={{ background: "#E3F2FD", borderRadius: 2 }}>
-                    <Schedule sx={{ fontSize: 40, color: "#42A5F5", mb: 1 }} />
-                    <Typography variant="h4" fontWeight="700">
-                      {activeSprint.plannedStories?.reduce((sum, story) => sum + story.quantity, 0) || 0}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">Historias Planificadas</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box textAlign="center" p={2} sx={{ background: "#FFF9C4", borderRadius: 2 }}>
-                    <CalendarToday sx={{ fontSize: 40, color: "#F57F17", mb: 1 }} />
-                    <Typography variant="h4" fontWeight="700">{getDaysRemaining(activeSprint.endDate)}</Typography>
-                    <Typography variant="caption" color="text.secondary">Días Restantes</Typography>
-                  </Box>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Lista de Todos los Sprints - ACTUALIZADO */}
+        {/* Lista de Todos los Sprints - SIN SCROLL INTERNO */}
         <Card
           elevation={0}
           sx={{
             background: theme.cardBg,
-            borderRadius: 3,
-            boxShadow: "0 4px 20px rgba(76, 175, 80, 0.12)",
+            borderRadius: 2,
+            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+            border: `1px solid #e0e0e0`,
+            minHeight: '400px', // Altura mínima pero sin scroll interno
           }}
         >
-          <CardContent sx={{ p: 4 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-              <Typography variant="h5" fontWeight="700" sx={{ color: theme.primary }}>
-                📋 Todos los Sprints ({filteredAndSortedSprints.length})
+          <CardContent sx={{ p: 3 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6" fontWeight="700" sx={{ color: theme.primaryDark }}>
+                Todos los Sprints ({filteredAndSortedSprints.length})
               </Typography>
-              <Chip 
-                icon={<Sort />}
-                label={`Ordenado por ${sortBy}`}
-                variant="outlined"
-                sx={{ borderColor: theme.primary, color: theme.primary }}
-              />
             </Box>
 
             {filteredAndSortedSprints.length === 0 ? (
-              <Box textAlign="center" py={8}>
-                <Typography variant="h6" color="text.secondary" mb={3}>
+              <Box textAlign="center" py={4}>
+                <Typography variant="body1" color="text.secondary">
                   {sprints.length === 0 ? "No hay sprints creados todavía" : "No se encontraron sprints con los filtros aplicados"}
                 </Typography>
-                {sprints.length === 0 && (
-                  <Button
-                    variant="contained"
-                    size="large"
-                    startIcon={<AddIcon />}
-                    onClick={handleCreateSprint}
-                    sx={{
-                      background: theme.gradient,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      px: 4,
-                      boxShadow: "0 4px 15px rgba(76, 175, 80, 0.3)",
-                      "&:hover": {
-                        background: theme.gradientAlt,
-                      }
-                    }}
-                  >
-                    Crear tu Primer Sprint
-                  </Button>
-                )}
               </Box>
             ) : (
-              <Grid container spacing={3}>
-                {filteredAndSortedSprints.map((sprint) => (
-                  <Grid item xs={12} sm={6} md={4} key={sprint._id}>
+              <Box>
+                {filteredAndSortedSprints.map((sprint) => {
+                  const sprintStatus = getSprintStatus(sprint);
+                  const progress = getProgressPercentage(sprint);
+                  
+                  return (
                     <Card
+                      key={sprint._id}
                       elevation={0}
                       sx={{
-                        height: '100%',
-                        background: `linear-gradient(135deg, ${theme.primaryLight}20 0%, ${theme.primary}20 100%)`,
-                        border: `2px solid ${theme.primary}30`,
-                        borderRadius: 3,
-                        transition: "all 0.3s ease",
+                        mb: 2,
+                        background: statusBackgrounds[sprintStatus],
+                        border: `1px solid ${statusColors[sprintStatus]}30`,
+                        borderRadius: 2,
+                        transition: "all 0.2s ease",
                         cursor: "pointer",
                         "&:hover": {
-                          transform: "translateY(-8px)",
-                          boxShadow: "0 12px 35px rgba(76, 175, 80, 0.25)",
-                          border: `2px solid ${theme.primary}60`,
-                          background: `linear-gradient(135deg, ${theme.primaryLight}30 0%, ${theme.primary}30 100%)`,
+                          transform: "translateY(-2px)",
+                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
                         },
+                        "&:last-child": {
+                          mb: 0
+                        }
                       }}
                       onClick={() => handleViewSprint(sprint._id)}
                     >
-                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        {/* Header con acciones */}
-                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                          <Chip
-                            label={sprint.status}
-                            color={getStatusColor(sprint.status)}
-                            size="small"
-                            sx={{ fontWeight: 600 }}
-                          />
-                          <Box>
+                      <CardContent sx={{ p: 2 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                          <Box flex={1}>
+                            <Box display="flex" alignItems="center" gap={1} mb={1}>
+                              <Chip
+                                label={sprintStatus}
+                                size="small"
+                                sx={{ 
+                                  backgroundColor: statusColors[sprintStatus],
+                                  color: 'white',
+                                  fontWeight: 600,
+                                  fontSize: '0.7rem'
+                                }}
+                              />
+                              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                                {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
+                              </Typography>
+                            </Box>
+                            
+                            <Typography variant="subtitle1" fontWeight="600" sx={{ color: theme.primaryDark, mb: 0.5 }}>
+                              {sprint.name}
+                            </Typography>
+                            
+                            {sprint.description && (
+                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mb: 1 }}>
+                                {sprint.description}
+                              </Typography>
+                            )}
+                          </Box>
+                          
+                          <Box display="flex" gap={0.5}>
                             <Tooltip title="Ver Detalle">
                               <IconButton 
                                 size="small" 
@@ -770,7 +655,7 @@ export default function AdminDashboard() {
                                 }}
                                 sx={{ color: theme.primary }}
                               >
-                                <Visibility />
+                                <Visibility fontSize="small" />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Editar Sprint">
@@ -782,7 +667,7 @@ export default function AdminDashboard() {
                                 }}
                                 sx={{ color: theme.primary }}
                               >
-                                <Edit />
+                                <Edit fontSize="small" />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Eliminar Sprint">
@@ -792,92 +677,65 @@ export default function AdminDashboard() {
                                   e.stopPropagation();
                                   openDeleteDialog(sprint);
                                 }}
-                                sx={{ color: '#f44336' }}
+                                sx={{ color: '#d32f2f' }}
                               >
-                                <Delete />
+                                <Delete fontSize="small" />
                               </IconButton>
                             </Tooltip>
                           </Box>
                         </Box>
 
-                        {/* Contenido del sprint */}
-                        <Box flex={1}>
-                          <Typography variant="h6" fontWeight="700" gutterBottom sx={{ color: theme.primaryDark }}>
-                            {sprint.name}
-                          </Typography>
+                        {/* Información del sprint */}
+                        <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+                          <Box display="flex" gap={1} flexWrap="wrap">
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                              {sprint.plannedTotalPoints || 0} pts planificados
+                            </Typography>
+                            {(sprintStatus === "Completado" || sprintStatus === "Completado Parcial") && (
+                              <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                                • {sprint.completedPoints || 0} pts completados
+                              </Typography>
+                            )}
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                              • {sprint.usersAssigned?.length || 0} miembros
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                              • {calculateDuration(sprint.startDate, sprint.endDate)} días
+                            </Typography>
+                          </Box>
                           
-                          {sprint.description && (
-                            <Typography variant="body2" color="text.secondary" mb={2}>
-                              {sprint.description.length > 100 
-                                ? `${sprint.description.substring(0, 100)}...` 
-                                : sprint.description
-                              }
+                          {(sprintStatus === "Completado" || sprintStatus === "Completado Parcial") && (
+                            <Typography variant="body2" sx={{ 
+                              fontSize: '0.8rem', 
+                              fontWeight: 600,
+                              color: statusColors[sprintStatus]
+                            }}>
+                              {progress}% completado
                             </Typography>
                           )}
-
-                          <Box display="flex" flexDirection="column" gap={1} mb={2}>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <CalendarToday fontSize="small" sx={{ color: theme.primary }} />
-                              <Typography variant="body2">
-                                {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
-                              </Typography>
-                            </Box>
-                            
-                            <Box display="flex" gap={1} flexWrap="wrap">
-                              <Chip 
-                                label={`${sprint.plannedTotalPoints || 0} pts`} 
-                                size="small" 
-                                sx={{ 
-                                  backgroundColor: theme.primary,
-                                  color: 'white',
-                                  fontWeight: 600
-                                }} 
-                              />
-                              <Chip
-                                label={`${sprint.usersAssigned?.length || 0} miembros`}
-                                size="small"
-                                variant="outlined"
-                                sx={{ borderColor: theme.primary, color: theme.primary }}
-                              />
-                              <Chip
-                                label={`${calculateDuration(sprint.startDate, sprint.endDate)} días`}
-                                size="small"
-                                sx={{ 
-                                  backgroundColor: "#E3F2FD",
-                                  color: "#1976D2",
-                                }}
-                              />
-                            </Box>
-                          </Box>
                         </Box>
 
-                        {/* Botón de ver detalle */}
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          startIcon={<Visibility />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log("🔄 Navegación forzada para:", sprint._id);
-                            window.location.href = `/sprint-detail/${sprint._id}`;
-                          }}
-                          sx={{
-                            background: theme.gradient,
-                            textTransform: "none",
-                            fontWeight: 600,
-                            mt: 'auto',
-                            "&:hover": {
-                              background: theme.gradientAlt,
-                            }
-                          }}
-                        >
-                          Ver Detalle (Forzado)
-                        </Button>
+                        {/* Barra de progreso para sprints completados o parciales */}
+                        {(sprintStatus === "Completado" || sprintStatus === "Completado Parcial") && (
+                          <LinearProgress
+                            variant="determinate"
+                            value={progress}
+                            sx={{
+                              height: 6,
+                              borderRadius: 1,
+                              mt: 1,
+                              backgroundColor: `${statusColors[sprintStatus]}20`,
+                              "& .MuiLinearProgress-bar": {
+                                background: statusColors[sprintStatus],
+                              },
+                            }}
+                          />
+                        )}
                       </CardContent>
                     </Card>
-                  </Grid>
-                ))}
-              </Grid>
+                  );
+                })}
+              </Box>
             )}
           </CardContent>
         </Card>
@@ -890,13 +748,13 @@ export default function AdminDashboard() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle sx={{ color: '#f44336', fontWeight: 600 }}>
-          🚨 Confirmar Eliminación
+        <DialogTitle sx={{ color: '#d32f2f', fontWeight: 600 }}>
+          Confirmar Eliminación
         </DialogTitle>
         <DialogContent>
           <Typography>
             ¿Estás seguro de que quieres eliminar el sprint "{deleteDialog.sprint?.name}"? 
-            Esta acción no se puede deshacer y se perderán todos los datos asociados.
+            Esta acción no se puede deshacer.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -908,7 +766,7 @@ export default function AdminDashboard() {
             color="error"
             variant="contained"
           >
-            Sí, Eliminar Sprint
+            Eliminar
           </Button>
         </DialogActions>
       </Dialog>
