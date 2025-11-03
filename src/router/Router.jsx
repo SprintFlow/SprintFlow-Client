@@ -45,7 +45,14 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      
+      {
+        path: "configuration",
+        element: (
+          <ProtectedRoute requireAdmin={false} requireUser={true}>
+            <Configuration />
+          </ProtectedRoute>
+        ),
+      },
       // ========== RUTAS DE ADMIN ==========
       {
         path: "admin-dashboard",
