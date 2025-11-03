@@ -1,1 +1,91 @@
-/*styles nav*/
+:root{
+  --bg: #f9fafb;
+  --white: #ffffff;
+  --accent: #2563eb;
+  --muted: #6b7280;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --admin: #b91c1c;
+}
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+margin:0;
+font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+background:var(--bg);
+color:#111827;
+}
+
+
+.container{max-width:1100px;margin:80px auto;padding:24px}
+
+
+/* Header / Navbar */
+.navbar{
+display:flex;
+align-items:center;
+gap:16px;
+max-width:1100px;margin:12px auto;padding:10px 20px;
+background:var(--white);
+border-radius:14px;
+box-shadow:var(--shadow);
+}
+.brand{display:flex;align-items:center;gap:12px;flex:1}
+.logo{font-weight:700;color:var(--accent);text-decoration:none;font-size:1.1rem}
+
+
+.nav-toggle{display:none;background:none;border:0;padding:8px;border-radius:8px}
+.nav-toggle .hamburger{width:22px;height:2px;background:var(--muted);display:block;position:relative}
+
+
+.nav-toggle.is-open .hamburger{transform:rotate(90deg)}
+
+
+.nav-links{list-style:none;display:flex;gap:12px;margin:0;padding:0;align-items:center}
+.nav-links a{display:block;padding:8px 10px;text-decoration:none;color:var(--muted);border-radius:8px}
+.nav-links a:hover{color:var(--accent);background:rgba(37,99,235,0.06)}
+
+
+.nav-actions{display:flex;align-items:center;gap:10px}
+.btn{display:inline-block;padding:8px 12px;border-radius:10px;text-decoration:none;border:0;background:transparent;color:var(--muted);font-weight:600}
+.btn:hover{filter:brightness(0.95)}
+.btn-outline{border:1px solid #e6e9ef}
+.btn-primary{background:var(--accent);color:var(--white)}
+.btn-admin{background:linear-gradient(90deg,var(--admin),#b91c1c);color:var(--white)}
+
+
+.avatar{width:36px;height:36px;border-radius:50%;display:inline-grid;place-items:center;font-weight:700;background:#eef2ff;color:var(--accent)}
+.avatar.admin{background:#ffe9e9;color:var(--admin)}
+
+
+/* Role-specific visibility handled by React prop; CSS keeps sensible defaults */
+.actions-guest{display:flex;gap:8px}
+.actions-user, .actions-admin{display:none;gap:8px;align-items:center}
+
+
+/* Responsive */
+@media (max-width:800px){
+.nav-links{display:none;position:absolute;top:70px;left:12px;right:12px;background:var(--white);border-radius:12px;padding:12px;flex-direction:column;z-index:1000}
+.nav-links.open{display:flex}
+
+
+.nav-toggle{display:block}
+.navbar{padding:12px}
+}
+
+
+/* Simple content cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:20px}
+.card{background:var(--white);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
+
+
+.site-footer{text-align:center;padding:40px 0;color:var(--muted)}
+
+
+a:focus, button:focus{outline:3px solid rgba(37,99,235,0.18);outline-offset:3px}
+
+
+/* Small tweaks to make hamburger accessible */
+.hamburger span{display:block;width:22px;height:2px;background:var(--muted);position:relative}
+.hamburger span::before, .hamburger span::after{content:'';position:absolute;left:0;width:22px;height:2px;background:var(--muted)}
+.hamburger span::before{top:-6px}
+.hamburger span::after{top:6px}
