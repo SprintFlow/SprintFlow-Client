@@ -1,6 +1,6 @@
 # SprintFlow - Cliente (Frontend)
 
-![Logo de SprintFlow](public/favicon.svg)
+<p align="center"><img src="public/favicon.svg" alt="Logo de SprintFlow" width="100" /></p>
 
 Bienvenido al frontend de **SprintFlow**, una aplicación web diseñada para la gestión ágil de proyectos, facilitando el seguimiento de tareas, sprints y el progreso del equipo.
 
