@@ -49,7 +49,20 @@ const UserService = {
   // Actualizar perfil propio
   updateProfile: async (profileData) => {
     try {
+      console.log('UserService.updateProfile - Enviando:', {
+        hasName: !!profileData.name,
+        hasEmail: !!profileData.email,
+        hasAvatar: !!profileData.avatar,
+        avatarLength: profileData.avatar?.length
+      });
+      
       const { data } = await axiosClient.put("/users/profile", profileData);
+      
+      console.log('UserService.updateProfile - Respuesta:', {
+        success: !!data,
+        hasAvatar: !!data.user?.avatar
+      });
+      
       return data;
     } catch (error) {
       console.error("Error al actualizar perfil:", error);

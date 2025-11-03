@@ -142,17 +142,31 @@ const Configuration = () => {
       setError('');
       setSuccess('');
 
-      let profileUpdated = false;
+      let hasProfileChanges = false;
+      let hasPasswordChanges = false;
 
-      // Actualizar perfil básico (nombre, email y avatar)
-      if (personalInfo.fullName !== currentUser?.name || 
-          personalInfo.email !== currentUser?.email ||
-          personalInfo.avatar !== currentUser?.avatar) {
+      // Verificar si hay cambios en el perfil
+      const nameChanged = personalInfo.fullName !== currentUser?.name;
+      const emailChanged = personalInfo.email !== currentUser?.email;
+      const avatarChanged = personalInfo.avatar !== (currentUser?.avatar || '');
+
+      hasProfileChanges = nameChanged || emailChanged || avatarChanged;
+
+      // Actualizar perfil básico (nombre, email y avatar) si hay cambios
+      if (hasProfileChanges) {
         const profileData = {
           name: personalInfo.fullName,
           email: personalInfo.email,
           avatar: personalInfo.avatar
         };
+        
+        console.log('Guardando perfil:', { 
+          nameChanged, 
+          emailChanged, 
+          avatarChanged,
+          avatarLength: personalInfo.avatar?.length 
+        });
+        
         await UserService.updateProfile(profileData);
         
         // Actualizar el store de Zustand con la nueva información
@@ -161,8 +175,6 @@ const Configuration = () => {
           email: personalInfo.email,
           avatar: personalInfo.avatar
         });
-        
-        profileUpdated = true;
       }
 
       // Cambiar contraseña si se proporcionó
@@ -172,9 +184,15 @@ const Configuration = () => {
           newPassword: personalInfo.newPassword,
           confirmPassword: personalInfo.confirmPassword
         });
+        hasPasswordChanges = true;
       }
 
-      setSuccess('Cambios guardados exitosamente');
+      // Mostrar mensaje de éxito si hubo algún cambio
+      if (hasProfileChanges || hasPasswordChanges) {
+        setSuccess('Cambios guardados exitosamente');
+      } else {
+        setError('No hay cambios para guardar');
+      }
       
       // Limpiar campos de contraseña
       setPersonalInfo(prev => ({
@@ -231,6 +249,10 @@ const Configuration = () => {
 
     try {
       const base64 = await convertToBase64(file);
+      console.log('Avatar convertido a Base64:', {
+        length: base64.length,
+        preview: base64.substring(0, 50) + '...'
+      });
       handlePersonalInfoChange('avatar', base64);
       setError(''); // Limpiar cualquier error previo
     } catch (error) {
