@@ -19,14 +19,17 @@ import {
   Paper,
   Chip,
   CircularProgress,
-  Alert
+  Alert,
+  Avatar,
+  Badge
 } from '@mui/material';
 import {
   ArrowBack,
   Save,
   Edit,
   Delete,
-  PersonAdd
+  PersonAdd,
+  PhotoCamera
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import UserService from '../services/UserService';
@@ -42,6 +45,7 @@ const Configuration = () => {
     fullName: '',
     email: '',
     role: '',
+    avatar: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -82,6 +86,7 @@ const Configuration = () => {
         fullName: currentUser.name || '',
         email: currentUser.email || '',
         role: currentUser.role || '',
+        avatar: currentUser.avatar || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -139,18 +144,22 @@ const Configuration = () => {
 
       let profileUpdated = false;
 
-      // Actualizar perfil básico (nombre y email)
-      if (personalInfo.fullName !== currentUser?.name || personalInfo.email !== currentUser?.email) {
+      // Actualizar perfil básico (nombre, email y avatar)
+      if (personalInfo.fullName !== currentUser?.name || 
+          personalInfo.email !== currentUser?.email ||
+          personalInfo.avatar !== currentUser?.avatar) {
         const profileData = {
           name: personalInfo.fullName,
-          email: personalInfo.email
+          email: personalInfo.email,
+          avatar: personalInfo.avatar
         };
         await UserService.updateProfile(profileData);
         
         // Actualizar el store de Zustand con la nueva información
         updateUser({
           name: personalInfo.fullName,
-          email: personalInfo.email
+          email: personalInfo.email,
+          avatar: personalInfo.avatar
         });
         
         profileUpdated = true;
@@ -404,6 +413,53 @@ const Configuration = () => {
                 <Typography variant="body2" color="text.secondary" mb={3}>
                   Actualiza tus datos de perfil
                 </Typography>
+
+                {/* Avatar Section */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    badgeContent={
+                      <IconButton
+                        sx={{
+                          backgroundColor: theme.primary,
+                          color: 'white',
+                          width: 40,
+                          height: 40,
+                          '&:hover': {
+                            backgroundColor: theme.primaryDark,
+                          },
+                        }}
+                        onClick={() => {
+                          const newAvatar = prompt(
+                            'Ingresa la URL de tu avatar (o deja vacío para usar iniciales):',
+                            personalInfo.avatar || ''
+                          );
+                          if (newAvatar !== null) {
+                            handlePersonalInfoChange('avatar', newAvatar);
+                          }
+                        }}
+                        disabled={loading}
+                      >
+                        <PhotoCamera fontSize="small" />
+                      </IconButton>
+                    }
+                  >
+                    <Avatar
+                      src={personalInfo.avatar}
+                      alt={personalInfo.fullName}
+                      sx={{
+                        width: 120,
+                        height: 120,
+                        fontSize: '3rem',
+                        backgroundColor: theme.primary,
+                        border: `4px solid ${theme.primary}`,
+                      }}
+                    >
+                      {!personalInfo.avatar && personalInfo.fullName.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </Badge>
+                </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <TextField
