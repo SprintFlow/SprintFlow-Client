@@ -1,32 +1,45 @@
-import React, { useState } from 'react';
-import '.Footer/Footer.css';
+// src/components/Footer/Footer.jsx
+import React from "react";
+import { Box, Typography, Divider, Link } from "@mui/material";
+import { useLocation } from "react-router-dom";
+import useAuthStore from "../../store/authStore";
 
-function Footer({ role = 'guest' }) {
+export default function Footer() {
+  const location = useLocation();
+  const { isAuthenticated } = useAuthStore();
+
+  // Rutas donde NO debe mostrarse el footer
+  const noFooterRoutes = ["/", "/login", "/register"];
+
+  // No mostrar footer si:
+  // 1. No está autenticado O
+  // 2. Está en una ruta de autenticación
+  if (!isAuthenticated || noFooterRoutes.includes(location.pathname)) {
+    return null;
+  }
+
   return (
-    <footer className="site-footer">
-      <div className="footer-container">
-        <div className="footer-brand">
-          <a href="#" className="logo">MiProyecto</a>
-          <p className="footer-text">
-            © {new Date().getFullYear()} MiProyecto — Todos los derechos reservados.
-          </p>
-        </div>
-
-        <ul className="footer-links">
-          <li><a href="#">Acerca de</a></li>
-          <li><a href="#">Privacidad</a></li>
-          <li><a href="#">Términos</a></li>
-          <li><a href="#">Contacto</a></li>
-        </ul>
-
-        {role === 'admin' && (
-          <div className="footer-admin">
-            <a href="#admin-panel" className="btn btn-admin">Panel de Administración</a>
-          </div>
-        )}
-      </div>
-    </footer>
+    <Box
+      component="footer"
+      sx={{
+        backgroundColor: "#f5f5f5",
+        color: "text.secondary",
+        textAlign: "center",
+        py: 2,
+        mt: "auto",
+        borderTop: "1px solid #e0e0e0",
+      }}
+    >
+      <Divider sx={{ mb: 1 }} />
+      <Typography variant="body2">
+        © {new Date().getFullYear()} SprintFlow — Todos los derechos reservados.
+      </Typography>
+      <Typography variant="caption">
+        Desarrollado por{" "}
+        <Link href="#" underline="hover" color="primary">
+          Cohispania Team
+        </Link>
+      </Typography>
+    </Box>
   );
 }
-
-export default Footer;
