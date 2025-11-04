@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import "./index.css";
 import routerSprint from "./router/Router";
+import { AuthProvider } from './context/AuthContext';
 
 const theme = createTheme({
   palette: {

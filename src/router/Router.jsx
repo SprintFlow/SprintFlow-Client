@@ -27,7 +27,7 @@ const routerSprint = createBrowserRouter([
         path: "register",
         element: <RegisterPage />,
       },
-      
+
       // ========== RUTAS DE USUARIO (Developer) ==========
       {
         path: "user-dashboard",
@@ -45,7 +45,15 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      
+      {
+        path: "configuration",
+        element: (
+          <ProtectedRoute requireAdmin={true}>
+            <Configuration />
+          </ProtectedRoute>
+        ),
+      },
+
       // ========== RUTAS DE ADMIN ==========
       {
         path: "admin-dashboard",
@@ -79,7 +87,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      
+
       // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
       {
         path: "sprint-detail/:id",
@@ -97,7 +105,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      
+
       // ========== 404 ==========
       {
         path: "*",
