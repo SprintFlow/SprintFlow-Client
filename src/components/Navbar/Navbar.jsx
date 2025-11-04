@@ -1,89 +1,294 @@
-import React, { useState } from 'react';
-import '.Navbar/navbar.css';
+import {
+    AppBar,
+    Toolbar,
+    Typography,
+    Button,
+    Box,
+    Avatar,
+    Menu,
+    MenuItem,
+    IconButton,
+    useTheme,
+    useMediaQuery,
+} from "@mui/material";
+import {
+    Menu as MenuIcon,
+    AccountCircle,
+    Dashboard,
+    AdminPanelSettings,
+    Logout,
+} from "@mui/icons-material";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import useAuthStore from "../../store/authStore";
+import SprintFlowLogo from "../SprintFlowLogo";
 
+export default function Navbar() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-function Navbar({ role = 'guest' }) {
-const [open, setOpen] = useState(false);
+    const { user, isAuthenticated, logout } = useAuthStore();
+    const [anchorEl, setAnchorEl] = useState(null);
 
+    const handleMenu = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
 
-return (
-<header>
-<nav className="navbar" aria-label="Navegación principal">
-<div className="brand">
-<a href="#" className="logo">Sprint Flow</a>
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
 
+    const handleLogout = () => {
+        logout();
+        handleClose();
+        navigate("/");
+    };
 
-<button
-className={`nav-toggle ${open ? 'is-open' : ''}`}
-aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
-aria-expanded={open}
-aria-controls="primary-nav"
-onClick={() => setOpen(!open)}
->
-<span className="hamburger" aria-hidden="true"><span /></span>
-</button>
-</div>
+    const handleNavigation = (path) => {
+        navigate(path);
+        handleClose();
+    };
 
+    // Rutas donde NO debe mostrarse el navbar
+    const noNavbarRoutes = ["/", "/login", "/register"];
+    
+    // No mostrar navbar si:
+    // 1. No está autenticado O
+    // 2. Está en una ruta de autenticación
+    if (!isAuthenticated || noNavbarRoutes.includes(location.pathname)) {
+        return null;
+    }
 
-<ul id="primary-nav" className={`nav-links ${open ? 'open' : ''}`}>
-<li><a href="#">Inicio</a></li>
-<li><a href="#">Características</a></li>
-<li><a href="#">Precios</a></li>
-<li><a href="#">Contacto</a></li>
-</ul>
+    return (
+        <AppBar
+            position="static"
+            sx={{
+                backgroundColor: "white",
+                color: "text.primary",
+                boxShadow: 1
+            }}
+        >
+            <Toolbar sx={{ justifyContent: "space-between" }}>
+                {/* Logo y título */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <SprintFlowLogo size={70} />
+                    <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 600, color: "#4CAF50", fontSize: "0.95rem" }}
+                    >
+                        SprintFlow
+                    </Typography>
+                </Box>
 
+                {/* Menú de navegación - Solo en desktop */}
+                {!isMobile && (
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                        {/* Botones para usuario regular */}
+                        {user && !user.isAdmin && (
+                            <>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate("/user-dashboard")}
+                                    sx={{
+                                        backgroundColor: location.pathname === "/user-dashboard" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        fontWeight: location.pathname === "/user-dashboard" ? 600 : 400
+                                    }}
+                                >
+                                    Mi Dashboard
+                                </Button>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate("/register-points")}
+                                    sx={{
+                                        backgroundColor: location.pathname === "/register-points" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        fontWeight: location.pathname === "/register-points" ? 600 : 400
+                                    }}
+                                >
+                                    Registrar Puntos
+                                </Button>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate("/results")}
+                                    sx={{
+                                        backgroundColor: location.pathname === "/results" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        fontWeight: location.pathname === "/results" ? 600 : 400
+                                    }}
+                                >
+                                    Resultados
+                                </Button>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate("/configuration")}
+                                    startIcon={<AdminPanelSettings />}
+                                    sx={{
+                                        backgroundColor: location.pathname === "/configuration" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        fontWeight: location.pathname === "/configuration" ? 600 : 400
+                                    }}
+                                >
+                                    Mi Perfil
+                                </Button>
+                            </>
+                        )}
 
-<div className="nav-actions">
-{role === 'guest' && (
-<div className="actions-guest">
-<a className="btn btn-outline" href="#login">Login</a>
-<a className="btn btn-primary" href="#register">Register</a>
-</div>
-)}
+                        {/* Botones para admin */}
+                        {user?.isAdmin && (
+                            <>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate("/admin-dashboard")}
+                                    startIcon={<Dashboard />}
+                                    sx={{
+                                        backgroundColor: location.pathname === "/admin-dashboard" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        fontWeight: location.pathname === "/admin-dashboard" ? 600 : 400
+                                    }}
+                                >
+                                    Dashboard Admin
+                                </Button>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate("/create-sprint")}
+                                    sx={{
+                                        backgroundColor: location.pathname === "/create-sprint" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        fontWeight: location.pathname === "/create-sprint" ? 600 : 400
+                                    }}
+                                >
+                                    Gestión Sprints
+                                </Button>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate("/results")}
+                                    sx={{
+                                        backgroundColor: location.pathname === "/results" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        fontWeight: location.pathname === "/results" ? 600 : 400
+                                    }}
+                                >
+                                    Resultados
+                                </Button>
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate("/configuration")}
+                                    startIcon={<AdminPanelSettings />}
+                                    sx={{
+                                        backgroundColor: location.pathname === "/configuration" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        fontWeight: location.pathname === "/configuration" ? 600 : 400
+                                    }}
+                                >
+                                    Mi Perfil
+                                </Button>
+                            </>
+                        )}
+                    </Box>
+                )}
 
+                {/* Menú de usuario */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>
+                        Hola, {user?.name}
+                    </Typography>
 
-{role === 'user' && (
-<div className="actions-user">
-<a className="btn" href="#dashboard">Mi cuenta</a>
-<div className="avatar" title="Usuario">U</div>
-</div>
-)}
+                    <IconButton
+                        onClick={handleMenu}
+                        sx={{
+                            border: "2px solid",
+                            borderColor: "primary.main"
+                        }}
+                    >
+                        <Avatar
+                            sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: "#4CAF50",
+                                fontSize: "0.875rem"
+                            }}
+                        >
+                            {user?.name?.charAt(0)?.toUpperCase() || <AccountCircle />}
+                        </Avatar>
+                    </IconButton>
 
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={handleClose}
+                        PaperProps={{
+                            sx: {
+                                mt: 1.5,
+                                minWidth: 200
+                            }
+                        }}
+                    >
+                        {/* Menú móvil - Navegación */}
+                        {isMobile && (
+                            <>
+                                {user && !user.isAdmin && (
+                                    [
+                                        { path: "/user-dashboard", label: "Mi Dashboard", icon: <Dashboard /> },
+                                        { path: "/register-points", label: "Registrar Puntos", icon: <Dashboard /> },
+                                        { path: "/results", label: "Resultados", icon: <Dashboard /> },
+                                        { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
+                                    ].map((item) => (
+                                        <MenuItem
+                                            key={item.path}
+                                            onClick={() => handleNavigation(item.path)}
+                                        >
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                {item.icon}
+                                                {item.label}
+                                            </Box>
+                                        </MenuItem>
+                                    ))
+                                )}
 
-{role === 'admin' && (
-<div className="actions-admin">
-<a className="btn btn-admin" href="#admin-panel">Panel Admin</a>
-<a className="btn" href="#dashboard">Mi cuenta</a>
-<div className="avatar admin" title="Administrador">A</div>
-</div>
-)}
-</div>
-</nav>
+                                {user?.isAdmin && (
+                                    [
+                                        { path: "/admin-dashboard", label: "Dashboard Admin", icon: <Dashboard /> },
+                                        { path: "/create-sprint", label: "Gestión Sprints", icon: <Dashboard /> },
+                                        { path: "/results", label: "Resultados", icon: <Dashboard /> },
+                                        { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
+                                    ].map((item) => (
+                                        <MenuItem
+                                            key={item.path}
+                                            onClick={() => handleNavigation(item.path)}
+                                        >
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                {item.icon}
+                                                {item.label}
+                                            </Box>
+                                        </MenuItem>
+                                    ))
+                                )}
+                                <MenuItem divider />
+                            </>
+                        )}
 
+                        {/* Información del usuario */}
+                        <MenuItem disabled>
+                            <Box>
+                                <Typography variant="subtitle2">{user?.name}</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {user?.email}
+                                </Typography>
+                                <Typography variant="caption" color="primary">
+                                    {user?.isAdmin ? "Administrador" : user?.role}
+                                </Typography>
+                            </Box>
+                        </MenuItem>
+                        <MenuItem divider />
 
-<main className="container">
-<h1>Navbar con roles (Invitado / Usuario / Administrador)</h1>
-<p>Este ejemplo separa el JSX y el CSS. Para la demo en tu app, controla el `role` desde tu estado/Context o backend.</p>
-
-
-<section className="cards">
-<article className="card">
-<h2>Invitado</h2>
-<p>Verá los botones <strong>Login</strong> y <strong>Register</strong>.</p>
-</article>
-<article className="card">
-<h2>Usuario</h2>
-<p>Verá enlace a su <strong>Mi cuenta</strong> y un avatar.</p>
-</article>
-<article className="card">
-<h2>Administrador</h2>
-<p>Verá además el botón <strong>Panel Admin</strong> para gestiones extra.</p>
-</article>
-</section>
-</main>
-</header>
-);
+                        {/* Cerrar sesión */}
+                        <MenuItem
+                            onClick={handleLogout}
+                            sx={{ color: "error.main" }}
+                        >
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                <Logout fontSize="small" />
+                                Cerrar Sesión
+                            </Box>
+                        </MenuItem>
+                    </Menu>
+                </Box>
+            </Toolbar>
+        </AppBar>
+    );
 }
-
-
-export default Navbar;
