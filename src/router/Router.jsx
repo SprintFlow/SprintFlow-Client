@@ -11,7 +11,7 @@ import EditSprint from "../pages/EditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
 import SprintDetail from "../pages/SprintDetail";
 import NotFoundPage from "../pages/NotFoundPage";
-import RegisterPoints from "../pages/RegisterPoints";
+import PointsRegistry from "../pages/PointsRegistry";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 const routerSprint = createBrowserRouter([
@@ -27,7 +27,7 @@ const routerSprint = createBrowserRouter([
         path: "register",
         element: <RegisterPage />,
       },
-      
+
       // ========== RUTAS DE USUARIO (Developer) ==========
       {
         path: "user-dashboard",
@@ -38,14 +38,22 @@ const routerSprint = createBrowserRouter([
         ),
       },
       {
-        path: "register-points",
+        path: "points-registry",
         element: (
           <ProtectedRoute requireAdmin={false} requireUser={true}>
-            <RegisterPoints />
+            <PointsRegistry />
           </ProtectedRoute>
         ),
       },
-      
+      {
+        path: "configuration",
+        element: (
+          <ProtectedRoute requireAdmin={true}>
+            <Configuration />
+          </ProtectedRoute>
+        ),
+      },
+
       // ========== RUTAS DE ADMIN ==========
       {
         path: "admin-dashboard",
@@ -79,7 +87,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      
+
       // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
       {
         path: "sprint-detail/:id",
@@ -97,7 +105,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      
+
       // ========== 404 ==========
       {
         path: "*",

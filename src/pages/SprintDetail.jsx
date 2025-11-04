@@ -168,35 +168,43 @@ export default function SprintDetail() {
   const calculateDuration = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return diff + 1;
+    // total de días incluyendo inicio y fin
+    return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
   };
 
-  // CORREGIDO: Los días transcurridos deben parar en la fecha de fin
+  // Días que han pasado desde el inicio (solo días completos)
   const getDaysElapsed = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const today = new Date();
 
-    // Si el sprint ya terminó, usar la fecha de fin
-    if (today > end) {
-      const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-      return Math.max(0, diff + 1); // +1 para incluir el día de inicio
-    }
+    // Normalizar a medianoche
+    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    // Si el sprint está activo, calcular días desde inicio hasta hoy
-    const diff = Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, diff + 1); // +1 para incluir el día de inicio
+    if (todayDay < startDay) return 0; // antes de empezar
+    if (todayDay > endDay) return calculateDuration(startDate, endDate); // sprint terminado
+
+    // días completos que han pasado, hoy no cuenta
+    return Math.floor((todayDay - startDay) / (1000 * 60 * 60 * 24));
   };
 
-  const getDaysRemaining = (endDate) => {
+  // Días restantes incluyendo hoy
+  const getDaysRemaining = (startDate, endDate) => {
+    const start = new Date(startDate);
     const end = new Date(endDate);
     const today = new Date();
-    // Si el sprint ya terminó, mostrar 0 días restantes
-    if (today > end) return 0;
 
-    const diff = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, diff);
+    // Normalizar a medianoche
+    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    if (todayDay < startDay) return calculateDuration(startDate, endDate); // sprint no empezado
+    if (todayDay > endDay) return 0; // sprint terminado
+
+    return Math.floor((endDay - todayDay) / (1000 * 60 * 60 * 24)) + 1;
   };
 
   const getProgressPercentage = (sprint) => {
@@ -343,8 +351,8 @@ export default function SprintDetail() {
   const sprint = currentSprint;
   const sprintStatus = getSprintStatus(sprint);
   const duration = calculateDuration(sprint.startDate, sprint.endDate);
-  const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
-  const daysRemaining = getDaysRemaining(sprint.endDate);
+  const daysElapsed = getDaysElapsed(sprint.startDate);
+  const daysRemaining = getDaysRemaining(sprint.startDate, sprint.endDate);
   const pointsProgress = getProgressPercentage(sprint);
   const velocityMetrics = calculateVelocityMetrics(sprint);
   const pointsData = getCompletedPointsBySize(sprint);
@@ -1035,7 +1043,7 @@ export default function SprintDetail() {
                               variant="outlined"
                             />
                           </Box>
-                          
+
                           {dev.completion?.notes && (
                             <Box mt={1}>
                               <Typography variant="caption" color="text.secondary">
