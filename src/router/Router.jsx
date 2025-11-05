@@ -6,6 +6,7 @@ import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
 import UserDashboard from "../pages/UserDashboard";
 import Configuration from "../pages/Configuration";
+import ConfigurationTest from "../pages/ConfigurationTest";
 import CreateSprint from "../pages/CreateSprint";
 import EditSprint from "../pages/EditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
