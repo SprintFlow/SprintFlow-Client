@@ -222,7 +222,19 @@ const Configuration = () => {
 
     } catch (error) {
       console.error('Error al guardar cambios:', error);
-      setError('Error al guardar los cambios: ' + (error.response?.data?.message || error.message));
+      
+      // Mensajes de error específicos
+      let errorMessage = 'Error al guardar los cambios';
+      
+      if (error.response?.status === 413 || error.message?.includes('413')) {
+        errorMessage = 'La imagen es demasiado grande. Por favor, usa una imagen más pequeña (máximo 2MB).';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -266,12 +278,16 @@ const Configuration = () => {
     }
 
     try {
+      setSuccess('Procesando imagen...');
       const base64 = await convertToBase64(file);
       console.log('Avatar convertido a Base64:', {
-        length: base64.length,
+        fileName: file.name,
+        fileSize: file.size,
+        base64Length: base64.length,
         preview: base64.substring(0, 50) + '...'
       });
       handlePersonalInfoChange('avatar', base64);
+      setSuccess('Imagen cargada. Haz click en "Guardar Cambios" para aplicar.');
       setError(''); // Limpiar cualquier error previo
     } catch (error) {
       console.error('Error al convertir imagen:', error);
@@ -701,96 +717,6 @@ const Configuration = () => {
                     disabled={loading}
                   />
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Preferencias */}
-          <Grid item xs={12}>
-            <Card
-              sx={{
-                borderRadius: 2,
-                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                border: `1px solid #e0e0e0`,
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography 
-                  variant="h6" 
-                  fontWeight="700" 
-                  mb={1}
-                  sx={{ color: theme.primaryDark }}
-                >
-                  Preferencias
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={3}>
-                  Personaliza tu experiencia
-                </Typography>
-
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={4}>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium" mb={1}>
-                        Tema de la aplicación
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                        Cambia entre modo claro y oscuro
-                      </Typography>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={preferences.theme === 'dark'}
-                            onChange={(e) => handlePreferenceChange('theme', e.target.checked ? 'dark' : 'light')}
-                            disabled={loading}
-                          />
-                        }
-                        label={preferences.theme === 'dark' ? 'Oscuro' : 'Claro'}
-                      />
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={12} sm={4}>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium" mb={1}>
-                        Notificaciones por email
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                        Recibe actualizaciones de sprint
-                      </Typography>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={preferences.emailNotifications}
-                            onChange={(e) => handlePreferenceChange('emailNotifications', e.target.checked)}
-                            disabled={loading}
-                          />
-                        }
-                        label={preferences.emailNotifications ? 'Activas' : 'Desactivadas'}
-                      />
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={12} sm={4}>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium" mb={1}>
-                        Recordatorios diarios
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                        Daily stand-up automático
-                      </Typography>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={preferences.dailyReminders}
-                            onChange={(e) => handlePreferenceChange('dailyReminders', e.target.checked)}
-                            disabled={loading}
-                          />
-                        }
-                        label={preferences.dailyReminders ? 'Activos' : 'Desactivados'}
-                      />
-                    </Box>
-                  </Grid>
-                </Grid>
               </CardContent>
             </Card>
           </Grid>

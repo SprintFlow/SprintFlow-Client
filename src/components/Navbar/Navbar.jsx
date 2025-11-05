@@ -188,24 +188,47 @@ export default function Navbar() {
                         Hola, {user?.name}
                     </Typography>
 
+                    {/* Avatar clickeable que lleva a configuración */}
                     <IconButton
-                        onClick={handleMenu}
+                        onClick={() => navigate("/configuration")}
                         sx={{
                             border: "2px solid",
-                            borderColor: "primary.main"
+                            borderColor: "primary.main",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                                transform: "scale(1.1)",
+                                borderColor: "primary.dark",
+                                boxShadow: "0 4px 12px rgba(76, 175, 80, 0.4)"
+                            }
                         }}
+                        title="Ir a Mi Perfil / Configuración"
                     >
                         <Avatar
                             src={user?.avatar}
                             sx={{
-                                width: 32,
-                                height: 32,
+                                width: 36,
+                                height: 36,
                                 bgcolor: "#4CAF50",
-                                fontSize: "0.875rem"
+                                fontSize: "1rem",
+                                cursor: "pointer"
                             }}
                         >
                             {!user?.avatar && (user?.name?.charAt(0)?.toUpperCase() || <AccountCircle />)}
                         </Avatar>
+                    </IconButton>
+
+                    {/* Menú hamburguesa */}
+                    <IconButton
+                        onClick={handleMenu}
+                        size="small"
+                        sx={{ 
+                            color: "primary.main",
+                            "&:hover": {
+                                backgroundColor: "rgba(76, 175, 80, 0.1)"
+                            }
+                        }}
+                    >
+                        <MenuIcon />
                     </IconButton>
 
                     <Menu
