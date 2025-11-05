@@ -78,7 +78,10 @@ const Configuration = () => {
   // Cargar datos del usuario actual al montar el componente
   useEffect(() => {
     loadCurrentUser();
-    loadUsers();
+    // Solo cargar usuarios si es admin
+    if (currentUser?.isAdmin) {
+      loadUsers();
+    }
   }, [currentUser]);
 
   const loadCurrentUser = () => {
