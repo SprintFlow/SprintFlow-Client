@@ -64,6 +64,15 @@ const Configuration = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Validación: Si no hay usuario, mostrar loading
+  if (!currentUser) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   // Colores del tema verde profesional (igual que AdminDashboard)
   const theme = {
     primary: "#4CAF50",
