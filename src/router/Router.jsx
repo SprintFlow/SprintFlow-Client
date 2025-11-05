@@ -6,6 +6,7 @@ import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
 import UserDashboard from "../pages/UserDashboard";
 import Configuration from "../pages/Configuration";
+import ConfigurationTest from "../pages/ConfigurationTest";
 import CreateSprint from "../pages/CreateSprint";
 import EditSprint from "../pages/EditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
@@ -37,14 +38,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: "configuration",
-        element: (
-          <ProtectedRoute requireAdmin={true}>
-            <Configuration />
-          </ProtectedRoute>
-        ),
-      },
+      
 
       // ========== RUTAS DE ADMIN ==========
       {
@@ -71,16 +65,16 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      
+      // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
       {
         path: "configuration",
         element: (
-          <ProtectedRoute requireAdmin={true}>
+          <ProtectedRoute>
             <Configuration />
           </ProtectedRoute>
         ),
       },
-
-      // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
       {
         path: "sprint-detail/:id",
         element: (

@@ -232,6 +232,7 @@ export default function Navbar() {
                         }}
                     >
                         <Avatar
+                            src={user?.avatar}
                             sx={{
                                 width: 32,
                                 height: 32,
@@ -239,7 +240,7 @@ export default function Navbar() {
                                 fontSize: "0.875rem"
                             }}
                         >
-                            {user?.name?.charAt(0)?.toUpperCase() || <AccountCircle />}
+                            {!user?.avatar && (user?.name?.charAt(0)?.toUpperCase() || <AccountCircle />)}
                         </Avatar>
                     </IconButton>
 

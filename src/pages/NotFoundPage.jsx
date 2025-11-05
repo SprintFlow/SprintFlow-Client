@@ -1,10 +1,18 @@
 import React from "react";
 import { Box, Typography, Button, Container } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import SprintFlowLogo from "../components/SprintFlowLogo";
+import useAuthStore from "../store/authStore";
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, isAuthenticated } = useAuthStore();
+
+  console.log("🔴 404 Page - Debug Info:");
+  console.log("   - Ruta intentada:", location.pathname);
+  console.log("   - isAuthenticated:", isAuthenticated);
+  console.log("   - user:", user);
 
   return (
     <Container maxWidth="sm">
@@ -29,6 +37,9 @@ export default function NotFoundPage() {
         </Typography>
         <Typography variant="body1" color="text.secondary" mb={4}>
           Lo sentimos, la página que buscas no existe o ha sido movida.
+        </Typography>
+        <Typography variant="caption" color="text.secondary" mb={2}>
+          Ruta: {location.pathname}
         </Typography>
         <Button
           variant="contained"

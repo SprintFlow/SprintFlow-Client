@@ -24,7 +24,8 @@ const useAuthStore = create(
               name: data.user.name,
               email: data.user.email,
               role: data.user.role,
-              isAdmin: data.user.isAdmin  // IMPORTANTE
+              isAdmin: data.user.isAdmin,
+              avatar: data.user.avatar
             },
             token: data.token,
             isAuthenticated: true,
@@ -53,7 +54,8 @@ const useAuthStore = create(
               name: data.user.name,
               email: data.user.email,
               role: data.user.role,
-              isAdmin: data.user.isAdmin
+              isAdmin: data.user.isAdmin,
+              avatar: data.user.avatar
             },
             token: data.token,
             isAuthenticated: true,
@@ -91,6 +93,17 @@ const useAuthStore = create(
       isAdmin: () => {
         const user = get().user;
         return user?.isAdmin === true;
+      },
+
+      // ✅ Actualizar información del usuario
+      updateUser: (userData) => {
+        const currentUser = get().user;
+        set({
+          user: {
+            ...currentUser,
+            ...userData
+          }
+        });
       },
 
       // === CLEAR ERROR ===
