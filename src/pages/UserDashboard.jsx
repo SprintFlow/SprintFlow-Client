@@ -1,310 +1,794 @@
-import {
-    Box,
-    Card,
-    CardContent,
-    Button,
-    Typography,
-    Grid,
-    LinearProgress,
-    Chip,
-    Divider,
-    CircularProgress
-} from "@mui/material";
-import { Calendar, Target, TrendingUp, Clock, Award } from "lucide-react";
-import { Link } from 'react-router-dom';
-import { useEffect, useMemo } from "react";
+// components/UserDashboard.jsx
+import React, { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import { Calendar, Target, TrendingUp, Clock, Plus, Minus } from "lucide-react";
+import { LinearProgress, CircularProgress, Alert, Divider, Chip, Snackbar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, FormControlLabel, Checkbox } from '@mui/material';
 
-import useSprintStore from "../store/SprintStore";
-import useAuthStore from "../store/authStore";
-
+// Importar stores
+import useAuthStore from '../store/authStore';
+import useSprintStore from '../store/sprintStore';
+import usePointStore from '../store/pointStore';
 
 const UserDashboard = () => {
-    const { user } = useAuthStore()
-    const { sprints, fetchSprints, isLoading } = useSprintStore()
+    const { user } = useAuthStore();
+    const { sprints, isLoading: sprintsLoading, error: sprintsError, fetchSprints } = useSprintStore();
+    const {
+        userPoints,
+        recentRecords,
+        isLoading: pointsLoading,
+        error: pointsError,
+        fetchUserPoints,
+        fetchRecentRecords,
+        getPointsBySprint,
+        getTotalPoints,
+        registerPoints
+    } = usePointStore();
+
+    const [activeSprint, setActiveSprint] = useState(null);
+    const [dashboardStats, setDashboardStats] = useState({
+        currentSprintPoints: 0,
+        totalPoints: 0,
+        teamProgress: 0,
+        daysRemaining: 0,
+        teamTotalPoints: 0,
+        teamPlannedPoints: 0,
+        remainingPoints: 0
+    });
+
+    // Estados para el registro de puntos
+    const [points, setPoints] = useState({
+        '0.5': 0,
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '5': 0,
+        '8': 0,
+        '13': 0,
+        '21': 0
+    });
+
+    const [isInterruption, setIsInterruption] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     useEffect(() => {
-        fetchSprints()
-    }, [fetchSprints])
+        loadDashboardData();
+    }, []);
 
-    // 👇 Para depurar
-    // console.log("Usuario logeado:", user);
+    const loadDashboardData = async () => {
+        try {
+            await fetchSprints();
+            if (user?.id) {
+                await fetchUserPoints(user.id);
+                await fetchRecentRecords(user.id);
+            }
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+        }
+    };
 
-    // const activeSprint = useMemo(() => {
-    //     const today = new Date();
-    //     return sprints.find(s => {
-    //         const start = new Date(s.startDate);
-    //         const end = new Date(s.endDate);
-    //         return today >= start && today <= end;
-    //     });
-    // }, [sprints]);
-    const activeSprint = useMemo(() => {
-        const userId = user?._id || user?.id
-        if (!userId) return null;
-
-        const today = new Date();
-        return sprints.find(s => {
-            const start = new Date(s.startDate);
-            const end = new Date(s.endDate);
-            const isActiveByDate = today >= start && today <= end;
-            const isStatusActive = s.status === "Activo";
-            const isUserAssigned = s.usersAssigned?.some(
-                u => String(u.userId?._id || u.userId) === String(userId)
-            );
-
-            // Para depurar
-            console.log('Sprint:', s.name, {
-                isActiveByDate,
-                isStatusActive,
-                isUserAssigned,
-                userIds: s.usersAssigned?.map(u => String(u.userId?._id || u.userId)),
-                currentUserId: String(userId)
+    // Encontrar sprint activo y calcular estadísticas
+    useEffect(() => {
+        if (sprints && sprints.length > 0) {
+            const active = sprints.find(sprint => {
+                const sprintStatus = sprint.calculatedStatus || 'Planificado';
+                return sprintStatus === 'Activo';
             });
-            return isActiveByDate && isStatusActive && isUserAssigned
-        });
-    }, [sprints, user]);
 
-    if (isLoading) {
+            setActiveSprint(active || null);
+
+            if (active && user?.id) {
+                const userSprintPoints = getPointsBySprint(active._id);
+                const totalUserPoints = getTotalPoints();
+
+                const teamTotalPoints = active.completedPoints || 0;
+                const teamPlannedPoints = active.plannedTotalPoints || 0;
+                const remainingPoints = Math.max(0, teamPlannedPoints - teamTotalPoints);
+                const teamProgress = teamPlannedPoints > 0 ?
+                    (teamTotalPoints / teamPlannedPoints) * 100 : 0;
+
+                const daysRemaining = calculateDaysRemaining(active.endDate);
+
+                setDashboardStats({
+                    currentSprintPoints: userSprintPoints,
+                    totalPoints: totalUserPoints,
+                    teamProgress: teamProgress,
+                    daysRemaining: daysRemaining,
+                    teamTotalPoints: teamTotalPoints,
+                    teamPlannedPoints: teamPlannedPoints,
+                    remainingPoints: remainingPoints
+                });
+            }
+        }
+    }, [sprints, userPoints, user]);
+
+    const calculateDaysRemaining = (endDate) => {
+        if (!endDate) return 0;
+        const end = new Date(endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+        const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+        return Math.max(0, diff);
+    };
+
+    const calculateSprintDuration = (startDate, endDate) => {
+        if (!startDate || !endDate) return 0;
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        return Math.max(0, diff + 1);
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        const date = new Date(dateString);
+        return date.toLocaleDateString("es-ES", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
+
+    const formatRecordDate = (dateString) => {
+        if (!dateString) return "N/A";
+        const date = new Date(dateString);
+        return date.toLocaleDateString("es-ES", {
+            day: "numeric",
+            month: "long"
+        });
+    };
+
+    // Funciones para el registro de puntos
+    const handlePointChange = (pointValue, change) => {
+        setPoints(prev => ({
+            ...prev,
+            [pointValue]: Math.max(0, prev[pointValue] + change)
+        }));
+    };
+
+    const handleInputChange = (pointValue, newValue) => {
+        const value = parseInt(newValue) || 0;
+        setPoints(prev => ({
+            ...prev,
+            [pointValue]: value >= 0 ? value : 0
+        }));
+    };
+
+    const calculateSubtotal = (pointValue) => {
+        const count = points[pointValue];
+        return count > 0 ? (parseFloat(pointValue) * count).toFixed(1) : '-';
+    };
+
+    const calculateTotalPoints = () => {
+        return Object.entries(points).reduce((total, [pointValue, count]) => {
+            return total + (parseFloat(pointValue) * count);
+        }, 0);
+    };
+
+    const getStoriesArray = () => {
+        return Object.entries(points)
+            .filter(([_, count]) => count > 0)
+            .map(([pointValue, count]) => ({
+                points: parseFloat(pointValue),
+                count: count
+            }));
+    };
+
+    const handleSubmit = async () => {
+        const totalPoints = calculateTotalPoints();
+
+        if (totalPoints === 0) {
+            showSnackbar('Debes registrar al menos un punto', 'error');
+            return;
+        }
+
+        if (!activeSprint) {
+            showSnackbar('No hay un sprint activo', 'error');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const pointData = {
+                sprintId: activeSprint._id,
+                userId: user.id,
+                points: totalPoints,
+                stories: getStoriesArray(),
+                isInterruption: isInterruption,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            console.log('Enviando datos:', pointData); // DEBUG
+
+            const result = await registerPoints(pointData);
+
+            if (result.success) {
+                showSnackbar('Puntos registrados exitosamente!', 'success');
+
+                setPoints({
+                    '0.5': 0, '1': 0, '2': 0, '3': 0,
+                    '5': 0, '8': 0, '13': 0, '21': 0
+                });
+                setIsInterruption(false);
+
+                setTimeout(() => {
+                    loadDashboardData();
+                }, 1000);
+            } else {
+                showSnackbar(pointsError || 'Error al registrar puntos', 'error');
+            }
+        } catch (error) {
+            console.error('Error al registrar puntos:', error);
+            showSnackbar('Error al registrar puntos: ' + error.message, 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const showSnackbar = (message, severity) => {
+        setSnackbar({ open: true, message, severity });
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbar({ ...snackbar, open: false });
+    };
+
+    const pointValues = ['0.5', '1', '2', '3', '5', '8', '13', '21'];
+    const totalPoints = calculateTotalPoints();
+
+    if (sprintsLoading || pointsLoading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-                <Typography>Cargando...</Typography>
+            <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                minHeight="100vh"
+                sx={{ backgroundColor: '#f0fdf4' }}
+            >
+                <CircularProgress size={60} sx={{ color: '#10b981' }} />
             </Box>
         );
     }
 
-    if (!activeSprint) {
-        return (
-            <Card sx={{ p: 4, textAlign: "center" }}>
-                <Typography variant="h6">No hay un sprint activo actualmente</Typography>
-            </Card>
-        );
-    }
-
-    // Datos del usuario dentro del sprint activo
-    const userPoints = activeSprint.userPoints?.find(u => u.userId === user?._id);
-    const myPoints = userPoints?.points || 0;
-
-    // Cálculo de progreso
-    const planned = activeSprint.plannedTotalPoints || 0;
-    const completed = activeSprint.completedPoints || 0;
-    const progress = planned > 0 ? (completed / planned) * 100 : 0;
-
-    const daysRemaining = (() => {
-        const today = new Date();
-        const end = new Date(activeSprint.endDate);
-        const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-        return diff > 0 ? diff : 0;
-    })();
+    const hasError = sprintsError || pointsError;
 
     return (
-        <>
-            <Card component='main' sx={{ bgcolor: '#f5f5f5', color: 'black', textAlign: 'justify', borderRadius: '10px', p: '5% 3%' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Box >
-                        <Typography variant='h5' sx={{ fontSize: '20px' }}>Mi Dashboard - Desarrollador</Typography>
-                        <Typography sx={{ color: 'grey' }}> Bienvenido, <span>{user?.name}</span></Typography>
-                    </Box>
-                    <Button component={Link} to="/points-registry" variant='contained' size='small' sx={{
-                        bgcolor: 'black', color: 'white', fontSize: '0.75rem',
-                        padding: '2px 10px',
-                        minWidth: 'auto'
-                    }}>Registrar puntos</Button>
-                </Box>
+        <Box sx={{
+            minHeight: "100vh",
+            backgroundColor: '#f0fdf4',
+            py: 3,
+            width: '100%',
+            margin: 0,
+            padding: 0,
+        }}>
+            <Box sx={{
+                width: '100%',
+                px: { xs: 2, sm: 3, md: 4 },
+                maxWidth: '1400px',
+                margin: '0 auto'
+            }}>
 
-                {/* Stats Cards */}
-                <Grid container spacing={3}
-                    sx={{
-                        mt: 4,
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: 'repeat(2, 1fr)',
-                            md: 'repeat(4, 1fr)'
-                        },
-                        gap: 3
-                    }}>
-                    {/* Sprint actual */}
-                    <Card>
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
-                                <Typography gutterBottom sx={{ fontSize: 17 }}>
-                                    Sprint actual
-                                </Typography>
-                                <Target style={{ color: '#9e9e9e' }} />
-                            </Box>
-                            <Typography sx={{ mt: '30px', fontSize: '20px', whiteSpace: 'normal', textAlign: 'left' }}>{activeSprint.name.replace(/\s+/g, ' ').trim() }</Typography>
-                            <Typography sx={{ fontSize: '12px', color: 'grey', mt: 2 }}>En progreso</Typography>
-                        </CardContent>
-                    </Card>
-
-                    {/* Mis Puntos (Sprint) */}
-                    <Card>
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
-                                <Typography gutterBottom sx={{ fontSize: 17 }}>
-                                    Mis Puntos (Sprint)
-                                </Typography>
-                                <TrendingUp style={{ color: '#9e9e9e' }} />
-                            </Box>
-                            <Typography sx={{ mt: '30px', fontSize: '30px' }}>{myPoints.toFixed(1)}</Typography>
-                            <Typography sx={{ fontSize: '12px', color: 'grey' }}>Este sprint</Typography>
-                        </CardContent>
-                    </Card>
-
-                    {/* Puntos Totales  */}
-                    <Card>
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
-                                <Typography gutterBottom sx={{ fontSize: 17 }}>
-                                    Puntos Totales
-                                </Typography>
-                                {/* <Calendar style={{ color: '#9e9e9e' }} /> */}
-                                <Award style={{ color: '#9e9e9e' }}></Award>
-                            </Box>
-                            {/* <Typography sx={{ mt: '30px', fontSize: '30px' }}>{user?.totalPoints || 0}</Typography> */}
-                            <Typography sx={{ mt: '30px', fontSize: '30px' }}>{planned}</Typography>
-                            <Typography sx={{ fontSize: '12px', color: 'grey' }}>De este sprint</Typography>
-                        </CardContent>
-                    </Card>
-
-                    {/* Días Restantes  */}
-                    <Card>
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
-                                <Typography gutterBottom sx={{ fontSize: 17 }}>
-                                    Días Restantes
-                                </Typography>
-                                <Clock style={{ color: '#9e9e9e' }}></Clock>
-                            </Box>
-                            <Typography sx={{ mt: '30px', fontSize: '30px' }}>{daysRemaining}</Typography>
-                            <Typography sx={{ fontSize: '12px', color: 'grey' }}>Para finalizar sprint</Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Active Sprint */}
-                {activeSprint ? (
-                    <Card sx={{ mt: 4, py: 2.7, px: 2, borderRadius: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Typography variant='h4' sx={{ fontSize: 17, fontWeight: 600 }}>Sprint Activo</Typography>
-                            <Chip label="Activo" sx={{ color: 'white', backgroundColor: 'black' }} />
-                        </Box>
-
-                        <Box sx={{ mt: 4 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography>{activeSprint.name}</Typography>
-                                <Button component={Link} to={`/sprint-detail/${activeSprint._id}`} variant='outlined' >Ver Detalle</Button>
-                            </Box>
-                            <Typography sx={{ color: 'grey.600', fontSize: 14, mt: 0.5 }}><span>{activeSprint.startDate}</span>  -  <span>{activeSprint.endDate}</span> <span>(5 días)</span></Typography>
-                        </Box>
-
-                        {/* Progreso del equipo - Sprint Activo  */}
-                        <Box sx={{ mt: 3 }}>
-                            <Box sx={{ display: "flex", justifyContent: 'space-between', alignItems: "center", gap: 1 }}>
-                                <Typography
-                                    variant="body2"
-                                    fontWeight={500}
-                                    color="text.secondary"
-                                    sx={{ mb: 1 }}
-                                >
-                                    Progreso del Equipo
-                                </Typography>
-                                <Typography variant='body2'><span>{completed}</span> / <span>{planned}</span> puntos</Typography>
-                            </Box>
-
-                            <Box sx={{ width: "100%" }}>
-                                <LinearProgress
-                                    variant="determinate"
-                                    value={progress}
-                                    sx={{
-                                        height: 8,
-                                        borderRadius: 5,
-                                        backgroundColor: "#e5e7eb",
-                                        "& .MuiLinearProgress-bar": {
-                                            backgroundColor: "#1e40af",
-                                        },
-                                    }}
-                                />
-                            </Box>
-                            <Typography variant="body2" sx={{ minWidth: 40, textAlign: "justify", mt: 1 }}>
-                                <span>{progress.toFixed(1)}</span> %
-                            </Typography>
-                        </Box>
-
-                        <Divider sx={{ my: 3 }} />
-
-                        <Box elevation={1} sx={{ mx: "auto", backgroundColor: "transparent" }}>
-                            {/* Puntos */}
-                            <Grid container spacing={6} sx={{
-                                display: "grid",
-                                gridTemplateColumns: "1fr 1fr",
-                                alignItems: "center",
-                                textAlign: "justify",
-                                gap: 0,
-                            }}>
-                                <Grid>
-                                    <Typography variant="subtitle2" color="text.secondary">
-                                        Mis Puntos
-                                    </Typography>
-                                    <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28 }}>
-                                        {myPoints.toFixed(1)}
-                                    </Typography>
-                                </Grid>
-
-                                <Grid>
-                                    <Typography variant="subtitle2" color="text.secondary">
-                                        Equipo Total
-                                    </Typography>
-                                    <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28 }}>
-                                        {completed.toFixed(1)}
-                                    </Typography>
-                                </Grid>
-                            </Grid>
-
-                            <Divider sx={{ my: 2 }} />
-
-                            {/* Observaciones */}
-                            <Box>
-                                <Typography
-                                    variant="subtitle1"
-                                    fontWeight="bold"
-                                    sx={{ mb: 0.5 }}
-                                >
-                                    Observaciones:
-                                </Typography>
-                                <Typography variant="body1" color="text.secondary" sx={{ fontSize: 14 }}>
-                                    {activeSprint.observations || 'Sin observaciones'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Card>
-                ) : (
-                    <Typography>No hay un sprint activo actualmente</Typography>
+                {hasError && (
+                    <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                        {sprintsError || pointsError}
+                    </Alert>
                 )}
 
-                {/* My Recent Records */}
-                <Card sx={{ mt: 4, py: 2.7, px: 2, borderRadius: 3 }}>
-                    <Typography variant='h4' sx={{ fontSize: 17, fontWeight: 600 }}>Mis Registros</Typography>
-                    <Box sx={{
-                        my: 2, p: 2, borderRadius: 2,
-                        border: "1px solid",
-                        borderColor: "grey.200",
-                        bgcolor: "background.default"
-                    }}>
-                        <Typography><span>2</span> historia(s) de <span>1</span> punto(s)</Typography>
-                        <Typography component="span" sx={{ color: 'grey', fontSize: '14px' }}>14 de enero</Typography>
-                    </Box>
-                    <Box sx={{
-                        my: 2, p: 2, borderRadius: 2,
-                        border: "1px solid",
-                        borderColor: "grey.200",
-                        bgcolor: "background.default"
-                    }}>
-                        <Typography><span>1</span> historia(s) de <span>5</span> punto(s)</Typography>
-                        <Typography component="span" sx={{ color: 'grey', fontSize: '14px' }}>15 de enero</Typography>
+                {/* Header */}
+                <Card sx={{
+                    bgcolor: 'white',
+                    borderRadius: 3,
+                    p: 3,
+                    mb: 3,
+                    boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                    border: '1px solid #d1fae5'
+                }}>
+                    <Box>
+                        <Typography variant='h5' fontWeight="700" sx={{ color: '#065f46' }}>
+                            Mi Dashboard - {user?.role || 'Developer'}
+                        </Typography>
+                        <Typography sx={{ color: '#6b7280' }}>
+                            Bienvenido, <span style={{ fontWeight: 600, color: '#059669' }}>{user?.name || 'Usuario'}</span>
+                        </Typography>
                     </Box>
                 </Card>
-            </Card>
-        </>
-    )
-}
 
-export default UserDashboard
+                {/* Stats Cards */}
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                    {/* Sprint actual */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card sx={{
+                            height: '100%',
+                            borderRadius: 3,
+                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            transition: 'transform 0.2s',
+                            border: '1px solid #d1fae5',
+                            '&:hover': { transform: 'translateY(-2px)' }
+                        }}>
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}>
+                                        Sprint actual
+                                    </Typography>
+                                    <Target style={{ color: '#10b981' }} />
+                                </Box>
+                                <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}>
+                                    {activeSprint ? activeSprint.number || '1' : '0'}
+                                </Typography>
+                                <Typography sx={{ fontSize: '12px', color: '#6b7280' }}>
+                                    {activeSprint ? 'En progreso' : 'No activo'}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Mis Puntos (Sprint) */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card sx={{
+                            height: '100%',
+                            borderRadius: 3,
+                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            transition: 'transform 0.2s',
+                            border: '1px solid #d1fae5',
+                            '&:hover': { transform: 'translateY(-2px)' }
+                        }}>
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}>
+                                        Mis Puntos (Sprint)
+                                    </Typography>
+                                    <TrendingUp style={{ color: '#10b981' }} />
+                                </Box>
+                                <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}>
+                                    {dashboardStats.currentSprintPoints.toFixed(1)}
+                                </Typography>
+                                <Typography sx={{ fontSize: '12px', color: '#6b7280' }}>
+                                    Este sprint
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Puntos Totales */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card sx={{
+                            height: '100%',
+                            borderRadius: 3,
+                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            transition: 'transform 0.2s',
+                            border: '1px solid #d1fae5',
+                            '&:hover': { transform: 'translateY(-2px)' }
+                        }}>
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}>
+                                        Puntos Totales
+                                    </Typography>
+                                    <Calendar style={{ color: '#10b981' }} />
+                                </Box>
+                                <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}>
+                                    {dashboardStats.totalPoints.toFixed(1)}
+                                </Typography>
+                                <Typography sx={{ fontSize: '12px', color: '#6b7280' }}>
+                                    Todos los sprints
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Días Restantes */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card sx={{
+                            height: '100%',
+                            borderRadius: 3,
+                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            transition: 'transform 0.2s',
+                            border: '1px solid #d1fae5',
+                            '&:hover': { transform: 'translateY(-2px)' }
+                        }}>
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}>
+                                        Días Restantes
+                                    </Typography>
+                                    <Clock style={{ color: '#10b981' }} />
+                                </Box>
+                                <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#ef4444' }}>
+                                    {dashboardStats.daysRemaining}
+                                </Typography>
+                                <Typography sx={{ fontSize: '12px', color: '#6b7280' }}>
+                                    Para finalizar sprint
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+
+                <Grid container spacing={3}>
+                    {/* Columna izquierda: Sprint activo y registro de puntos */}
+                    <Grid item xs={12} lg={8}>
+                        {/* Active Sprint Section */}
+                        {activeSprint && (
+                            <Card sx={{
+                                borderRadius: 3,
+                                mb: 3,
+                                boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                                border: '1px solid #d1fae5'
+                            }}>
+                                <CardContent sx={{ p: 3 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                                        <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, color: '#065f46' }}>
+                                            Sprint Activo
+                                        </Typography>
+                                        <Chip
+                                            label="Activo"
+                                            sx={{
+                                                color: 'white',
+                                                backgroundColor: '#10b981',
+                                                fontWeight: 600
+                                            }}
+                                        />
+                                    </Box>
+
+                                    <Box sx={{ mb: 3 }}>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, color: '#065f46' }}>
+                                                {activeSprint.name}
+                                            </Typography>
+                                            <Typography sx={{ color: '#6b7280', fontSize: 14, mt: 0.5 }}>
+                                                {formatDate(activeSprint.startDate)} - {formatDate(activeSprint.endDate)}
+                                                {` (${calculateSprintDuration(activeSprint.startDate, activeSprint.endDate)} días)`}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+
+                                    {/* Progreso del equipo */}
+                                    <Box sx={{ mb: 3 }}>
+                                        <Box sx={{ display: "flex", justifyContent: 'space-between', alignItems: "center", mb: 1 }}>
+                                            <Typography variant="body2" fontWeight={500} color="#6b7280">
+                                                Progreso del Equipo
+                                            </Typography>
+                                            <Typography variant='body2' fontWeight={600} color="#065f46">
+                                                {dashboardStats.teamTotalPoints.toFixed(1)} / {dashboardStats.teamPlannedPoints.toFixed(1)} puntos
+                                            </Typography>
+                                        </Box>
+
+                                        <LinearProgress
+                                            variant="determinate"
+                                            value={Math.min(dashboardStats.teamProgress, 100)}
+                                            sx={{
+                                                height: 8,
+                                                borderRadius: 5,
+                                                backgroundColor: "#d1fae5",
+                                                "& .MuiLinearProgress-bar": {
+                                                    backgroundColor: "#10b981",
+                                                },
+                                            }}
+                                        />
+                                        <Typography variant="body2" sx={{ textAlign: "right", mt: 1, color: '#065f46', fontWeight: 500 }}>
+                                            Faltan {dashboardStats.remainingPoints.toFixed(1)} puntos por completar
+                                        </Typography>
+                                    </Box>
+
+                                    <Divider sx={{ my: 3, borderColor: '#d1fae5' }} />
+
+                                    {/* Puntos del usuario vs equipo */}
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant="subtitle2" color="#6b7280">
+                                                Mis Puntos
+                                            </Typography>
+                                            <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28, color: '#10b981' }}>
+                                                {dashboardStats.currentSprintPoints.toFixed(1)}
+                                            </Typography>
+                                        </Grid>
+
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant="subtitle2" color="#6b7280">
+                                                Equipo Total
+                                            </Typography>
+                                            <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28, color: '#10b981' }}>
+                                                {dashboardStats.teamTotalPoints.toFixed(1)}
+                                            </Typography>
+                                        </Grid>
+                                    </Grid>
+
+                                    {activeSprint.description && (
+                                        <Box>
+                                            <Divider sx={{ my: 3, borderColor: '#d1fae5' }} />
+                                            <Box>
+                                                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, color: '#065f46' }}>
+                                                    Observaciones:
+                                                </Typography>
+                                                <Typography variant="body1" color="#6b7280">
+                                                    {activeSprint.description}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Formulario de Registro de Puntos - TABLA COMPACTA */}
+                        <Card sx={{
+                            p: 3,
+                            borderRadius: 3,
+                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            border: '1px solid #d1fae5'
+                        }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#065f46' }}>
+                                Registrar Puntos Completados
+                            </Typography>
+                            <Typography sx={{ color: '#6b7280', fontSize: '14px', mb: 3 }}>
+                                Ingresa la cantidad de historias completadas para cada puntuación
+                            </Typography>
+
+                            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #d1fae5', mb: 3, bgcolor: '#f0fdf4', overflow: 'hidden' }}>
+                                <Table sx={{ minWidth: '100%', tableLayout: 'fixed' }}>
+                                    <TableHead>
+                                        <TableRow sx={{ bgcolor: '#d1fae5' }}>
+                                            <TableCell sx={{ fontWeight: 600, color: '#065f46', width: '140px', px: 1 }}>
+                                                Puntuación
+                                            </TableCell>
+                                            {pointValues.map((value) => (
+                                                <TableCell key={value} align="center" sx={{ fontWeight: 600, color: '#065f46', px: 1 }}>
+                                                    {value}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell sx={{ fontWeight: 500, color: '#065f46', px: 1 }}>
+                                                Historias
+                                            </TableCell>
+                                            {pointValues.map((value) => (
+                                                <TableCell key={value} align="center" sx={{ px: 0.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                                                        <Button
+                                                            variant="outlined"
+                                                            size="small"
+                                                            onClick={() => handlePointChange(value, -1)}
+                                                            disabled={points[value] <= 0 || !activeSprint || isSubmitting}
+                                                            sx={{
+                                                                minWidth: '28px',
+                                                                width: '28px',
+                                                                height: '28px',
+                                                                borderColor: '#10b981',
+                                                                color: '#10b981',
+                                                                '&:hover': { bgcolor: '#f0fdf4' }
+                                                            }}
+                                                        >
+                                                            <Minus size={14} />
+                                                        </Button>
+                                                        <TextField
+                                                            type="number"
+                                                            size="small"
+                                                            value={points[value]}
+                                                            onChange={(e) => handleInputChange(value, e.target.value)}
+                                                            inputProps={{
+                                                                min: 0,
+                                                                style: {
+                                                                    textAlign: 'center',
+                                                                    padding: '4px 2px',
+                                                                    fontSize: '14px'
+                                                                }
+                                                            }}
+                                                            sx={{
+                                                                width: '50px',
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    bgcolor: 'white',
+                                                                    height: '28px',
+                                                                    '& input': {
+                                                                        padding: '4px 2px',
+                                                                        fontSize: '14px',
+                                                                        '&[type=number]': {
+                                                                            '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                                                                                display: 'none',
+                                                                            },
+                                                                            '-moz-appearance': 'textfield',
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }}
+                                                            disabled={!activeSprint || isSubmitting}
+                                                        />
+                                                        <Button
+                                                            variant="contained"
+                                                            size="small"
+                                                            onClick={() => handlePointChange(value, 1)}
+                                                            disabled={!activeSprint || isSubmitting}
+                                                            sx={{
+                                                                minWidth: '28px',
+                                                                width: '28px',
+                                                                height: '28px',
+                                                                bgcolor: '#10b981',
+                                                                '&:hover': { bgcolor: '#059669' }
+                                                            }}
+                                                        >
+                                                            <Plus size={14} />
+                                                        </Button>
+                                                    </Box>
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                        <TableRow sx={{ bgcolor: '#ecfdf5' }}>
+                                            <TableCell sx={{ fontWeight: 600, color: '#065f46', px: 1 }}>
+                                                Subtotal
+                                            </TableCell>
+                                            {pointValues.map((value) => (
+                                                <TableCell key={value} align="center" sx={{ fontWeight: 500, color: '#065f46', px: 1 }}>
+                                                    {calculateSubtotal(value)}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+
+                            {/* Total Points */}
+                            <Box sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                p: 2,
+                                bgcolor: '#d1fae5',
+                                borderRadius: 2,
+                                border: '1px solid #10b981',
+                                mb: 3
+                            }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600, color: '#065f46' }}>
+                                    Total de Puntos a Registrar:
+                                </Typography>
+                                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#065f46' }}>
+                                    {totalPoints.toFixed(1)}
+                                </Typography>
+                            </Box>
+
+                            {/* Interruption Checkbox */}
+                            <Box sx={{
+                                p: 2,
+                                bgcolor: '#fffbeb',
+                                border: '1px solid #fcd34d',
+                                borderRadius: 2,
+                                mb: 3
+                            }}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={isInterruption}
+                                            onChange={(e) => setIsInterruption(e.target.checked)}
+                                            disabled={!activeSprint || isSubmitting}
+                                            sx={{ color: '#f59e0b', '&.Mui-checked': { color: '#f59e0b' } }}
+                                        />
+                                    }
+                                    label={
+                                        <Box>
+                                            <Typography variant="body1" sx={{ fontWeight: 500, color: '#92400e' }}>
+                                                Marcar como interrupción
+                                            </Typography>
+                                            <Typography variant="body2" color="#92400e">
+                                                Selecciona si estos puntos corresponden a trabajo inesperado o interrupciones
+                                            </Typography>
+                                        </Box>
+                                    }
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                <Button
+                                    variant='contained'
+                                    onClick={handleSubmit}
+                                    disabled={!activeSprint || totalPoints === 0 || isSubmitting}
+                                    sx={{
+                                        bgcolor: '#10b981',
+                                        color: 'white',
+                                        px: 4,
+                                        '&:hover': {
+                                            bgcolor: '#059669',
+                                        },
+                                        '&:disabled': {
+                                            bgcolor: '#9ca3af',
+                                            color: '#6b7280'
+                                        }
+                                    }}
+                                >
+                                    {isSubmitting ? <CircularProgress size={24} /> : 'Registrar Puntos'}
+                                </Button>
+                            </Box>
+                        </Card>
+                    </Grid>
+
+                    {/* Columna derecha: Registros recientes */}
+                    <Grid item xs={12} lg={4}>
+                        <Card sx={{
+                            borderRadius: 3,
+                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            border: '1px solid #d1fae5',
+                            height: 'fit-content'
+                        }}>
+                            <CardContent sx={{ p: 3 }}>
+                                <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: '#065f46' }}>
+                                    Mis Registros Recientes
+                                </Typography>
+
+                                {recentRecords.length === 0 ? (
+                                    <Box textAlign="center" py={4}>
+                                        <Typography variant="body1" color="#6b7280">
+                                            No hay registros recientes
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    recentRecords.slice(0, 8).map((record, index) => (
+                                        <Box
+                                            key={record._id || index}
+                                            sx={{
+                                                mb: 2,
+                                                p: 2,
+                                                borderRadius: 2,
+                                                border: "1px solid",
+                                                borderColor: "#d1fae5",
+                                                bgcolor: "#f0fdf4",
+                                                transition: 'all 0.2s',
+                                                '&:hover': {
+                                                    borderColor: "#10b981",
+                                                    bgcolor: "#d1fae5"
+                                                }
+                                            }}
+                                        >
+                                            <Typography sx={{ fontWeight: 600, mb: 0.5, color: '#065f46' }}>
+                                                {record.stories && record.stories.length > 0 ? (
+                                                    record.stories.map(story =>
+                                                        `${story.count} historia(s) de ${story.pointValue || story.points || '0'} punto(s)`
+                                                    ).join(', ')
+                                                ) : (
+                                                    `${record.points?.toFixed(1) || '0'} punto(s) totales`
+                                                )}
+                                            </Typography>
+                                            <Typography component="span" sx={{ color: '#6b7280', fontSize: '14px' }}>
+                                                {formatRecordDate(record.date || record.createdAt)}
+                                                {record.sprintName && ` • ${record.sprintName}`}
+                                                {record.isInterruption && (
+                                                    <Chip
+                                                        label="Interrupción"
+                                                        size="small"
+                                                        sx={{ ml: 1, bgcolor: '#fef3c7', color: '#92400e' }}
+                                                    />
+                                                )}
+                                            </Typography>
+                                        </Box>
+                                    ))
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={6000}
+                    onClose={handleCloseSnackbar}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                >
+                    <Alert
+                        onClose={handleCloseSnackbar}
+                        severity={snackbar.severity}
+                        sx={{ width: '100%' }}
+                    >
+                        {snackbar.message}
+                    </Alert>
+                </Snackbar>
+            </Box>
+        </Box>
+    );
+};
+
+export default UserDashboard;

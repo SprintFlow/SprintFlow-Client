@@ -12,7 +12,6 @@ import {
     useMediaQuery,
 } from "@mui/material";
 import {
-    Menu as MenuIcon,
     AccountCircle,
     Dashboard,
     AdminPanelSettings,
@@ -61,6 +60,53 @@ export default function Navbar() {
         return null;
     }
 
+    // Definir items del menú fuera del return
+    const userMenuItems = [
+        { path: "/user-dashboard", label: "Mi Dashboard", icon: <Dashboard /> },
+        { path: "/results", label: "Resultados", icon: <Dashboard /> },
+        { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
+    ];
+
+    const adminMenuItems = [
+        { path: "/admin-dashboard", label: "Dashboard Admin", icon: <Dashboard /> },
+        { path: "/create-sprint", label: "Gestión Sprints", icon: <Dashboard /> },
+        { path: "/results", label: "Resultados", icon: <Dashboard /> },
+        { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
+    ];
+
+    // Renderizar items del menú móvil
+    const renderMobileMenuItems = () => {
+        if (user && !user.isAdmin) {
+            return userMenuItems.map((item) => (
+                <MenuItem
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {item.icon}
+                        {item.label}
+                    </Box>
+                </MenuItem>
+            ));
+        }
+
+        if (user?.isAdmin) {
+            return adminMenuItems.map((item) => (
+                <MenuItem
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {item.icon}
+                        {item.label}
+                    </Box>
+                </MenuItem>
+            ));
+        }
+
+        return null;
+    };
+
     return (
         <AppBar
             position="static"
@@ -87,7 +133,7 @@ export default function Navbar() {
                     <Box sx={{ display: "flex", gap: 1 }}>
                         {/* Botones para usuario regular */}
                         {user && !user.isAdmin && (
-                            <>
+                            <Box sx={{ display: "flex", gap: 1 }}>
                                 <Button
                                     color="inherit"
                                     onClick={() => navigate("/user-dashboard")}
@@ -97,16 +143,6 @@ export default function Navbar() {
                                     }}
                                 >
                                     Mi Dashboard
-                                </Button>
-                                <Button
-                                    color="inherit"
-                                    onClick={() => navigate("/register-points")}
-                                    sx={{
-                                        backgroundColor: location.pathname === "/register-points" ? "rgba(76, 175, 80, 0.1)" : "transparent",
-                                        fontWeight: location.pathname === "/register-points" ? 600 : 400
-                                    }}
-                                >
-                                    Registrar Puntos
                                 </Button>
                                 <Button
                                     color="inherit"
@@ -129,12 +165,12 @@ export default function Navbar() {
                                 >
                                     Mi Perfil
                                 </Button>
-                            </>
+                            </Box>
                         )}
 
                         {/* Botones para admin */}
                         {user?.isAdmin && (
-                            <>
+                            <Box sx={{ display: "flex", gap: 1 }}>
                                 <Button
                                     color="inherit"
                                     onClick={() => navigate("/admin-dashboard")}
@@ -177,7 +213,7 @@ export default function Navbar() {
                                 >
                                     Mi Perfil
                                 </Button>
-                            </>
+                            </Box>
                         )}
                     </Box>
                 )}
@@ -220,46 +256,10 @@ export default function Navbar() {
                     >
                         {/* Menú móvil - Navegación */}
                         {isMobile && (
-                            <>
-                                {user && !user.isAdmin && (
-                                    [
-                                        { path: "/user-dashboard", label: "Mi Dashboard", icon: <Dashboard /> },
-                                        { path: "/register-points", label: "Registrar Puntos", icon: <Dashboard /> },
-                                        { path: "/results", label: "Resultados", icon: <Dashboard /> },
-                                        { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
-                                    ].map((item) => (
-                                        <MenuItem
-                                            key={item.path}
-                                            onClick={() => handleNavigation(item.path)}
-                                        >
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                {item.icon}
-                                                {item.label}
-                                            </Box>
-                                        </MenuItem>
-                                    ))
-                                )}
-
-                                {user?.isAdmin && (
-                                    [
-                                        { path: "/admin-dashboard", label: "Dashboard Admin", icon: <Dashboard /> },
-                                        { path: "/create-sprint", label: "Gestión Sprints", icon: <Dashboard /> },
-                                        { path: "/results", label: "Resultados", icon: <Dashboard /> },
-                                        { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
-                                    ].map((item) => (
-                                        <MenuItem
-                                            key={item.path}
-                                            onClick={() => handleNavigation(item.path)}
-                                        >
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                {item.icon}
-                                                {item.label}
-                                            </Box>
-                                        </MenuItem>
-                                    ))
-                                )}
+                            <Box>
+                                {renderMobileMenuItems()}
                                 <MenuItem divider />
-                            </>
+                            </Box>
                         )}
 
                         {/* Información del usuario */}
