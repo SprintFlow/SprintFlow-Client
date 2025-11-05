@@ -29,7 +29,8 @@ import {
   Edit,
   Delete,
   PersonAdd,
-  PhotoCamera
+  PhotoCamera,
+  Close
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import UserService from '../services/UserService';
@@ -286,6 +287,12 @@ const Configuration = () => {
       handleAvatarChange(file);
     };
     input.click();
+  };
+
+  // Eliminar avatar
+  const handleRemoveAvatar = () => {
+    handlePersonalInfoChange('avatar', '');
+    setSuccess('Avatar eliminado. Recuerda hacer click en "Guardar Cambios"');
   };
 
   const handleNewUser = async () => {
@@ -555,6 +562,30 @@ const Configuration = () => {
                         {!personalInfo.avatar && personalInfo.fullName.charAt(0).toUpperCase()}
                       </Avatar>
                     </Badge>
+                    
+                    {/* Botón para eliminar avatar */}
+                    {personalInfo.avatar && (
+                      <IconButton
+                        sx={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          backgroundColor: '#f44336',
+                          color: 'white',
+                          width: 32,
+                          height: 32,
+                          '&:hover': {
+                            backgroundColor: '#d32f2f',
+                          },
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                        }}
+                        onClick={handleRemoveAvatar}
+                        disabled={loading}
+                        size="small"
+                      >
+                        <Close fontSize="small" />
+                      </IconButton>
+                    )}
                   </Box>
                   <Typography 
                     variant="caption" 
