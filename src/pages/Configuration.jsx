@@ -173,11 +173,14 @@ const Configuration = () => {
           avatar: personalInfo.avatar
         };
         
-        console.log('Guardando perfil:', { 
+        console.log('💾 Guardando perfil:', { 
           nameChanged, 
           emailChanged, 
           avatarChanged,
-          avatarLength: personalInfo.avatar?.length 
+          currentAvatar: currentUser?.avatar?.substring(0, 50),
+          newAvatar: personalInfo.avatar === '' ? 'CADENA VACÍA' : personalInfo.avatar?.substring(0, 50),
+          avatarLength: personalInfo.avatar?.length,
+          avatarType: typeof personalInfo.avatar
         });
         
         await UserService.updateProfile(profileData);
@@ -188,6 +191,8 @@ const Configuration = () => {
           email: personalInfo.email,
           avatar: personalInfo.avatar
         });
+        
+        console.log('✅ Store actualizado con avatar:', personalInfo.avatar === '' ? 'CADENA VACÍA' : 'TIENE CONTENIDO');
       }
 
       // Cambiar contraseña si se proporcionó
@@ -303,7 +308,9 @@ const Configuration = () => {
 
   // Eliminar avatar
   const handleRemoveAvatar = () => {
+    console.log('🗑️ Eliminando avatar - Estado anterior:', personalInfo.avatar?.substring(0, 50));
     handlePersonalInfoChange('avatar', '');
+    console.log('🗑️ Avatar establecido a cadena vacía');
     setSuccess('Avatar eliminado. Recuerda hacer click en "Guardar Cambios"');
   };
 
