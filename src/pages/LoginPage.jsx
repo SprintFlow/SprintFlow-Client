@@ -17,6 +17,7 @@ import useAuthStore from "../store/authStore";
 import SprintFlowLogo from "../components/SprintFlowLogo";
 import LoadingOverlay from "../components/LoadingOverlay";
 
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -29,27 +30,68 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setIsLoading(true);
     setError("");
-    
+
     try {
+      // 1) Intentamos usar tu login del store (no cambiamos la lógica)
       const result = await login({ email, password });
-      
-      if (result.success) {
-        // Obtener el usuario actualizado del store
-        const currentUser = useAuthStore.getState().user;
-        
-        // Redirigir según el rol del usuario
-        if (currentUser?.isAdmin) {
+
+      // Si el login del store devuelve un objeto con success (tu lógica actual),
+      // seguimos el flujo original.
+      if (result && typeof result.success !== "undefined") {
+        if (result.success) {
+          const currentUser = useAuthStore.getState().user;
+          if (currentUser?.isAdmin) {
+            navigate("/admin-dashboard");
+          } else {
+            navigate("/user-dashboard");
+          }
+        } else {
+          setError(
+            useAuthStore.getState().error ||
+              "Credenciales inválidas o error en el servidor."
+          );
+        }
+        return;
+      }
+
+      // ---------------------------
+      // FALLBACK (solo si el store.login no devolvió lo esperado)
+      // ---------------------------
+      // Hacemos una petición directa al backend usando credentials: 'include'
+      // Esto funciona con la implementación del backend que setea cookie httpOnly.
+      // No cambia tu lógica original: solo actúa si el store.login no cerró el flujo.
+      try {
+        const res = await fetch("http://localhost:4000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // <- IMPORTANT para cookies httpOnly
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.message || "Credenciales inválidas o error en el servidor.");
+          return;
+        }
+
+        // Si tu store tiene setUser, actualizamos el estado global (no obligatorio)
+        const maybeSetUser = useAuthStore.getState().setUser;
+        if (typeof maybeSetUser === "function" && data.user) {
+          maybeSetUser(data.user);
+        }
+
+        // Redirigir según rol (igual que antes)
+        if (data.user?.isAdmin) {
           navigate("/admin-dashboard");
         } else {
           navigate("/user-dashboard");
         }
-      } else {
-        setError(
-          useAuthStore.getState().error ||
-            "Credenciales inválidas o error en el servidor."
-        );
+      } catch (fallbackErr) {
+        console.error("Fallback login error:", fallbackErr);
+        setError("Error en la conexión con el servidor.");
       }
-    } finally { // Garantiza que loading se desactive
+    } finally {
       setIsLoading(false);
     }
   };

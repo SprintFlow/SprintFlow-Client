@@ -6,6 +6,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import "./index.css";
 import routerSprint from "./router/Router";
 
+
 const theme = createTheme({
   palette: {
     primary: {
