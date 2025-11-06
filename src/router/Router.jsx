@@ -37,6 +37,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      
 
       // ========== RUTAS DE ADMIN ==========
       {
