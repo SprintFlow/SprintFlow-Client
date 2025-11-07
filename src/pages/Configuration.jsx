@@ -30,7 +30,9 @@ import {
   Delete,
   PersonAdd,
   PhotoCamera,
-  Close
+  Close,
+  Visibility,
+  VisibilityOff
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import UserService from '../services/UserService';
@@ -57,6 +59,11 @@ const Configuration = () => {
     emailNotifications: true,
     dailyReminders: true
   });
+
+  // Estados para mostrar/ocultar contraseñas
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Estados para el backend
   const [users, setUsers] = useState([]);
@@ -687,34 +694,67 @@ const Configuration = () => {
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <TextField
                     label="Contraseña Actual"
-                    type="password"
+                    type={showCurrentPassword ? "text" : "password"}
                     value={personalInfo.currentPassword}
                     onChange={(e) => handlePersonalInfoChange('currentPassword', e.target.value)}
                     onKeyPress={handleKeyPress}
                     fullWidth
                     disabled={loading}
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          edge="end"
+                          disabled={loading}
+                        >
+                          {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      )
+                    }}
                   />
 
                   <TextField
                     label="Nueva Contraseña"
-                    type="password"
+                    type={showNewPassword ? "text" : "password"}
                     value={personalInfo.newPassword}
                     onChange={(e) => handlePersonalInfoChange('newPassword', e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Mínimo 6 caracteres"
                     fullWidth
                     disabled={loading}
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          edge="end"
+                          disabled={loading}
+                        >
+                          {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      )
+                    }}
                   />
 
                   <TextField
                     label="Confirmar Nueva Contraseña"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={personalInfo.confirmPassword}
                     onChange={(e) => handlePersonalInfoChange('confirmPassword', e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Repite la nueva contraseña"
                     fullWidth
                     disabled={loading}
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                          disabled={loading}
+                        >
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      )
+                    }}
                   />
                 </Box>
               </CardContent>
