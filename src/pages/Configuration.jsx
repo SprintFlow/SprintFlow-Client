@@ -21,7 +21,8 @@ import {
   CircularProgress,
   Alert,
   Avatar,
-  Badge
+  Badge,
+  InputAdornment
 } from '@mui/material';
 import {
   ArrowBack,
@@ -702,13 +703,15 @@ const Configuration = () => {
                     disabled={loading}
                     InputProps={{
                       endAdornment: (
-                        <IconButton
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          edge="end"
-                          disabled={loading}
-                        >
-                          {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            edge="end"
+                            disabled={loading}
+                          >
+                            {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
                       )
                     }}
                   />
@@ -724,13 +727,15 @@ const Configuration = () => {
                     disabled={loading}
                     InputProps={{
                       endAdornment: (
-                        <IconButton
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          edge="end"
-                          disabled={loading}
-                        >
-                          {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            edge="end"
+                            disabled={loading}
+                          >
+                            {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
                       )
                     }}
                   />
@@ -746,13 +751,15 @@ const Configuration = () => {
                     disabled={loading}
                     InputProps={{
                       endAdornment: (
-                        <IconButton
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          edge="end"
-                          disabled={loading}
-                        >
-                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            edge="end"
+                            disabled={loading}
+                          >
+                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
                       )
                     }}
                   />
