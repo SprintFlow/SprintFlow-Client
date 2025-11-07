@@ -37,7 +37,6 @@ import {
   ExpandLess,
   PlayArrow,
   CalendarMonth,
-  Download,
   Groups,
   Speed,
 } from "@mui/icons-material";
@@ -50,7 +49,7 @@ export default function AdminDashboard() {
   const theme = useTheme();
   
   const { sprints, isLoading, error, fetchSprints, deleteSprint } = useSprintStore();
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
 
   // Estados para filtros y paginación
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,10 +60,6 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sprintsPerPage] = useState(10);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, sprint: null });
-
-  // Estados para la exportación CSV
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportError, setExportError] = useState(null);
 
   // Tema moderno adaptable
   const modernTheme = {
@@ -281,6 +276,55 @@ export default function AdminDashboard() {
     navigate(`/edit-sprint/${sprintId}`);
   };
 
+  // Lógica para exportar informe de sprints a CSV
+  const handleExportSprintReport = async () => {
+    setIsExporting(true);
+    setExportError(null); // Limpiamos errores previos
+
+    try {
+      const response = await fetch('http://localhost:4000/api/reports/sprint-participation', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        // Si el servidor devuelve un error (ej. 403 Forbidden)
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al generar el informe.');
+      }
+
+      // 1. Obtener el blob (el archivo)
+      const blob = await response.blob();
+
+      // 2. Crear una URL temporal para el blob
+      const url = window.URL.createObjectURL(blob);
+
+      // 3. Crear un enlace <a> invisible
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+
+      // 4. Ponerle nombre al archivo
+      const date = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      a.download = `sprint_participation_report_${date}.csv`;
+
+      // 5. Añadirlo al DOM y simular un clic
+      document.body.appendChild(a);
+      a.click();
+
+      // 6. Limpiar
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+    } catch (error) {
+      console.error('Error en la exportación:', error);
+      setExportError(error.message || 'Ocurrió un error desconocido al exportar el informe.'); // Guardamos el mensaje de error para mostrarlo
+    } finally {
+      setIsExporting(false); // Pase lo que pase, dejamos de cargar
+    }
+  };
+
   const handleDeleteSprint = async (sprintId) => {
     try {
       await deleteSprint(sprintId);
@@ -407,56 +451,29 @@ export default function AdminDashboard() {
                 Gestión profesional • {user?.name || "Admin"}
               </Typography>
             </Box>
-            <Box display="flex" gap={2}>
-              {/* Botón de Exportar (Parte 1 y 2) */}
-              {user?.role === 'Admin' && (
-                <Button
-                  variant="outlined"
-                  size="large"
-                  startIcon={isExporting ? <CircularProgress size={20} color="inherit" /> : <Download />}
-                  disabled={isExporting}
-                  // onClick={handleExportSprintReport} // Se añadirá en la Parte 3
-                  sx={{
-                    color: modernTheme.textSecondary,
-                    borderColor: modernTheme.textTertiary,
-                    textTransform: "none",
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    fontSize: '0.9rem',
-                    '&:hover': {
-                      borderColor: modernTheme.primary,
-                      color: modernTheme.primary,
-                      background: alpha(modernTheme.primary, 0.05)
-                    }
-                  }}
-                >
-                  {isExporting ? 'Exportando...' : 'Exportar Informe'}
-                </Button>
-              )}
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<AddIcon />}
-                onClick={handleCreateSprint}
-                sx={{
-                  background: `linear-gradient(135deg, ${modernTheme.success} 0%, ${modernTheme.successDark} 100%)`,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  px: 3,
-                  py: 1,
-                  borderRadius: 2,
-                  fontSize: '0.9rem',
-                  boxShadow: '0 4px 12px rgba(0, 255, 174, 0.3)',
-                  "&:hover": {
-                    boxShadow: '0 6px 16px rgba(0, 255, 115, 0.25)',
-                    transform: 'translateY(-1px)',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Crear Sprint
-              </Button>
-            </Box>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<AddIcon />}
+              onClick={handleCreateSprint}
+              sx={{
+                background: `linear-gradient(135deg, ${modernTheme.success} 0%, ${modernTheme.successDark} 100%)`,
+                textTransform: "none",
+                fontWeight: 600,
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                fontSize: '0.9rem',
+                boxShadow: '0 4px 12px rgba(0, 255, 174, 0.3)',
+                "&:hover": {
+                  boxShadow: '0 6px 16px rgba(0, 255, 115, 0.25)',
+                  transform: 'translateY(-1px)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Crear Sprint
+            </Button>
           </Box>
         </Box>
 
@@ -980,6 +997,20 @@ export default function AdminDashboard() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar para mostrar errores de exportación */}
+      <Snackbar
+        open={!!exportError}
+        autoHideDuration={6000}
+        onClose={() => setExportError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert
+          onClose={() => setExportError(null)}
+          severity="error"
+          sx={{ width: '100%' }}
+        >{exportError}</Alert>
+      </Snackbar>
     </Box>
   );
 }
