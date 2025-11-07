@@ -313,7 +313,7 @@ export default function CreateSprint() {
               </Button>
               <Divider orientation="vertical" flexItem />
               <Box>
-                <Typography variant="h4" fontWeight="700" sx={{ color: styles.textPrimary }}>
+                <Typography variant="h4" fontWeight="700" color= "#27AE60">
                   Crear Nuevo Sprint
                 </Typography>
                 <Typography variant="body2" sx={{ color: styles.textSecondary }}>
