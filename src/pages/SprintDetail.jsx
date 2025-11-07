@@ -41,6 +41,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import useSprintStore from "../store/SprintStore";
+import axiosClient from '../utils/axiosClient';
 
 export default function SprintDetail() {
   const { id } = useParams();
@@ -80,24 +81,68 @@ export default function SprintDetail() {
   // Puntos de Fibonacci para la tabla
   const fibonacciPoints = [0.5, 1, 2, 3, 5, 8, 13, 21];
 
+  // CORREGIDO: Función para calcular puntos planificados correctamente
+  const calculateTotalPlannedPoints = (sprint) => {
+    if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
+      return 0;
+    }
+    
+    return sprint.plannedStories.reduce((total, story) => {
+      return total + (story.score * story.quantity);
+    }, 0);
+  };
+
+  // CORREGIDO: Función para calcular historias planificadas correctamente
+  const calculateTotalPlannedStories = (sprint) => {
+    if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
+      return 0;
+    }
+    
+    return sprint.plannedStories.reduce((total, story) => {
+      return total + story.quantity;
+    }, 0);
+  };
+
+  // CORREGIDO: Función para calcular puntos completados correctamente
+  const calculateTotalCompletedPoints = () => {
+    return completions.reduce((sum, completion) => {
+      return sum + (completion.totalAchievedPoints || 0);
+    }, 0);
+  };
+
+  // CORREGIDO: Función para calcular historias completadas
+  const calculateTotalCompletedStories = () => {
+    let totalStories = 0;
+    completions.forEach(completion => {
+      if (completion.completedStories) {
+        completion.completedStories.forEach(story => {
+          totalStories += story.completedCount || 0;
+        });
+      }
+    });
+    return totalStories;
+  };
+
   // Fetch completions data
   const fetchCompletions = async (sprintId) => {
-    try {
-      setCompletionsLoading(true);
-      const response = await fetch(`/api/completions/sprint/${sprintId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setCompletions(data.completions || []);
-      } else {
-        setCompletions([]);
-      }
-    } catch (error) {
-      console.error("Error fetching completions:", error);
-      setCompletions([]);
-    } finally {
-      setCompletionsLoading(false);
-    }
-  };
+  try {
+    setCompletionsLoading(true);
+    console.log('🔄 [SPRINT-DETAIL] Iniciando carga de completions...');
+    
+    // USAR AXIOS CLIENT que ya maneja el token automáticamente
+    const response = await axiosClient.get(`/completions/sprint/${sprintId}`);
+    
+    console.log('✅ [SPRINT-DETAIL] Datos recibidos:', response.data);
+    console.log('👥 [SPRINT-DETAIL] Completions:', response.data.completions);
+    
+    setCompletions(response.data.completions || []);
+  } catch (error) {
+    console.error('❌ [SPRINT-DETAIL] Error:', error.response?.data || error.message);
+    setCompletions([]);
+  } finally {
+    setCompletionsLoading(false);
+  }
+};
 
   useEffect(() => {
     if (id) {
@@ -132,7 +177,7 @@ export default function SprintDetail() {
     }
   };
 
-  // Función para calcular estado automático
+  // Función para calcular estado automático - CORREGIDA
   const calculateSprintStatus = (sprint) => {
     const today = new Date();
     const startDate = new Date(sprint.startDate);
@@ -149,8 +194,8 @@ export default function SprintDetail() {
 
     // Si está completado, verificar si alcanzó los puntos planificados
     if (status === "Completado") {
-      const plannedPoints = sprint.plannedTotalPoints || 0;
-      const completedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
+      const plannedPoints = calculateTotalPlannedPoints(sprint);
+      const completedPoints = calculateTotalCompletedPoints();
 
       if (plannedPoints > 0 && completedPoints < plannedPoints) {
         return "Completado Parcial";
@@ -216,8 +261,8 @@ export default function SprintDetail() {
   };
 
   const getProgressPercentage = (sprint) => {
-    const plannedPoints = sprint.plannedTotalPoints || 0;
-    const completedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
+    const plannedPoints = calculateTotalPlannedPoints(sprint);
+    const completedPoints = calculateTotalCompletedPoints();
     if (plannedPoints === 0) return 0;
     return Math.min(100, Math.round((completedPoints / plannedPoints) * 100));
   };
@@ -238,12 +283,12 @@ export default function SprintDetail() {
     }
   };
 
-  // Cálculos para la sección de Velocidad
+  // Cálculos para la sección de Velocidad - CORREGIDOS
   const calculateVelocityMetrics = (sprint) => {
     const duration = calculateDuration(sprint.startDate, sprint.endDate);
     const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
-    const plannedPoints = sprint.plannedTotalPoints || 0;
-    const completedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
+    const plannedPoints = calculateTotalPlannedPoints(sprint);
+    const completedPoints = calculateTotalCompletedPoints();
 
     // Velocidad ideal (puntos por día según planificación)
     const idealVelocity = duration > 0 ? (plannedPoints / duration).toFixed(1) : 0;
@@ -265,12 +310,12 @@ export default function SprintDetail() {
     };
   };
 
-  // Calcular puntos completados por tamaño basado en los datos reales
+  // Calcular puntos completados por tamaño basado en los datos reales - CORREGIDO
   const getCompletedPointsBySize = (sprint) => {
     const planned = Array(8).fill(0);
     const completed = Array(8).fill(0);
 
-    // Calcular puntos planificados
+    // Calcular puntos planificados - CORREGIDO
     if (sprint.plannedStories) {
       sprint.plannedStories.forEach(story => {
         const index = fibonacciPoints.indexOf(story.score);
@@ -280,7 +325,7 @@ export default function SprintDetail() {
       });
     }
 
-    // Calcular puntos completados basado en los completions
+    // Calcular puntos completados basado en los completions - CORREGIDO
     completions.forEach(completion => {
       if (completion.completedStories) {
         completion.completedStories.forEach(story => {
@@ -324,7 +369,7 @@ export default function SprintDetail() {
       .slice(0, 5);
   };
 
-  // Calcular progreso individual de desarrolladores
+  // Calcular progreso individual de desarrolladores - CORREGIDO
   const getDeveloperProgress = (sprint) => {
     if (!sprint.usersAssigned || !sprint.usersAssigned.length) return [];
 
@@ -332,7 +377,7 @@ export default function SprintDetail() {
       const user = member.userId || {};
       const userCompletion = completions.find(c => c.userId?._id === user._id);
       const completedPoints = userCompletion?.totalAchievedPoints || 0;
-      const totalSprintPoints = sprint.plannedTotalPoints || 0;
+      const totalSprintPoints = calculateTotalPlannedPoints(sprint);
 
       // Calcular porcentaje basado en el total del sprint
       const progressPercentage = totalSprintPoints > 0 
@@ -373,8 +418,12 @@ export default function SprintDetail() {
   const duration = calculateDuration(sprint.startDate, sprint.endDate);
   const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
   const daysRemaining = getDaysRemaining(sprint.startDate, sprint.endDate);
-  const totalCompletedPoints = completions.reduce((sum, c) => sum + (c.totalAchievedPoints || 0), 0);
-  const plannedPoints = sprint.plannedTotalPoints || 0;
+  
+  // CORREGIDO: Usar las funciones corregidas para calcular puntos
+  const plannedPoints = calculateTotalPlannedPoints(sprint);
+  const totalCompletedPoints = calculateTotalCompletedPoints();
+  const totalPlannedStories = calculateTotalPlannedStories(sprint);
+  const totalCompletedStories = calculateTotalCompletedStories();
   const remainingPoints = Math.max(0, plannedPoints - totalCompletedPoints);
   
   const velocityMetrics = calculateVelocityMetrics(sprint);
@@ -382,7 +431,7 @@ export default function SprintDetail() {
   const recentRecords = getRecentRecords();
   const developerProgress = getDeveloperProgress(sprint);
 
-  // Calcular totales para la tabla
+  // Calcular totales para la tabla - CORREGIDOS
   const totalPlannedCount = pointsData.planned.reduce((sum, count) => sum + count, 0);
   const totalCompletedCount = pointsData.completed.reduce((sum, count) => sum + count, 0);
 
@@ -443,7 +492,7 @@ export default function SprintDetail() {
                   {sprint.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Detalle completo del sprint - {totalCompletedPoints} pts completados
+                  Detalle completo del sprint - {totalCompletedPoints} pts completados de {plannedPoints} pts planificados
                 </Typography>
               </Box>
             </Box>
