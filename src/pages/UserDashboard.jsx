@@ -11,7 +11,7 @@ import { LinearProgress, CircularProgress, Alert, Divider, Chip, Snackbar, Table
 
 // Importar stores
 import useAuthStore from '../store/authStore';
-import useSprintStore from '../store/sprintStore';
+import useSprintStore from '../store/SprintStore';
 import usePointStore from '../store/pointStore';
 
 const UserDashboard = () => {
@@ -283,7 +283,7 @@ const UserDashboard = () => {
 
                 {/* Header */}
                 <Card sx={{
-                    bgcolor: 'white',
+                    bgcolor: 'background.paper',
                     borderRadius: 3,
                     p: 3,
                     mb: 3,
@@ -430,7 +430,7 @@ const UserDashboard = () => {
                                         <Chip
                                             label="Activo"
                                             sx={{
-                                                color: 'white',
+                                                color: 'background.paper',
                                                 backgroundColor: '#10b981',
                                                 fontWeight: 600
                                             }}
@@ -585,7 +585,7 @@ const UserDashboard = () => {
                                                             sx={{
                                                                 width: '50px',
                                                                 '& .MuiOutlinedInput-root': {
-                                                                    bgcolor: 'white',
+                                                                    bgcolor: 'background.paper',
                                                                     height: '28px',
                                                                     '& input': {
                                                                         padding: '4px 2px',
