@@ -50,6 +50,7 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import useSprintStore from "../store/SprintStore";
+import { useTheme } from '@mui/material/styles';
 
 const theme = {
   primary: "#4CAF50",

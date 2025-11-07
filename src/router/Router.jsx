@@ -12,7 +12,6 @@ import EditSprint from "../pages/EditSprint";
 import AdminDashboard from "../pages/AdminDashboard";
 import SprintDetail from "../pages/SprintDetail";
 import NotFoundPage from "../pages/NotFoundPage";
-import RegisterPoints from "../pages/RegisterPoints";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 const routerSprint = createBrowserRouter([

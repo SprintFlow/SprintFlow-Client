@@ -10,23 +10,28 @@ import {
     IconButton,
     useTheme,
     useMediaQuery,
+    Switch,
 } from "@mui/material";
 import {
     AccountCircle,
     Dashboard,
     AdminPanelSettings,
     Logout,
+    DarkMode,
+    LightMode,
 } from "@mui/icons-material";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
 import SprintFlowLogo from "../SprintFlowLogo";
+import { useThemeContext } from "../../main"; // Importar desde main.jsx
 
 export default function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const { darkMode, toggleDarkMode } = useThemeContext();
 
     const { user, isAuthenticated, logout } = useAuthStore();
     const [anchorEl, setAnchorEl] = useState(null);
@@ -53,9 +58,6 @@ export default function Navbar() {
     // Rutas donde NO debe mostrarse el navbar
     const noNavbarRoutes = ["/", "/login", "/register"];
     
-    // No mostrar navbar si:
-    // 1. No está autenticado O
-    // 2. Está en una ruta de autenticación
     if (!isAuthenticated || noNavbarRoutes.includes(location.pathname)) {
         return null;
     }
@@ -111,9 +113,10 @@ export default function Navbar() {
         <AppBar
             position="static"
             sx={{
-                backgroundColor: "white",
-                color: "text.primary",
-                boxShadow: 1
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                boxShadow: 1,
+                transition: 'all 0.3s ease',
             }}
         >
             <Toolbar sx={{ justifyContent: "space-between" }}>
@@ -122,7 +125,7 @@ export default function Navbar() {
                     <SprintFlowLogo size={70} />
                     <Typography
                         variant="subtitle1"
-                        sx={{ fontWeight: 600, color: "#4CAF50", fontSize: "0.95rem" }}
+                        sx={{ fontWeight: 600, color: "#10b981", fontSize: "0.95rem" }}
                     >
                         SprintFlow
                     </Typography>
@@ -130,7 +133,7 @@ export default function Navbar() {
 
                 {/* Menú de navegación - Solo en desktop */}
                 {!isMobile && (
-                    <Box sx={{ display: "flex", gap: 1 }}>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                         {/* Botones para usuario regular */}
                         {user && !user.isAdmin && (
                             <Box sx={{ display: "flex", gap: 1 }}>
@@ -138,7 +141,7 @@ export default function Navbar() {
                                     color="inherit"
                                     onClick={() => navigate("/user-dashboard")}
                                     sx={{
-                                        backgroundColor: location.pathname === "/user-dashboard" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        backgroundColor: location.pathname === "/user-dashboard" ? "rgba(16, 185, 129, 0.1)" : "transparent",
                                         fontWeight: location.pathname === "/user-dashboard" ? 600 : 400
                                     }}
                                 >
@@ -148,7 +151,7 @@ export default function Navbar() {
                                     color="inherit"
                                     onClick={() => navigate("/results")}
                                     sx={{
-                                        backgroundColor: location.pathname === "/results" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        backgroundColor: location.pathname === "/results" ? "rgba(16, 185, 129, 0.1)" : "transparent",
                                         fontWeight: location.pathname === "/results" ? 600 : 400
                                     }}
                                 >
@@ -159,7 +162,7 @@ export default function Navbar() {
                                     onClick={() => navigate("/configuration")}
                                     startIcon={<AdminPanelSettings />}
                                     sx={{
-                                        backgroundColor: location.pathname === "/configuration" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        backgroundColor: location.pathname === "/configuration" ? "rgba(16, 185, 129, 0.1)" : "transparent",
                                         fontWeight: location.pathname === "/configuration" ? 600 : 400
                                     }}
                                 >
@@ -176,7 +179,7 @@ export default function Navbar() {
                                     onClick={() => navigate("/admin-dashboard")}
                                     startIcon={<Dashboard />}
                                     sx={{
-                                        backgroundColor: location.pathname === "/admin-dashboard" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        backgroundColor: location.pathname === "/admin-dashboard" ? "rgba(16, 185, 129, 0.1)" : "transparent",
                                         fontWeight: location.pathname === "/admin-dashboard" ? 600 : 400
                                     }}
                                 >
@@ -186,7 +189,7 @@ export default function Navbar() {
                                     color="inherit"
                                     onClick={() => navigate("/create-sprint")}
                                     sx={{
-                                        backgroundColor: location.pathname === "/create-sprint" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        backgroundColor: location.pathname === "/create-sprint" ? "rgba(16, 185, 129, 0.1)" : "transparent",
                                         fontWeight: location.pathname === "/create-sprint" ? 600 : 400
                                     }}
                                 >
@@ -196,7 +199,7 @@ export default function Navbar() {
                                     color="inherit"
                                     onClick={() => navigate("/results")}
                                     sx={{
-                                        backgroundColor: location.pathname === "/results" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        backgroundColor: location.pathname === "/results" ? "rgba(16, 185, 129, 0.1)" : "transparent",
                                         fontWeight: location.pathname === "/results" ? 600 : 400
                                     }}
                                 >
@@ -207,7 +210,7 @@ export default function Navbar() {
                                     onClick={() => navigate("/configuration")}
                                     startIcon={<AdminPanelSettings />}
                                     sx={{
-                                        backgroundColor: location.pathname === "/configuration" ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                                        backgroundColor: location.pathname === "/configuration" ? "rgba(16, 185, 129, 0.1)" : "transparent",
                                         fontWeight: location.pathname === "/configuration" ? 600 : 400
                                     }}
                                 >
@@ -218,8 +221,26 @@ export default function Navbar() {
                     </Box>
                 )}
 
-                {/* Menú de usuario */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {/* Menú de usuario y modo oscuro */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    {/* Botón de modo oscuro */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <LightMode sx={{ fontSize: 20, color: theme.palette.text.secondary }} />
+                        <Switch
+                            checked={darkMode}
+                            onChange={toggleDarkMode}
+                            sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: '#10b981',
+                                },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                    backgroundColor: '#10b981',
+                                },
+                            }}
+                        />
+                        <DarkMode sx={{ fontSize: 20, color: theme.palette.text.secondary }} />
+                    </Box>
+
                     <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>
                         Hola, {user?.name}
                     </Typography>
@@ -236,7 +257,7 @@ export default function Navbar() {
                             sx={{
                                 width: 32,
                                 height: 32,
-                                bgcolor: "#4CAF50",
+                                bgcolor: "#10b981",
                                 fontSize: "0.875rem"
                             }}
                         >
@@ -251,7 +272,8 @@ export default function Navbar() {
                         PaperProps={{
                             sx: {
                                 mt: 1.5,
-                                minWidth: 200
+                                minWidth: 200,
+                                backgroundColor: theme.palette.background.paper,
                             }
                         }}
                     >
