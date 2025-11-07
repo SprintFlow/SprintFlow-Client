@@ -265,13 +265,13 @@ const UserDashboard = () => {
             backgroundColor: '#f0fdf4',
             py: 3,
             width: '100%',
-            margin: 0,
+            margin: '2% 0 0 0',
             padding: 0,
         }}>
             <Box sx={{
                 width: '100%',
                 px: { xs: 2, sm: 3, md: 4 },
-                maxWidth: '1400px',
+                // maxWidth: '1400px',
                 margin: '0 auto'
             }}>
 
@@ -301,7 +301,11 @@ const UserDashboard = () => {
                 </Card>
 
                 {/* Stats Cards */}
-                <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid container spacing={3} sx={{
+                    mb: 4, width: '100%', mx: 0, '& > .MuiGrid-item': {
+                        padding: 1
+                    }
+                }}>
                     {/* Sprint actual */}
                     <Grid item xs={12} sm={6} md={3}>
                         <Card sx={{
@@ -313,7 +317,7 @@ const UserDashboard = () => {
                             '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
                                     <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}>
                                         Sprint actual
                                     </Typography>
@@ -340,7 +344,7 @@ const UserDashboard = () => {
                             '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
                                     <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}>
                                         Mis Puntos (Sprint)
                                     </Typography>
@@ -367,7 +371,7 @@ const UserDashboard = () => {
                             '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
                                     <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}>
                                         Puntos Totales
                                     </Typography>
@@ -394,7 +398,7 @@ const UserDashboard = () => {
                             '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
                                     <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}>
                                         Días Restantes
                                     </Typography>
@@ -531,10 +535,10 @@ const UserDashboard = () => {
                                 Ingresa la cantidad de historias completadas para cada puntuación
                             </Typography>
 
-                            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #d1fae5', mb: 3, bgcolor: '#f0fdf4', overflow: 'hidden' }}>
+                            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #d1fae5', mb: 3, overflow: 'hidden' }}>
                                 <Table sx={{ minWidth: '100%', tableLayout: 'fixed' }}>
                                     <TableHead>
-                                        <TableRow sx={{ bgcolor: '#d1fae5' }}>
+                                        <TableRow>
                                             <TableCell sx={{ fontWeight: 600, color: '#065f46', width: '140px', px: 1 }}>
                                                 Puntuación
                                             </TableCell>
@@ -620,7 +624,7 @@ const UserDashboard = () => {
                                                 </TableCell>
                                             ))}
                                         </TableRow>
-                                        <TableRow sx={{ bgcolor: '#ecfdf5' }}>
+                                        <TableRow>
                                             <TableCell sx={{ fontWeight: 600, color: '#065f46', px: 1 }}>
                                                 Subtotal
                                             </TableCell>
@@ -640,7 +644,6 @@ const UserDashboard = () => {
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                                 p: 2,
-                                bgcolor: '#d1fae5',
                                 borderRadius: 2,
                                 border: '1px solid #10b981',
                                 mb: 3
@@ -708,7 +711,7 @@ const UserDashboard = () => {
                     </Grid>
 
                     {/* Columna derecha: Registros recientes */}
-                    <Grid item xs={12} lg={4}>
+                    <Grid item xs={12} lg={4} sx={{ width: '100%'}}>
                         <Card sx={{
                             borderRadius: 3,
                             boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
@@ -736,7 +739,6 @@ const UserDashboard = () => {
                                                 borderRadius: 2,
                                                 border: "1px solid",
                                                 borderColor: "#d1fae5",
-                                                bgcolor: "#f0fdf4",
                                                 transition: 'all 0.2s',
                                                 '&:hover': {
                                                     borderColor: "#10b981",
