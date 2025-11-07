@@ -37,6 +37,7 @@ import {
   ExpandLess,
   PlayArrow,
   CalendarMonth,
+  Download,
   Groups,
   Speed,
 } from "@mui/icons-material";
@@ -60,6 +61,10 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sprintsPerPage] = useState(10);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, sprint: null });
+
+  // Estados para la exportación CSV
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
 
   // Tema moderno adaptable
   const modernTheme = {
@@ -402,29 +407,56 @@ export default function AdminDashboard() {
                 Gestión profesional • {user?.name || "Admin"}
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<AddIcon />}
-              onClick={handleCreateSprint}
-              sx={{
-                background: `linear-gradient(135deg, ${modernTheme.success} 0%, ${modernTheme.successDark} 100%)`,
-                textTransform: "none",
-                fontWeight: 600,
-                px: 3,
-                py: 1,
-                borderRadius: 2,
-                fontSize: '0.9rem',
-                boxShadow: '0 4px 12px rgba(0, 255, 174, 0.3)',
-                "&:hover": {
-                  boxShadow: '0 6px 16px rgba(0, 255, 115, 0.25)',
-                  transform: 'translateY(-1px)',
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Crear Sprint
-            </Button>
+            <Box display="flex" gap={2}>
+              {/* Botón de Exportar (Parte 1 y 2) */}
+              {user?.role === 'Admin' && (
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={isExporting ? <CircularProgress size={20} color="inherit" /> : <Download />}
+                  disabled={isExporting}
+                  // onClick={handleExportSprintReport} // Se añadirá en la Parte 3
+                  sx={{
+                    color: modernTheme.textSecondary,
+                    borderColor: modernTheme.textTertiary,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    fontSize: '0.9rem',
+                    '&:hover': {
+                      borderColor: modernTheme.primary,
+                      color: modernTheme.primary,
+                      background: alpha(modernTheme.primary, 0.05)
+                    }
+                  }}
+                >
+                  {isExporting ? 'Exportando...' : 'Exportar Informe'}
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<AddIcon />}
+                onClick={handleCreateSprint}
+                sx={{
+                  background: `linear-gradient(135deg, ${modernTheme.success} 0%, ${modernTheme.successDark} 100%)`,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1,
+                  borderRadius: 2,
+                  fontSize: '0.9rem',
+                  boxShadow: '0 4px 12px rgba(0, 255, 174, 0.3)',
+                  "&:hover": {
+                    boxShadow: '0 6px 16px rgba(0, 255, 115, 0.25)',
+                    transform: 'translateY(-1px)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Crear Sprint
+              </Button>
+            </Box>
           </Box>
         </Box>
 
