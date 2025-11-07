@@ -10,9 +10,7 @@ Este proyecto contiene toda la interfaz de usuario con la que interactúan los u
 
 ## ✨ Características Principales
 
-*   **Gestión de Proyectos:** Crea y organiza tus proyectos.
-*   **Tableros Kanban:** Visualiza tus tareas en tableros con columnas personalizables.
-*   **Gestión de Tareas:** Crea, asigna, y actualiza el estado de las tareas.
+*   **Gestión de Sprints:** Crea, asigna, y actualiza el estado de los Sprints.
 *   **Autenticación de Usuarios:** Registro e inicio de sesión seguros con JWT.
 *   **Diseño Responsivo:** Experiencia de usuario fluida tanto en escritorio como en dispositivos móviles.
 
