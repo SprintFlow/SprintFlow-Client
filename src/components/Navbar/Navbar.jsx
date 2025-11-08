@@ -56,7 +56,7 @@ export default function Navbar() {
     };
 
     // Rutas donde NO debe mostrarse el navbar
-    const noNavbarRoutes = ["/", "/login", "/register"];
+    const noNavbarRoutes = ["/", "/login", "/register", "/forgot-password"];
     
     if (!isAuthenticated || noNavbarRoutes.includes(location.pathname)) {
         return null;

@@ -1,10 +1,11 @@
-import React, { StrictMode, useState } from "react";
+import React, { StrictMode, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import "./index.css";
 import routerSprint from "./router/Router";
+import useAuthStore from "./store/authStore"; // ✅ Agregar esta importación
 
 // ✅ SOLUCIÓN DEFINITIVA - Ignorar error de Fragment en Menu
 if (import.meta.env.DEV) {
@@ -176,6 +177,11 @@ function ThemedApp() {
   });
 
   const theme = darkMode ? darkTheme : lightTheme;
+
+  // ✅ INICIALIZAR AUTH STORE AL CARGAR LA APP
+  useEffect(() => {
+    useAuthStore.getState().initializeAuth();
+  }, []);
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;

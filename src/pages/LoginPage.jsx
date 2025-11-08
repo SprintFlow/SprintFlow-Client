@@ -9,14 +9,17 @@ import {
   Stack,
   Link,
   Avatar,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import SprintFlowLogo from "../components/SprintFlowLogo";
 import LoadingOverlay from "../components/LoadingOverlay";
-
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -24,6 +27,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,7 +52,7 @@ export default function LoginPage() {
         } else {
           setError(
             useAuthStore.getState().error ||
-              "Credenciales inválidas o error en el servidor."
+            "Credenciales inválidas o error en el servidor."
           );
         }
         return;
@@ -100,6 +104,18 @@ export default function LoginPage() {
     if (e.key === "Enter" && !isLoading) {
       handleLogin();
     }
+  };
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
+  const handleForgotPassword = () => {
+    navigate("/forgot-password");
   };
 
   // Color verde de la "S" animada
@@ -176,7 +192,7 @@ export default function LoginPage() {
               <TextField
                 id="password"
                 label="Contraseña"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 variant="outlined"
                 fullWidth
@@ -184,6 +200,21 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={isLoading}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                        disabled={isLoading}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
 
               {error && (
@@ -209,7 +240,13 @@ export default function LoginPage() {
               </Stack>
 
               <Typography variant="body2" align="center">
-                <Link href="#" underline="hover" color="primary">
+                <Link
+                  component="button"
+                  underline="hover"
+                  color="primary"
+                  onClick={handleForgotPassword}
+                  disabled={isLoading}
+                >
                   ¿Olvidaste tu contraseña?
                 </Link>
               </Typography>
