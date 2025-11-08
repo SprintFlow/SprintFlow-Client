@@ -265,7 +265,7 @@ const UserDashboard = () => {
             backgroundColor: '#f0fdf4',
             py: 3,
             width: '100%',
-            margin: '2% 0 0 0',
+            margin: '2% 0',
             padding: 0,
         }}>
             <Box sx={{
@@ -301,13 +301,10 @@ const UserDashboard = () => {
                 </Card>
 
                 {/* Stats Cards */}
-                <Grid container spacing={3} sx={{
-                    mb: 4, width: '100%', mx: 0, '& > .MuiGrid-item': {
-                        padding: 1
-                    }
-                }}>
+                <Box container spacing={2} sx={{
+                    mb: 4, width: '100%', mx: 0, display: 'flex', gap: 2 }}>
                     {/* Sprint actual */}
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%'}}>
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
@@ -331,10 +328,10 @@ const UserDashboard = () => {
                                 </Typography>
                             </CardContent>
                         </Card>
-                    </Grid>
+                    </Box>
 
                     {/* Mis Puntos (Sprint) */}
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%'}}>
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
@@ -358,10 +355,10 @@ const UserDashboard = () => {
                                 </Typography>
                             </CardContent>
                         </Card>
-                    </Grid>
+                    </Box>
 
                     {/* Puntos Totales */}
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%'}}>
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
@@ -385,10 +382,10 @@ const UserDashboard = () => {
                                 </Typography>
                             </CardContent>
                         </Card>
-                    </Grid>
+                    </Box>
 
                     {/* Días Restantes */}
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%'}}>
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
@@ -412,8 +409,8 @@ const UserDashboard = () => {
                                 </Typography>
                             </CardContent>
                         </Card>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
 
                 <Grid container spacing={3}>
                     {/* Columna izquierda: Sprint activo y registro de puntos */}
