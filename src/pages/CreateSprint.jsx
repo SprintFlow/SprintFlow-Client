@@ -283,7 +283,8 @@ export default function CreateSprint() {
         {/* Header */}
         <Box
           sx={{
-            width: "97%",
+            // width: "97%",
+            width: "100%",
             background: styles.cardBg,
             borderRadius: 2,
             p: 3,
@@ -313,7 +314,7 @@ export default function CreateSprint() {
               </Button>
               <Divider orientation="vertical" flexItem />
               <Box>
-                <Typography variant="h4" fontWeight="700" color= "#27AE60">
+                <Typography variant="h5" fontWeight="700" color= "#27AE60">
                   Crear Nuevo Sprint
                 </Typography>
                 <Typography variant="body2" sx={{ color: styles.textSecondary }}>
@@ -356,7 +357,7 @@ export default function CreateSprint() {
         </Snackbar>
 
         {/* CONTENIDO PRINCIPAL */}
-        <Box sx={{ width: "100%", maxWidth: "1200px", mx: "auto" }}>
+        <Box sx={{ width: "100%" }}>
           <Grid container spacing={3}>
             {/* COLUMNA IZQUIERDA - Información Básica y Historias */}
             <Grid item xs={12} lg={8}>

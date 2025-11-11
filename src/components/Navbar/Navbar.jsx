@@ -137,7 +137,7 @@ export default function Navbar() {
                     color: isActiveRoute(item.path) ? '#4CAF50' : theme.palette.text.primary,
                     fontWeight: isActiveRoute(item.path) ? 600 : 400,
                     borderRadius: '8px',
-                    px: 2,
+                    // px: 2,
                     py: 1,
                     '&:hover': {
                         backgroundColor: 'rgba(76, 175, 80, 0.05)',

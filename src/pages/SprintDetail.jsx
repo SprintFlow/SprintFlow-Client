@@ -5,10 +5,10 @@ import {
   Card,
   CardContent,
   Button,
-  Grid,
   Chip,
   CircularProgress,
   Alert,
+  Grid,
   LinearProgress,
   Divider,
   Table,
@@ -66,7 +66,8 @@ export default function SprintDetail() {
     gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
     gradientAlt: "linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)",
     text: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.text.primary,
-    textSecondary: theme.palette.mode === 'dark' ? theme.palette.text.secondary : theme.palette.text.secondary,
+    // textSecondary: theme.palette.mode === 'dark' ? theme.palette.text.secondary : theme.palette.text.secondary,
+    textSecondary: theme.palette.mode === 'dark' ? theme.palette.text.secondary : "#6b7280",
   };
 
   // Colores para estados de sprints
@@ -85,7 +86,7 @@ export default function SprintDetail() {
     if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
       return 0;
     }
-    
+
     return sprint.plannedStories.reduce((total, story) => {
       return total + (story.score * story.quantity);
     }, 0);
@@ -96,7 +97,7 @@ export default function SprintDetail() {
     if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
       return 0;
     }
-    
+
     return sprint.plannedStories.reduce((total, story) => {
       return total + story.quantity;
     }, 0);
@@ -194,10 +195,17 @@ export default function SprintDetail() {
   const fetchCompletions = async (sprintId) => {
     try {
       setCompletionsLoading(true);
+      console.log('🔄 [SPRINT-DETAIL] Iniciando carga de completions...');
+
+      // USAR AXIOS CLIENT que ya maneja el token automáticamente
       const response = await axiosClient.get(`/completions/sprint/${sprintId}`);
+
+      console.log('✅ [SPRINT-DETAIL] Datos recibidos:', response.data);
+      console.log('👥 [SPRINT-DETAIL] Completions:', response.data.completions);
+
       setCompletions(response.data.completions || []);
     } catch (error) {
-      console.error('Error fetching completions:', error);
+      console.error('❌ [SPRINT-DETAIL] Error:', error.response?.data || error.message);
       setCompletions([]);
     } finally {
       setCompletionsLoading(false);
@@ -390,7 +398,8 @@ export default function SprintDetail() {
       const completedPoints = userCompletion?.totalAchievedPoints || 0;
       const totalSprintPoints = calculateTotalPlannedPoints(sprint);
 
-      const progressPercentage = totalSprintPoints > 0 
+      // Calcular porcentaje basado en el total del sprint
+      const progressPercentage = totalSprintPoints > 0
         ? Math.min(100, (completedPoints / totalSprintPoints) * 100)
         : 0;
 
@@ -428,12 +437,13 @@ export default function SprintDetail() {
   const duration = calculateDuration(sprint.startDate, sprint.endDate);
   const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
   const daysRemaining = getDaysRemaining(sprint.startDate, sprint.endDate);
-  
+
+  // CORREGIDO: Usar las funciones corregidas para calcular puntos
   const plannedPoints = calculateTotalPlannedPoints(sprint);
   const { totalValidPoints: totalCompletedPoints } = getValidCompletedPoints();
   const totalPlannedStories = calculateTotalPlannedStories(sprint);
   const remainingPoints = Math.max(0, plannedPoints - totalCompletedPoints);
-  
+
   const velocityMetrics = calculateVelocityMetrics(sprint);
   const recentRecords = getRecentRecords();
   const developerProgress = getDeveloperProgress(sprint);
@@ -499,7 +509,7 @@ export default function SprintDetail() {
               </Button>
               <Divider orientation="vertical" flexItem />
               <Box>
-                <Typography variant="h4" fontWeight="700" sx={{ color: customTheme.primary }}>
+                <Typography variant="h5" fontWeight="700" sx={{ color: customTheme.primary }}>
                   {sprint.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -558,9 +568,18 @@ export default function SprintDetail() {
         </Box>
 
         {/* PRIMERA FILA: Tres tarjetas equilibradas */}
-        <Grid container spacing={3} mb={3}>
-          {/* 📊 Progreso del Sprint */}
-          <Grid item xs={12} md={4}>
+        <Box container sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 3,
+          width: '100%',
+          mb: 3
+        }}>
+          {/* 📊 Progreso del Sprint - Más compacto */}
+          <Box sx={{
+            flex: '1 1 calc(45% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(40% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -572,8 +591,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  📊 Progreso del Sprint
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Progreso del Sprint
                 </Typography>
 
                 <Box mb={3}>
@@ -626,8 +645,8 @@ export default function SprintDetail() {
 
                 <Grid container spacing={1}>
                   <Grid item xs={6}>
-                    <Box textAlign="center" p={1.5} sx={{ 
-                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#F1F8E9", 
+                    <Box textAlign="center" p={1.5} sx={{
+                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#F1F8E9",
                       borderRadius: 2,
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: customTheme.primary }}>
@@ -639,8 +658,8 @@ export default function SprintDetail() {
                     </Box>
                   </Grid>
                   <Grid item xs={6}>
-                    <Box textAlign="center" p={1.5} sx={{ 
-                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E8F5E9", 
+                    <Box textAlign="center" p={1.5} sx={{
+                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E8F5E9",
                       borderRadius: 2,
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#26A69A" }}>
@@ -652,8 +671,8 @@ export default function SprintDetail() {
                     </Box>
                   </Grid>
                   <Grid item xs={6}>
-                    <Box textAlign="center" p={1.5} sx={{ 
-                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#FFF9C4", 
+                    <Box textAlign="center" p={1.5} sx={{
+                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#FFF9C4",
                       borderRadius: 2,
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#F57F17" }}>
@@ -665,8 +684,8 @@ export default function SprintDetail() {
                     </Box>
                   </Grid>
                   <Grid item xs={6}>
-                    <Box textAlign="center" p={1.5} sx={{ 
-                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E3F2FD", 
+                    <Box textAlign="center" p={1.5} sx={{
+                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E3F2FD",
                       borderRadius: 2,
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#42A5F5" }}>
@@ -680,10 +699,13 @@ export default function SprintDetail() {
                 </Grid>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* 🚀 Velocidad del Sprint */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(25% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(25% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -695,8 +717,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  🚀 Velocidad del Sprint
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Velocidad del Sprint
                 </Typography>
 
                 <Box display="flex" alignItems="center" gap={2} mb={2.5}>
@@ -766,10 +788,13 @@ export default function SprintDetail() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* ℹ️ Información General */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(25% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(25% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -781,8 +806,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  ℹ️ Información General
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Información General
                 </Typography>
 
                 <Box display="flex" alignItems="center" gap={2} mb={2.5}>
@@ -844,13 +869,12 @@ export default function SprintDetail() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
-        {/* SEGUNDA FILA: Puntos Completados y Progreso de Miembros - SIN ESPACIO */}
-        <Grid container spacing={3}>
-          {/* 📊 Puntos Completados - Ahora a la izquierda */}
-          <Grid item xs={12} md={8}>
+        {/* SEGUNDA FILA: Tabla de Puntos Completados como en la imagen */}
+        <Box container sx={{ mb: 3 }}>
+          <Grid item xs={12}>
             <Card
               elevation={0}
               sx={{
@@ -861,8 +885,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  📊 Puntos Completados
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Puntos Completados
                 </Typography>
 
                 <TableContainer component={Paper} elevation={0} sx={{ mb: 2 }}>
@@ -890,7 +914,7 @@ export default function SprintDetail() {
                               label={count}
                               size="small"
                               variant="outlined"
-                              sx={{ 
+                              sx={{
                                 fontWeight: 600,
                                 borderColor: theme.palette.mode === 'dark' ? '#555' : '#ddd'
                               }}
@@ -909,32 +933,7 @@ export default function SprintDetail() {
                           />
                         </TableCell>
                       </TableRow>
-                      
-                      {/* NUEVA FILA: Subtotal Planificado */}
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 700, fontStyle: 'italic' }}>Subtotal</TableCell>
-                        {plannedSubtotal.map((points, index) => (
-                          <TableCell key={index} align="center">
-                            <Typography variant="body2" fontWeight="600" sx={{ 
-                              color: points > 0 ? customTheme.primary : 'text.secondary' 
-                            }}>
-                              {points > 0 ? `${points} pts` : '-'}
-                            </Typography>
-                          </TableCell>
-                        ))}
-                        <TableCell align="center" sx={{ backgroundColor: theme.palette.mode === 'dark' ? '#2e2e2e' : '#f5f5f5' }}>
-                          <Chip
-                            label={`${totalPlannedSubtotal} pts`}
-                            size="small"
-                            sx={{
-                              backgroundColor: customTheme.primary,
-                              color: 'white',
-                              fontWeight: 600
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-                      
+
                       {/* Fila Completado */}
                       <TableRow>
                         <TableCell sx={{ fontWeight: 700 }}>Completado</TableCell>
@@ -944,8 +943,8 @@ export default function SprintDetail() {
                               label={count}
                               size="small"
                               sx={{
-                                backgroundColor: count > 0 ? customTheme.primaryLight : 
-                                              theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
+                                backgroundColor: count > 0 ? customTheme.primaryLight :
+                                  theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
                                 color: count > 0 ? "white" : "text.secondary",
                                 fontWeight: 600
                               }}
@@ -957,8 +956,8 @@ export default function SprintDetail() {
                             label={totalCompletedCount}
                             size="small"
                             sx={{
-                              backgroundColor: totalCompletedCount > 0 ? customTheme.primary : 
-                                            theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
+                              backgroundColor: totalCompletedCount > 0 ? customTheme.primary :
+                                theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
                               color: totalCompletedCount > 0 ? "white" : "text.secondary",
                               fontWeight: 600
                             }}
@@ -996,9 +995,9 @@ export default function SprintDetail() {
 
                 {/* Fila de puntos pendientes */}
                 <Box mt={2} display="flex" justifyContent="flex-end">
-                  <Box 
-                    sx={{ 
-                      p: 2, 
+                  <Box
+                    sx={{
+                      p: 2,
                       background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#FFF3E0",
                       borderRadius: 1,
                       border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#FFE0B2'}`,
@@ -1016,9 +1015,9 @@ export default function SprintDetail() {
                 </Box>
 
                 {/* Registros Recientes */}
-                <Box mt={4}>
-                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.primary }}>
-                    📋 Registros Recientes
+                <Box mt={1}>
+                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.textPrimary }}>
+                    Registros Recientes
                   </Typography>
                   {recentRecords.length > 0 ? (
                     <Box display="flex" flexDirection="column" gap={1}>
@@ -1036,11 +1035,11 @@ export default function SprintDetail() {
                           }}
                         >
                           <Box display="flex" alignItems="center" gap={2}>
-                            <Avatar sx={{ 
-                              width: 32, 
-                              height: 32, 
-                              bgcolor: customTheme.primary, 
-                              fontSize: '0.8rem' 
+                            <Avatar sx={{
+                              width: 32,
+                              height: 32,
+                              bgcolor: customTheme.primary,
+                              fontSize: '0.8rem'
                             }}>
                               {record.developer?.split(' ').map(n => n[0]).join('') || 'U'}
                             </Avatar>
@@ -1088,53 +1087,22 @@ export default function SprintDetail() {
                 </Box>
               </CardContent>
             </Card>
-
-            {/* Observaciones justo debajo de Puntos Completados - SIN ESPACIO */}
-            <Box mt={3}>
-              <Card
-                elevation={0}
-                sx={{
-                  background: customTheme.cardBg,
-                  borderRadius: 2,
-                  boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                  border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}
-              >
-                <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.primary }}>
-                    📋 Observaciones
-                  </Typography>
-                  <Box
-                    sx={{
-                      flex: 1,
-                      minHeight: '120px',
-                      p: 2,
-                      border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
-                      borderRadius: 1,
-                      backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : "#F8F9FA",
-                      overflow: 'auto'
-                    }}
-                  >
-                    {sprint.observations ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {sprint.observations}
-                      </Typography>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                        No hay observaciones registradas para este sprint.
-                      </Typography>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Box>
           </Grid>
+        </Box>
 
-          {/* 👥 Progreso de Miembros - Ahora a la derecha */}
-          <Grid item xs={12} md={4}>
+        {/* TERCERA FILA: Progreso de Miembros y Observaciones */}
+        <Box container sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 3,
+          width: '100%',
+          mb: 4
+        }}>
+          {/* 👥 Progreso de Miembros */}
+          <Box sx={{
+            flex: '1 1 calc(40%  - 12px)',
+            minWidth: { xs: '100%', lg: 'calc(40% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -1146,8 +1114,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  👥 Progreso de Miembros
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Progreso de Miembros
                 </Typography>
 
                 {developerProgress.length > 0 ? (
@@ -1234,13 +1202,59 @@ export default function SprintDetail() {
                 )}
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+
+          {/* 📋 Observaciones */}
+          <Box sx={{
+            flex: '1 1 calc(60% - 12px)',
+            minWidth: { xs: '100%', lg: 'calc(60% - 12px)' }
+          }}>
+            <Card
+              elevation={0}
+              sx={{
+                background: customTheme.cardBg,
+                borderRadius: 2,
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.textPrimary }}>
+                  Observaciones
+                </Typography>
+                <Box
+                  sx={{
+                    flex: 1,
+                    minHeight: '200px',
+                    p: 2,
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
+                    borderRadius: 1,
+                    backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : "#F8F9FA",
+                    overflow: 'auto'
+                  }}
+                >
+                  {sprint.observations ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {sprint.observations}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                      No hay observaciones registradas para este sprint.
+                    </Typography>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
       </Box>
 
       {/* Dialog de confirmación de eliminación */}
-      <Dialog 
-        open={deleteDialogOpen} 
+      <Dialog
+        open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         PaperProps={{
           sx: {
