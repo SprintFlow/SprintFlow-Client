@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 import Layout from "../layout/Layout";
 import LoginPage from "../pages/LoginPage";
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import RegisterPage from "../pages/RegisterPage";
 import Results from "../pages/Results";
 import UserDashboard from "../pages/UserDashboard";
@@ -9,7 +10,7 @@ import Configuration from "../pages/Configuration";
 import ConfigurationTest from "../pages/ConfigurationTest";
 import CreateSprint from "../pages/CreateSprint";
 import EditSprint from "../pages/EditSprint";
-import AdminDashboard from "../pages/AdminDashboard";
+import AdminDashboard from "../pages/Admindashboard";
 import SprintDetail from "../pages/SprintDetail";
 import NotFoundPage from "../pages/NotFoundPage";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -24,8 +25,16 @@ const routerSprint = createBrowserRouter([
         element: <LoginPage />,
       },
       {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
         path: "register",
         element: <RegisterPage />,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPasswordPage />,
       },
 
       // ========== RUTAS DE USUARIO (Developer) ==========
@@ -37,7 +46,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      
+
 
       // ========== RUTAS DE ADMIN ==========
       {
@@ -64,7 +73,7 @@ const routerSprint = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      
+
       // ========== RUTAS COMPARTIDAS (Autenticadas) ==========
       {
         path: "configuration",
@@ -98,6 +107,12 @@ const routerSprint = createBrowserRouter([
       },
     ],
   },
-]);
+], {
+  // ✅ Agregar esta configuración
+  future: {
+    v7_relativeSplatPath: true,
+    v7_startTransition: true,
+  }
+});
 
 export default routerSprint;

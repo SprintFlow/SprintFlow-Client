@@ -22,6 +22,12 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { 
   ArrowBack, 
@@ -32,7 +38,11 @@ import {
   Analytics,
   BarChart,
   ShowChart,
-  PieChart
+  PieChart,
+  Download,
+  CalendarToday,
+  Group,
+  Speed
 } from "@mui/icons-material";
 import {
   BarChart as RechartsBarChart,
@@ -47,29 +57,40 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Cell,
+  Legend,
+  AreaChart,
+  Area,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import useSprintStore from "../store/SprintStore";
-import { useTheme } from '@mui/material/styles';
-
-const theme = {
-  primary: "#4CAF50",
-  primaryDark: "#45A049",
-  primaryLight: "#81C784",
-  background: "#e6f2ed",
-  cardBg: "#ffffff",
-  gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
-};
+import axiosClient from "../utils/axiosClient";
 
 export default function Results() {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { sprints, isLoading, fetchSprints } = useSprintStore();
   
-  const [selectedSprint, setSelectedSprint] = useState(null);
-  const [resultsData, setResultsData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedSprints, setSelectedSprints] = useState([]);
+  const [timeFilter, setTimeFilter] = useState("last4");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [chartType, setChartType] = useState("bar");
-  const [comments, setComments] = useState("");
+  const [comparisonData, setComparisonData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [teamPerformanceData, setTeamPerformanceData] = useState({});
+
+  // Tema profesional con soporte para modo oscuro
+  const customTheme = {
+    primary: "#4CAF50",
+    primaryDark: "#45A049",
+    primaryLight: "#81C784",
+    background: theme.palette.mode === 'dark' ? theme.palette.background.default : "#f8fbf9",
+    cardBg: theme.palette.mode === 'dark' ? theme.palette.background.paper : "#ffffff",
+    gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
+    text: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.text.primary,
+    textSecondary: theme.palette.mode === 'dark' ? theme.palette.text.secondary : theme.palette.text.secondary,
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -86,21 +107,38 @@ export default function Results() {
 
   useEffect(() => {
     if (sprints && sprints.length > 0) {
-      const completedSprints = sprints.filter(sprint => {
+      applyFilters();
+    }
+  }, [sprints, timeFilter, startDate, endDate]);
+
+  const applyFilters = () => {
+    let filteredSprints = getCompletedSprints();
+
+    // Aplicar filtro de tiempo
+    if (timeFilter === "last4") {
+      filteredSprints = filteredSprints.slice(0, 4);
+    } else if (timeFilter === "last10") {
+      filteredSprints = filteredSprints.slice(0, 10);
+    } else if (timeFilter === "custom" && startDate && endDate) {
+      filteredSprints = filteredSprints.filter(sprint => {
+        const sprintDate = new Date(sprint.endDate);
+        return sprintDate >= new Date(startDate) && sprintDate <= new Date(endDate);
+      });
+    }
+
+    setSelectedSprints(filteredSprints);
+    calculateComparisonData(filteredSprints);
+    fetchTeamPerformanceData(filteredSprints);
+  };
+
+  const getCompletedSprints = () => {
+    return sprints
+      .filter(sprint => {
         const status = calculateSprintStatus(sprint);
         return status === "Completado" || status === "Completado Parcial";
-      });
-
-      if (completedSprints.length > 0) {
-        const latestSprint = completedSprints.sort((a, b) => 
-          new Date(b.endDate) - new Date(a.endDate)
-        )[0];
-        
-        setSelectedSprint(latestSprint);
-        calculateResults(latestSprint);
-      }
-    }
-  }, [sprints]);
+      })
+      .sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
+  };
 
   const calculateSprintStatus = (sprint) => {
     const today = new Date();
@@ -110,7 +148,7 @@ export default function Results() {
     if (today < startDate) return "Planificado";
     if (today >= startDate && today <= endDate) return "Activo";
     
-    const plannedPoints = sprint.plannedTotalPoints || 0;
+    const plannedPoints = calculateTotalPlannedPoints(sprint);
     const completedPoints = sprint.completedPoints || 0;
     
     if (plannedPoints > 0 && completedPoints < plannedPoints) {
@@ -119,33 +157,94 @@ export default function Results() {
     return "Completado";
   };
 
-  const calculateResults = (sprint) => {
-    if (!sprint) return;
+  const calculateTotalPlannedPoints = (sprint) => {
+    if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
+      return 0;
+    }
+    
+    return sprint.plannedStories.reduce((total, story) => {
+      return total + (story.score * story.quantity);
+    }, 0);
+  };
 
-    const plannedPoints = sprint.plannedTotalPoints || 0;
-    const completedPoints = sprint.completedPoints || 0;
-    const completionRate = plannedPoints > 0 ? Math.round((completedPoints / plannedPoints) * 100) : 0;
-    const objectiveAchieved = completionRate >= 80;
-    const duration = calculateDuration(sprint.startDate, sprint.endDate);
-    const velocityIdeal = duration > 0 ? (plannedPoints / duration).toFixed(1) : 0;
-    const velocityReal = duration > 0 ? (completedPoints / duration).toFixed(1) : 0;
+  const calculateComparisonData = (sprintsToCompare) => {
+    if (!sprintsToCompare || sprintsToCompare.length === 0) {
+      setComparisonData(null);
+      return;
+    }
 
-    const pointsDistribution = calculatePointsDistribution(sprint);
-    const teamPerformance = calculateTeamPerformance(sprint);
+    const velocityData = sprintsToCompare.map(sprint => {
+      const duration = calculateDuration(sprint.startDate, sprint.endDate);
+      const plannedPoints = calculateTotalPlannedPoints(sprint);
+      const completedPoints = sprint.completedPoints || 0;
+      const velocityIdeal = duration > 0 ? (plannedPoints / duration).toFixed(1) : 0;
+      const velocityReal = duration > 0 ? (completedPoints / duration).toFixed(1) : 0;
+      const completionRate = plannedPoints > 0 ? Math.round((completedPoints / plannedPoints) * 100) : 0;
 
-    setResultsData({
-      sprint: sprint,
-      plannedPoints,
-      completedPoints,
-      completionRate,
-      objectiveAchieved,
-      pointsDistribution,
-      teamPerformance,
-      velocityIdeal,
-      velocityReal,
-      duration,
-      status: calculateSprintStatus(sprint)
+      return {
+        name: sprint.name,
+        sprintId: sprint._id,
+        plannedPoints: plannedPoints,
+        completedPoints: completedPoints,
+        velocityIdeal: parseFloat(velocityIdeal),
+        velocityReal: parseFloat(velocityReal),
+        completionRate,
+        duration,
+        startDate: sprint.startDate,
+        endDate: sprint.endDate,
+        status: calculateSprintStatus(sprint)
+      };
     });
+
+    // Estadísticas resumen
+    const totalPlannedPoints = velocityData.reduce((sum, sprint) => sum + sprint.plannedPoints, 0);
+    const totalCompletedPoints = velocityData.reduce((sum, sprint) => sum + sprint.completedPoints, 0);
+    const averageCompletion = velocityData.length > 0 ? 
+      Math.round(velocityData.reduce((sum, sprint) => sum + sprint.completionRate, 0) / velocityData.length) : 0;
+    const averageVelocity = velocityData.length > 0 ? 
+      (velocityData.reduce((sum, sprint) => sum + sprint.velocityReal, 0) / velocityData.length).toFixed(1) : 0;
+
+    setComparisonData({
+      velocityData,
+      summary: {
+        totalSprints: sprintsToCompare.length,
+        totalPlannedPoints,
+        totalCompletedPoints,
+        averageCompletion,
+        averageVelocity,
+        overallCompletionRate: totalPlannedPoints > 0 ? Math.round((totalCompletedPoints / totalPlannedPoints) * 100) : 0
+      }
+    });
+  };
+
+  const fetchTeamPerformanceData = async (sprintsToCompare) => {
+    const performanceData = {};
+    
+    for (const sprint of sprintsToCompare) {
+      try {
+        const response = await axiosClient.get(`/completions/sprint/${sprint._id}`);
+        const completions = response.data.completions || [];
+        
+        completions.forEach(completion => {
+          const memberName = completion.userId?.name || 'Usuario';
+          if (!performanceData[memberName]) {
+            performanceData[memberName] = [];
+          }
+          
+          performanceData[memberName].push({
+            sprint: sprint.name,
+            sprintId: sprint._id,
+            completed: completion.totalAchievedPoints || 0,
+            completionRate: Math.round((completion.totalAchievedPoints / calculateTotalPlannedPoints(sprint)) * 100) || 0,
+            date: sprint.endDate
+          });
+        });
+      } catch (error) {
+        console.error(`Error fetching completions for sprint ${sprint._id}:`, error);
+      }
+    }
+    
+    setTeamPerformanceData(performanceData);
   };
 
   const calculateDuration = (startDate, endDate) => {
@@ -155,92 +254,76 @@ export default function Results() {
     return diff + 1;
   };
 
-  const calculatePointsDistribution = (sprint) => {
-    const fibonacciPoints = [0.5, 1, 2, 3, 5, 8, 13, 21];
-    const distribution = [];
-
-    if (sprint.plannedStories) {
-      sprint.plannedStories.forEach(story => {
-        distribution.push({
-          points: story.score,
-          planned: story.quantity,
-          completed: Math.floor(story.quantity * 0.8),
-          plannedPoints: story.score * story.quantity,
-          completedPoints: Math.floor(story.score * story.quantity * 0.8)
-        });
-      });
-    }
-
-    fibonacciPoints.forEach(point => {
-      if (!distribution.find(item => item.points === point)) {
-        distribution.push({
-          points: point,
-          planned: 0,
-          completed: 0,
-          plannedPoints: 0,
-          completedPoints: 0
-        });
-      }
-    });
-
-    return distribution.sort((a, b) => a.points - b.points);
-  };
-
-  const calculateTeamPerformance = (sprint) => {
-    if (!sprint.usersAssigned) return [];
-    
-    return sprint.usersAssigned.map((member, index) => {
-      const completedPoints = Math.floor((sprint.completedPoints || 0) / sprint.usersAssigned.length);
-      const plannedPoints = Math.floor((sprint.plannedTotalPoints || 0) / sprint.usersAssigned.length);
-      const completionRate = plannedPoints > 0 ? Math.round((completedPoints / plannedPoints) * 100) : 0;
-      
-      return {
-        name: member.userId?.name || `Miembro ${index + 1}`,
-        planned: plannedPoints,
-        completed: completedPoints,
-        completionRate: completionRate
-      };
-    });
-  };
-
   const handleBack = () => navigate("/admin-dashboard");
-  const handleSprintChange = (sprint) => {
-    setSelectedSprint(sprint);
-    calculateResults(sprint);
-  };
   const handleChartChange = (event, newType) => {
     if (newType) setChartType(newType);
   };
 
-  // Datos para gráficos
-  const getChartData = () => {
-    if (!resultsData) return [];
-    return [
-      { name: "Planificado", value: resultsData.plannedPoints },
-      { name: "Completado", value: resultsData.completedPoints },
+  const handleExportCSV = () => {
+    if (!comparisonData) return;
+
+    const headers = [
+      'Sprint',
+      'Fecha Inicio',
+      'Fecha Fin',
+      'Puntos Planificados',
+      'Puntos Completados',
+      'Tasa Completado (%)',
+      'Velocidad Ideal',
+      'Velocidad Real',
+      'Duración (días)',
+      'Estado'
     ];
+
+    const csvData = comparisonData.velocityData.map(sprint => [
+      `"${sprint.name}"`,
+      new Date(sprint.startDate).toLocaleDateString(),
+      new Date(sprint.endDate).toLocaleDateString(),
+      sprint.plannedPoints,
+      sprint.completedPoints,
+      sprint.completionRate,
+      sprint.velocityIdeal,
+      sprint.velocityReal,
+      sprint.duration,
+      sprint.status
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `sprint-comparison-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const colors = ["#1976d2", "#4CAF50", "#FF9800"];
+  const getChartColors = () => {
+    return theme.palette.mode === 'dark' 
+      ? ['#4CAF50', '#81C784', '#66BB6A', '#388E3C']
+      : ['#4CAF50', '#81C784', '#66BB6A', '#388E3C'];
+  };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" sx={{ backgroundColor: theme.background }}>
-        <CircularProgress size={60} sx={{ color: theme.primary }} />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" sx={{ backgroundColor: customTheme.background }}>
+        <CircularProgress size={60} sx={{ color: customTheme.primary }} />
       </Box>
     );
   }
 
-  const completedSprints = sprints ? sprints.filter(sprint => {
-    const status = calculateSprintStatus(sprint);
-    return status === "Completado" || status === "Completado Parcial";
-  }) : [];
+  const completedSprints = getCompletedSprints();
 
   if (completedSprints.length === 0) {
     return (
       <Box sx={{ 
         minHeight: "100vh", 
-        backgroundColor: theme.background,
+        backgroundColor: customTheme.background,
         width: "100vw",
         margin: 0,
         padding: 0,
@@ -258,14 +341,14 @@ export default function Results() {
               sx={{
                 textTransform: "none",
                 fontWeight: 600,
-                borderColor: theme.primary,
-                color: theme.primary,
+                borderColor: customTheme.primary,
+                color: customTheme.primary,
               }}
             >
               Volver al Dashboard
             </Button>
-            <Typography variant="h4" fontWeight="700" sx={{ color: theme.primary }}>
-              Resultados del Sprint
+            <Typography variant="h4" fontWeight="700" sx={{ color: customTheme.primary }}>
+              Comparativa de Sprints
             </Typography>
           </Box>
 
@@ -281,7 +364,7 @@ export default function Results() {
   return (
     <Box sx={{ 
       minHeight: "100vh", 
-      backgroundColor: theme.background,
+      backgroundColor: customTheme.background,
       width: "100vw",
       margin: 0,
       padding: 0,
@@ -290,18 +373,19 @@ export default function Results() {
         width: "100%",
         px: { xs: 2, sm: 3, md: 4 },
         py: 4,
+        maxWidth: 1400,
+        mx: "auto"
       }}>
         {/* Header */}
-        <Box
+        <Card
+          elevation={0}
           sx={{
-            background: theme.cardBg,
-            borderRadius: 2,
+            background: customTheme.cardBg,
+            borderRadius: 3,
             p: 3,
             mb: 3,
             boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-            border: `1px solid #e0e0e0`,
-            maxWidth: 1400,
-            mx: "auto"
+            border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
           }}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
@@ -313,79 +397,109 @@ export default function Results() {
                 sx={{
                   textTransform: "none",
                   fontWeight: 600,
-                  borderColor: theme.primary,
-                  color: theme.primary,
+                  borderColor: customTheme.primary,
+                  color: customTheme.primary,
                 }}
               >
                 Volver al Dashboard
               </Button>
               <Box>
-                <Typography variant="h4" fontWeight="700" sx={{ color: theme.primary }}>
-                  📊 Resultados del Sprint
+                <Typography variant="h4" fontWeight="700" sx={{ color: customTheme.primary }}>
+                  📊 Comparativa de Sprints
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Comparativa de puntos planificados vs completados
+                  Análisis histórico y planificación basada en datos
                 </Typography>
               </Box>
             </Box>
 
-            {/* Selector de Sprint */}
-            <Box sx={{ minWidth: 280 }}>
-              <Typography variant="body2" fontWeight="600" mb={1}>
-                Seleccionar Sprint:
-              </Typography>
-              <select 
-                value={selectedSprint?._id || ""}
-                onChange={(e) => {
-                  const sprint = completedSprints.find(s => s._id === e.target.value);
-                  if (sprint) handleSprintChange(sprint);
-                }}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  backgroundColor: "white",
-                  fontWeight: "500"
-                }}
-              >
-                {completedSprints.map(sprint => (
-                  <option key={sprint._id} value={sprint._id}>
-                    {sprint.name} ({new Date(sprint.endDate).toLocaleDateString()})
-                  </option>
-                ))}
-              </select>
-            </Box>
+            <Button
+              startIcon={<Download />}
+              onClick={handleExportCSV}
+              variant="contained"
+              disabled={!comparisonData}
+              sx={{
+                background: customTheme.gradient,
+                textTransform: "none",
+                fontWeight: 600,
+              }}
+            >
+              Exportar CSV
+            </Button>
           </Box>
-        </Box>
 
-        {resultsData && (
-          <Box sx={{ maxWidth: 1400, mx: "auto" }}>
-            {/* Métricas Principales */}
+          {/* Filtros */}
+          <Box sx={{ mt: 3, display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel>Período de tiempo</InputLabel>
+              <Select
+                value={timeFilter}
+                label="Período de tiempo"
+                onChange={(e) => setTimeFilter(e.target.value)}
+              >
+                <MenuItem value="last4">Últimos 4 sprints</MenuItem>
+                <MenuItem value="last10">Últimos 10 sprints</MenuItem>
+                <MenuItem value="custom">Rango personalizado</MenuItem>
+              </Select>
+            </FormControl>
+
+            {timeFilter === "custom" && (
+              <>
+                <TextField
+                  label="Fecha inicio"
+                  type="date"
+                  size="small"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 150 }}
+                />
+                <TextField
+                  label="Fecha fin"
+                  type="date"
+                  size="small"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 150 }}
+                />
+              </>
+            )}
+
+            <Chip 
+              label={`${selectedSprints.length} sprint(s) seleccionados`}
+              variant="outlined"
+              sx={{ alignSelf: 'center', borderColor: customTheme.primary, color: customTheme.primary }}
+            />
+          </Box>
+        </Card>
+
+        {comparisonData && (
+          <>
+            {/* Métricas Resumen - Diseño Compacto y Elegante */}
             <Grid container spacing={3} mb={4}>
               <Grid item xs={12} sm={6} md={3}>
                 <Card
                   elevation={0}
                   sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
+                    background: customTheme.cardBg,
+                    borderRadius: 3,
                     boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                     height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'translateY(-2px)' }
                   }}
                 >
-                  <CardContent sx={{ p: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <Avatar sx={{ bgcolor: theme.primary, width: 56, height: 56, mx: 'auto', mb: 2 }}>
+                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                    <Avatar sx={{ bgcolor: customTheme.primary, width: 48, height: 48, mx: 'auto', mb: 2 }}>
                       <TrendingUp />
                     </Avatar>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Puntos Planificados
+                      Total Sprints
                     </Typography>
-                    <Typography variant="h3" fontWeight="700" sx={{ color: theme.primary }}>
-                      {resultsData.plannedPoints}
+                    <Typography variant="h3" fontWeight="700" sx={{ color: customTheme.primary }}>
+                      {comparisonData.summary.totalSprints}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -395,24 +509,24 @@ export default function Results() {
                 <Card
                   elevation={0}
                   sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
+                    background: customTheme.cardBg,
+                    borderRadius: 3,
                     boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                     height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'translateY(-2px)' }
                   }}
                 >
-                  <CardContent sx={{ p: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <Avatar sx={{ bgcolor: "#1976D2", width: 56, height: 56, mx: 'auto', mb: 2 }}>
+                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                    <Avatar sx={{ bgcolor: "#1976D2", width: 48, height: 48, mx: 'auto', mb: 2 }}>
                       <CheckCircle />
                     </Avatar>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Puntos Completados
+                      Tasa Completado
                     </Typography>
                     <Typography variant="h3" fontWeight="700" sx={{ color: "#1976D2" }}>
-                      {resultsData.completedPoints}
+                      {comparisonData.summary.overallCompletionRate}%
                     </Typography>
                   </CardContent>
                 </Card>
@@ -422,24 +536,24 @@ export default function Results() {
                 <Card
                   elevation={0}
                   sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
+                    background: customTheme.cardBg,
+                    borderRadius: 3,
                     boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                     height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'translateY(-2px)' }
                   }}
                 >
-                  <CardContent sx={{ p: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <Avatar sx={{ bgcolor: "#FF9800", width: 56, height: 56, mx: 'auto', mb: 2 }}>
-                      <Analytics />
+                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                    <Avatar sx={{ bgcolor: "#FF9800", width: 48, height: 48, mx: 'auto', mb: 2 }}>
+                      <Speed />
                     </Avatar>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Velocidad (ideal / real)
+                      Velocidad Promedio
                     </Typography>
                     <Typography variant="h4" fontWeight="700" sx={{ color: "#FF9800" }}>
-                      {resultsData.velocityIdeal} / {resultsData.velocityReal}
+                      {comparisonData.summary.averageVelocity}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       puntos/día
@@ -452,67 +566,61 @@ export default function Results() {
                 <Card
                   elevation={0}
                   sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
+                    background: customTheme.cardBg,
+                    borderRadius: 3,
                     boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                     height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'translateY(-2px)' }
                   }}
                 >
-                  <CardContent sx={{ p: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
                     <Avatar sx={{ 
-                      bgcolor: resultsData.objectiveAchieved ? theme.primary : "#FF9800", 
-                      width: 56, 
-                      height: 56, 
+                      bgcolor: comparisonData.summary.averageCompletion >= 80 ? customTheme.primary : "#FF9800", 
+                      width: 48, 
+                      height: 48, 
                       mx: 'auto', 
                       mb: 2 
                     }}>
                       <Assessment />
                     </Avatar>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Objetivo
+                      Objetivo Promedio
                     </Typography>
                     <Chip
-                      label={resultsData.objectiveAchieved ? "LOGRADO ✅" : "PENDIENTE ⚠️"}
-                      color={resultsData.objectiveAchieved ? "success" : "warning"}
+                      label={`${comparisonData.summary.averageCompletion}%`}
+                      color={comparisonData.summary.averageCompletion >= 80 ? "success" : "warning"}
                       sx={{ 
                         fontWeight: 700, 
                         fontSize: "1rem", 
-                        py: 1.5,
-                        px: 2,
-                        backgroundColor: resultsData.objectiveAchieved ? theme.primary : "#FF9800",
-                        color: "white"
+                        py: 1,
+                        px: 2
                       }}
                     />
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {resultsData.completionRate}% de 80% requerido
-                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
 
-            {/* Contenido Principal con Gráficos */}
-            <Grid container spacing={3}>
-              {/* Columna Izquierda: Tabla y Gráficos */}
+            {/* Segunda Fila: Gráficos Principales */}
+            <Grid container spacing={3} mb={4}>
+              {/* Gráfico de Comparativa de Puntos */}
               <Grid item xs={12} lg={8}>
-                {/* Selector de Gráficos */}
                 <Card
                   elevation={0}
                   sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
+                    background: customTheme.cardBg,
+                    borderRadius: 3,
                     boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
-                    mb: 3
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
+                    height: '100%'
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="h6" fontWeight="600" sx={{ color: theme.primary }}>
-                        📈 Visualización de Resultados
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                      <Typography variant="h6" fontWeight="600" sx={{ color: customTheme.primary }}>
+                        📈 Comparativa de Puntos por Sprint:
                       </Typography>
                       <ToggleButtonGroup
                         value={chartType}
@@ -528,298 +636,232 @@ export default function Results() {
                           <ShowChart sx={{ mr: 1 }} />
                           Líneas
                         </ToggleButton>
-                        <ToggleButton value="pie">
+                        <ToggleButton value="area">
                           <PieChart sx={{ mr: 1 }} />
-                          Tarta
+                          Área
                         </ToggleButton>
                       </ToggleButtonGroup>
                     </Box>
+
+                    <Box sx={{ height: 300 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        {chartType === "bar" ? (
+                          <RechartsBarChart data={comparisonData.velocityData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.mode === 'dark' ? '#444' : '#f0f0f0'} />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="plannedPoints" fill="#1976d2" name="Puntos Planificados" />
+                            <Bar dataKey="completedPoints" fill="#4CAF50" name="Puntos Completados" />
+                          </RechartsBarChart>
+                        ) : chartType === "line" ? (
+                          <RechartsLineChart data={comparisonData.velocityData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.mode === 'dark' ? '#444' : '#f0f0f0'} />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Line type="monotone" dataKey="plannedPoints" stroke="#1976d2" name="Puntos Planificados" strokeWidth={2} />
+                            <Line type="monotone" dataKey="completedPoints" stroke="#4CAF50" name="Puntos Completados" strokeWidth={2} />
+                          </RechartsLineChart>
+                        ) : (
+                          <AreaChart data={comparisonData.velocityData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.mode === 'dark' ? '#444' : '#f0f0f0'} />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Area type="monotone" dataKey="plannedPoints" stackId="1" stroke="#1976d2" fill="#1976d2" name="Puntos Planificados" />
+                            <Area type="monotone" dataKey="completedPoints" stackId="1" stroke="#4CAF50" fill="#4CAF50" name="Puntos Completados" />
+                          </AreaChart>
+                        )}
+                      </ResponsiveContainer>
+                    </Box>
                   </CardContent>
                 </Card>
+              </Grid>
 
-                {/* Gráfico Dinámico */}
+              {/* Gráfico de Velocidad */}
+              <Grid item xs={12} lg={4}>
                 <Card
                   elevation={0}
                   sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
+                    background: customTheme.cardBg,
+                    borderRadius: 3,
                     boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
-                    mb: 3,
-                    height: 320
-                  }}
-                >
-                  <CardContent sx={{ p: 3, height: '100%' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      {chartType === "bar" && (
-                        <RechartsBarChart data={getChartData()}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="value" fill={theme.primary} />
-                        </RechartsBarChart>
-                      )}
-                      {chartType === "line" && (
-                        <RechartsLineChart data={getChartData()}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="value" stroke={theme.primary} strokeWidth={2} />
-                        </RechartsLineChart>
-                      )}
-                      {chartType === "pie" && (
-                        <RechartsPieChart>
-                          <Pie
-                            data={getChartData()}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, value }) => `${name}: ${value}`}
-                            outerRadius={90}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {getChartData().map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </RechartsPieChart>
-                      )}
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Tabla de Comparativa */}
-                <Card
-                  elevation={0}
-                  sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
-                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
+                    height: '100%'
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: theme.primary }}>
-                      📋 Comparativa de Puntos por Tamaño de Historia
+                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: customTheme.primary }}>
+                      🚀 Velocidad por Sprint
                     </Typography>
 
-                    <TableContainer>
-                      <Table>
+                    <Box sx={{ height: 300 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsBarChart data={comparisonData.velocityData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.mode === 'dark' ? '#444' : '#f0f0f0'} />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="velocityIdeal" fill="#FF9800" name="Velocidad Ideal" />
+                          <Bar dataKey="velocityReal" fill="#4CAF50" name="Velocidad Real" />
+                        </RechartsBarChart>
+                      </ResponsiveContainer>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
+            {/* Tercera Fila: Rendimiento del Equipo y Tabla Resumen */}
+            <Grid container spacing={3}>
+              {/* Rendimiento del Equipo */}
+              <Grid item xs={12} lg={6}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    background: customTheme.cardBg,
+                    borderRadius: 3,
+                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
+                    height: '100%'
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: customTheme.primary }}>
+                      👥 Rendimiento del Equipo por Miembro
+                    </Typography>
+
+                    {Object.entries(teamPerformanceData).length > 0 ? (
+                      <Box display="flex" flexDirection="column" gap={2}>
+                        {Object.entries(teamPerformanceData).map(([memberName, performances]) => (
+                          <Box key={memberName}>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                              <Typography variant="body2" fontWeight="600">
+                                {memberName}
+                              </Typography>
+                              <Typography variant="body2" sx={{ 
+                                color: performances[0]?.completionRate >= 80 ? customTheme.primary : "#ED6C02",
+                                fontWeight: 600
+                              }}>
+                                {performances[0]?.completionRate || 0}%
+                              </Typography>
+                            </Box>
+                            <LinearProgress
+                              variant="determinate"
+                              value={performances[0]?.completionRate || 0}
+                              sx={{ 
+                                height: 6, 
+                                borderRadius: 3,
+                                backgroundColor: theme.palette.mode === 'dark' ? '#333' : "#e0e0e0",
+                                "& .MuiLinearProgress-bar": {
+                                  backgroundColor: (performances[0]?.completionRate || 0) >= 80 ? customTheme.primary : "#ED6C02",
+                                }
+                              }}
+                            />
+                            <Box display="flex" justifyContent="space-between" mt={0.5}>
+                              <Typography variant="caption" color="text.secondary">
+                                Último sprint: {performances[0]?.completed || 0} pts
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {performances.length} sprint(s)
+                              </Typography>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    ) : (
+                      <Box textAlign="center" py={4}>
+                        <Typography variant="body2" color="text.secondary">
+                          No hay datos de rendimiento disponibles
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Tabla Resumen de Sprints */}
+              <Grid item xs={12} lg={6}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    background: customTheme.cardBg,
+                    borderRadius: 3,
+                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
+                    height: '100%'
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h6" fontWeight="600" mb={2} sx={{ color: customTheme.primary }}>
+                      📋 Resumen por Sprint
+                    </Typography>
+                    
+                    <TableContainer sx={{ maxHeight: 400 }}>
+                      <Table size="small" stickyHeader>
                         <TableHead>
-                          <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
-                            <TableCell sx={{ fontWeight: 700 }}>Puntos</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 700 }}>Planificado</TableCell>
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: 700 }}>Sprint</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 700 }}>Puntos</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 700 }}>Completado</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 700 }}>% Completado</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 700 }}>Estado</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 700 }}>Velocidad</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {resultsData.pointsDistribution.map((item, index) => {
-                            const itemCompletion = item.plannedPoints > 0 ? 
-                              Math.round((item.completedPoints / item.plannedPoints) * 100) : 0;
-                            
-                            return (
-                              <TableRow key={index} hover>
-                                <TableCell>
-                                  <Chip 
-                                    label={`${item.points} pts`} 
-                                    size="small"
-                                    sx={{ 
-                                      backgroundColor: "#E8F5E9", 
-                                      color: theme.primary, 
-                                      fontWeight: 600 
-                                    }}
-                                  />
-                                </TableCell>
-                                <TableCell align="center">
-                                  <Typography fontWeight="700">
-                                    {item.planned} historias
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    {item.plannedPoints} pts
-                                  </Typography>
-                                </TableCell>
-                                <TableCell align="center">
-                                  <Typography fontWeight="700">
-                                    {item.completed} historias
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    {item.completedPoints} pts
-                                  </Typography>
-                                </TableCell>
-                                <TableCell align="center">
-                                  <Typography fontWeight="700" sx={{ 
-                                    color: itemCompletion >= 80 ? theme.primary : "#ED6C02" 
-                                  }}>
-                                    {itemCompletion}%
-                                  </Typography>
-                                </TableCell>
-                                <TableCell align="center">
-                                  <Chip
-                                    label={itemCompletion >= 80 ? "Cumplido" : "Pendiente"}
-                                    size="small"
-                                    sx={{
-                                      backgroundColor: itemCompletion >= 80 ? "#E8F5E9" : "#FFF3E0",
-                                      color: itemCompletion >= 80 ? theme.primary : "#ED6C02",
-                                      fontWeight: 600
-                                    }}
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
+                          {comparisonData.velocityData.map((sprint) => (
+                            <TableRow key={sprint.sprintId} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600" noWrap>
+                                  {sprint.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {new Date(sprint.startDate).toLocaleDateString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600">
+                                  {sprint.completedPoints}/{sprint.plannedPoints}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${sprint.completionRate}%`}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: sprint.completionRate >= 80 ? 
+                                      (theme.palette.mode === 'dark' ? '#1B5E20' : "#E8F5E9") : 
+                                      (theme.palette.mode === 'dark' ? '#E65100' : "#FFF3E0"),
+                                    color: sprint.completionRate >= 80 ? 
+                                      (theme.palette.mode === 'dark' ? '#81C784' : "#2E7D32") : 
+                                      (theme.palette.mode === 'dark' ? '#FFB74D' : "#ED6C02"),
+                                    fontWeight: 600,
+                                    minWidth: 60
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600">
+                                  {sprint.velocityReal}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  pts/día
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ))}
                         </TableBody>
                       </Table>
                     </TableContainer>
                   </CardContent>
                 </Card>
               </Grid>
-
-              {/* Columna Derecha: Información Adicional */}
-              <Grid item xs={12} lg={4}>
-                {/* Información del Sprint */}
-                <Card
-                  elevation={0}
-                  sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
-                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
-                    mb: 3
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: theme.primary }}>
-                      ℹ️ Información del Sprint
-                    </Typography>
-                    
-                    <Box sx={{ mb: 2, p: 2, backgroundColor: "#F8F9FA", borderRadius: 2 }}>
-                      <Typography variant="body2" fontWeight="600" color={theme.primary}>
-                        {resultsData.sprint.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(resultsData.sprint.startDate).toLocaleDateString()} - {" "}
-                        {new Date(resultsData.sprint.endDate).toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                    
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                      <Typography variant="body2" color="text.secondary">Estado:</Typography>
-                      <Chip 
-                        label={resultsData.status} 
-                        size="small"
-                        sx={{
-                          backgroundColor: 
-                            resultsData.status === "Completado" ? "#E8F5E9" : 
-                            resultsData.status === "Completado Parcial" ? "#FFF3E0" : "#F5F5F5",
-                          color: 
-                            resultsData.status === "Completado" ? theme.primary : 
-                            resultsData.status === "Completado Parcial" ? "#ED6C02" : "#666",
-                          fontWeight: 600
-                        }}
-                      />
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    <Typography variant="body2" color="text.secondary" mb={1} fontWeight="600">
-                      Observaciones:
-                    </Typography>
-                    <Box sx={{ p: 2, backgroundColor: "#F8F9FA", borderRadius: 1, minHeight: 80 }}>
-                      <Typography variant="body2" sx={{ fontStyle: resultsData.sprint.observations ? "normal" : "italic" }}>
-                        {resultsData.sprint.observations || "No hay observaciones registradas"}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-
-                {/* Rendimiento del Equipo */}
-                <Card
-                  elevation={0}
-                  sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
-                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
-                    mb: 3
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: theme.primary }}>
-                      👥 Rendimiento del Equipo
-                    </Typography>
-                    {resultsData.teamPerformance.map((member) => (
-                      <Box key={member.name} sx={{ mb: 2 }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                          <Typography variant="body2" fontWeight="600">
-                            {member.name}
-                          </Typography>
-                          <Typography variant="body2" sx={{ 
-                            color: member.completionRate >= 80 ? theme.primary : "#ED6C02",
-                            fontWeight: 600
-                          }}>
-                            {member.completionRate}%
-                          </Typography>
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={member.completionRate}
-                          color={member.completionRate >= 80 ? "success" : "warning"}
-                          sx={{ 
-                            height: 8, 
-                            borderRadius: 4,
-                            backgroundColor: "#e0e0e0",
-                            "& .MuiLinearProgress-bar": {
-                              backgroundColor: member.completionRate >= 80 ? theme.primary : "#ED6C02",
-                            }
-                          }}
-                        />
-                        <Box display="flex" justifyContent="space-between" mt={0.5}>
-                          <Typography variant="caption" color="text.secondary">
-                            {member.completed}/{member.planned} pts
-                          </Typography>
-                        </Box>
-                      </Box>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                {/* Comentarios del Scrum Master */}
-                <Card
-                  elevation={0}
-                  sx={{
-                    background: theme.cardBg,
-                    borderRadius: 2,
-                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                    border: `1px solid #e0e0e0`,
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={2} sx={{ color: theme.primary }}>
-                      💬 Observaciones del Scrum Master
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={3}
-                      placeholder="Añade observaciones o aprendizajes del sprint..."
-                      value={comments}
-                      onChange={(e) => setComments(e.target.value)}
-                      sx={{ mb: 2 }}
-                    />
-                    <Button variant="contained" fullWidth sx={{ background: theme.gradient }}>
-                      Guardar observaciones
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
             </Grid>
-          </Box>
+          </>
         )}
       </Box>
     </Box>
