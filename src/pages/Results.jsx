@@ -481,7 +481,7 @@ export default function Results() {
               mb: 4, width: '100%', mx: 0, display: 'flex', gap: 2, flexWrap: 'wrap'
             }}>
               <Box item sx={{
-                flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                flex: '1 1 calc(25% - 16px)', 
                 minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
               }}>
                 <Card
@@ -505,7 +505,7 @@ export default function Results() {
                         <TrendingUp />
                       </Avatar>
                     </Box>
-                    <Typography variant="h3" fontWeight="700" sx={{ color: customTheme.primary }}>
+                    <Typography variant="h4" fontWeight="700" sx={{ color: customTheme.primary }}>
                       {comparisonData.summary.totalSprints} 
                     </Typography>
                   </CardContent>
@@ -513,7 +513,7 @@ export default function Results() {
               </Box>
 
               <Box item sx={{
-                flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                flex: '1 1 calc(25% - 16px)', 
                 minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
               }}>
                 <Card
@@ -537,7 +537,7 @@ export default function Results() {
                         <CheckCircle sx={{ height: 20 }} />
                       </Avatar>
                     </Box>
-                    <Typography variant="h3" fontWeight="700" sx={{ color: "#1976D2" }}>
+                    <Typography variant="h4" fontWeight="700" sx={{ color: "#1976D2" }}>
                       {comparisonData.summary.overallCompletionRate}%
                     </Typography>
                   </CardContent>
@@ -545,7 +545,7 @@ export default function Results() {
               </Box>
 
               <Box item sx={{
-                flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                flex: '1 1 calc(25% - 16px)', 
                 minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
               }}>
                 <Card
@@ -570,7 +570,7 @@ export default function Results() {
                       </Avatar>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'center' }}>
-                      <Typography variant="h3" fontWeight="700" sx={{ color: "#FF9800" }}>
+                      <Typography variant="h4" fontWeight="700" sx={{ color: "#FF9800" }}>
                         {comparisonData.summary.averageVelocity}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -582,7 +582,7 @@ export default function Results() {
               </Box>
 
               <Box item sx={{
-                flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                flex: '1 1 calc(25% - 16px)', 
                 minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
               }}>
                 <Card
@@ -617,8 +617,8 @@ export default function Results() {
                       color={comparisonData.summary.averageCompletion >= 80 ? "success" : "warning"}
                       sx={{
                         fontWeight: 700,
-                        fontSize: "30px",
-                        py: 3,
+                        fontSize: "20px",
+                        py: 2,
                         px: 1,
                         borderRadius:10
                       }}
@@ -653,7 +653,7 @@ export default function Results() {
                 >
                   <CardContent sx={{ p: 3 }}>
                     <Box display="flex" sx={{gap: 2}} justifyContent="space-between" alignItems="center" mb={3}>
-                      <Typography variant="h6" fontWeight="600" sx={{ color: '#5b5c5c' }}>
+                      <Typography variant="h6" fontWeight="600" sx={{ color: customTheme.textPrimary }}>
                         Comparativa de Puntos por Sprint:
                       </Typography>
                       <ToggleButtonGroup
@@ -732,7 +732,7 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: '#5b5c5c' }}>
+                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: customTheme.textPrimary }}>
                       Velocidad por Sprint
                     </Typography>
 
@@ -778,7 +778,7 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: '#5b5c5c' }}>
+                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: customTheme.textPrimary }}>
                       Rendimiento del Equipo por Miembro
                     </Typography>
 
@@ -847,7 +847,7 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={2} sx={{ color: '#5b5c5c' }}>
+                    <Typography variant="h6" fontWeight="600" mb={2} sx={{ color: customTheme.textPrimary }}>
                       Resumen por Sprint
                     </Typography>
 
