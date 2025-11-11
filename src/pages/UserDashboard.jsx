@@ -15,6 +15,7 @@ import useSprintStore from '../store/SprintStore';
 import usePointStore from '../store/pointStore';
 
 const UserDashboard = () => {
+    // ===== STORES =====
     const { user } = useAuthStore();
     const { sprints, isLoading: sprintsLoading, error: sprintsError, fetchSprints } = useSprintStore();
     const {
@@ -26,9 +27,11 @@ const UserDashboard = () => {
         fetchRecentRecords,
         getPointsBySprint,
         getTotalPoints,
-        registerPoints
+        registerPoints,
+        getSprintRecords,
     } = usePointStore();
 
+    // ===== ESTADOS =====
     const [activeSprint, setActiveSprint] = useState(null);
     const [dashboardStats, setDashboardStats] = useState({
         currentSprintPoints: 0,
@@ -56,6 +59,7 @@ const UserDashboard = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
+    // ===== EFFECTS =====
     useEffect(() => {
         loadDashboardData();
     }, []);
@@ -73,39 +77,67 @@ const UserDashboard = () => {
     };
 
     // Encontrar sprint activo y calcular estadísticas
+    // useEffect(() => {
+    //     if (sprints && sprints.length > 0) {
+    //         const active = sprints.find(sprint => {
+    //             const sprintStatus = sprint.calculatedStatus || 'Planificado';
+    //             return sprintStatus === 'Activo';
+    //         });
+
+    //         setActiveSprint(active || null);
+
+    //         if (active && user?.id) {
+    //             const userSprintPoints = getPointsBySprint(active._id);
+    //             const totalUserPoints = getTotalPoints();
+
+    //             const teamTotalPoints = active.completedPoints || 0;
+    //             const teamPlannedPoints = active.plannedTotalPoints || 0;
+    //             const remainingPoints = Math.max(0, teamPlannedPoints - teamTotalPoints);
+    //             const teamProgress = teamPlannedPoints > 0 ?
+    //                 (teamTotalPoints / teamPlannedPoints) * 100 : 0;
+
+    //             const daysRemaining = calculateDaysRemaining(active.endDate);
+
+    //             setDashboardStats({
+    //                 currentSprintPoints: userSprintPoints,
+    //                 totalPoints: totalUserPoints,
+    //                 teamProgress: teamProgress,
+    //                 daysRemaining: daysRemaining,
+    //                 teamTotalPoints: teamTotalPoints,
+    //                 teamPlannedPoints: teamPlannedPoints,
+    //                 remainingPoints: remainingPoints
+    //             });
+    //         }
+    //     }
+    // }, [sprints, userPoints, user]);
+    useEffect(() => {
+        if (!activeSprint || !user) return;
+
+        const userSprintPoints = getPointsBySprint(activeSprint._id) || 0;
+        const totalUserPoints = getTotalPoints() || 0;
+        const teamTotalPoints = activeSprint.completedPoints || 0;
+        const teamPlannedPoints = activeSprint.plannedTotalPoints || 0;
+        const remainingPoints = Math.max(0, teamPlannedPoints - teamTotalPoints);
+        const teamProgress = teamPlannedPoints > 0 ? (teamTotalPoints / teamPlannedPoints) * 100 : 0;
+        const daysRemaining = calculateDaysRemaining(activeSprint.endDate);
+
+        setDashboardStats({
+            currentSprintPoints: userSprintPoints,
+            totalPoints: totalUserPoints,
+            teamProgress,
+            daysRemaining,
+            teamTotalPoints,
+            teamPlannedPoints,
+            remainingPoints
+        });
+    }, [activeSprint, userPoints, user]);
+
     useEffect(() => {
         if (sprints && sprints.length > 0) {
-            const active = sprints.find(sprint => {
-                const sprintStatus = sprint.calculatedStatus || 'Planificado';
-                return sprintStatus === 'Activo';
-            });
-
+            const active = sprints.find(s => s.status === "Activo");
             setActiveSprint(active || null);
-
-            if (active && user?.id) {
-                const userSprintPoints = getPointsBySprint(active._id);
-                const totalUserPoints = getTotalPoints();
-
-                const teamTotalPoints = active.completedPoints || 0;
-                const teamPlannedPoints = active.plannedTotalPoints || 0;
-                const remainingPoints = Math.max(0, teamPlannedPoints - teamTotalPoints);
-                const teamProgress = teamPlannedPoints > 0 ?
-                    (teamTotalPoints / teamPlannedPoints) * 100 : 0;
-
-                const daysRemaining = calculateDaysRemaining(active.endDate);
-
-                setDashboardStats({
-                    currentSprintPoints: userSprintPoints,
-                    totalPoints: totalUserPoints,
-                    teamProgress: teamProgress,
-                    daysRemaining: daysRemaining,
-                    teamTotalPoints: teamTotalPoints,
-                    teamPlannedPoints: teamPlannedPoints,
-                    remainingPoints: remainingPoints
-                });
-            }
         }
-    }, [sprints, userPoints, user]);
+    }, [sprints]);
 
     const calculateDaysRemaining = (endDate) => {
         if (!endDate) return 0;
@@ -143,6 +175,11 @@ const UserDashboard = () => {
             month: "long"
         });
     };
+
+    // 🔹 Datos calculados
+    const myPoints = activeSprint ? getPointsBySprint(activeSprint._id) : 0;
+    const sprintRecords = activeSprint ? getSprintRecords(activeSprint._id) : [];
+    const plannedPoints = activeSprint?.plannedTotalPoints || 0;
 
     // Funciones para el registro de puntos
     const handlePointChange = (pointValue, change) => {
@@ -201,6 +238,7 @@ const UserDashboard = () => {
                 userId: user.id,
                 points: totalPoints,
                 stories: getStoriesArray(),
+                totalPoints: totalPoints, // añadido
                 isInterruption: isInterruption,
                 date: new Date().toISOString().split('T')[0]
             };
@@ -302,9 +340,10 @@ const UserDashboard = () => {
 
                 {/* Stats Cards */}
                 <Box container spacing={2} sx={{
-                    mb: 4, width: '100%', mx: 0, display: 'flex', gap: 2 }}>
+                    mb: 4, width: '100%', mx: 0, display: 'flex', gap: 2
+                }}>
                     {/* Sprint actual */}
-                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%'}}>
+                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%' }}>
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
@@ -331,7 +370,7 @@ const UserDashboard = () => {
                     </Box>
 
                     {/* Mis Puntos (Sprint) */}
-                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%'}}>
+                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%' }}>
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
@@ -348,7 +387,8 @@ const UserDashboard = () => {
                                     <TrendingUp style={{ color: '#10b981' }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}>
-                                    {dashboardStats.currentSprintPoints.toFixed(1)}
+                                    {/* {dashboardStats.currentSprintPoints.toFixed(1)} */}
+                                    {activeSprint ? getPointsBySprint(activeSprint._id)?.toFixed(1) : 0}
                                 </Typography>
                                 <Typography sx={{ fontSize: '12px', color: '#6b7280' }}>
                                     Este sprint
@@ -357,8 +397,8 @@ const UserDashboard = () => {
                         </Card>
                     </Box>
 
-                    {/* Puntos Totales */}
-                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%'}}>
+                    {/* Puntos Totales Planificados */}
+                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%' }}>
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
@@ -375,17 +415,18 @@ const UserDashboard = () => {
                                     <Calendar style={{ color: '#10b981' }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}>
-                                    {dashboardStats.totalPoints.toFixed(1)}
+                                    {/* {dashboardStats.totalPoints.toFixed(1)} */}
+                                    {activeSprint?.plannedTotalPoints?.toFixed(1) || 0}
                                 </Typography>
                                 <Typography sx={{ fontSize: '12px', color: '#6b7280' }}>
-                                    Todos los sprints
+                                    Este sprint
                                 </Typography>
                             </CardContent>
                         </Card>
                     </Box>
 
                     {/* Días Restantes */}
-                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%'}}>
+                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%' }}>
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
@@ -708,7 +749,7 @@ const UserDashboard = () => {
                     </Grid>
 
                     {/* Columna derecha: Registros recientes */}
-                    <Grid item xs={12} lg={4} sx={{ width: '100%'}}>
+                    <Grid item xs={12} lg={4} sx={{ width: '100%' }}>
                         <Card sx={{
                             borderRadius: 3,
                             boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
@@ -720,14 +761,16 @@ const UserDashboard = () => {
                                     Mis Registros Recientes
                                 </Typography>
 
-                                {recentRecords.length === 0 ? (
+                                {/* {recentRecords.length === 0 ? ( */}
+                                {(!activeSprint || getSprintRecords(activeSprint._id).length === 0) ? (
                                     <Box textAlign="center" py={4}>
                                         <Typography variant="body1" color="#6b7280">
-                                            No hay registros recientes
+                                            No hay registros recientes para este sprint
                                         </Typography>
                                     </Box>
                                 ) : (
-                                    recentRecords.slice(0, 8).map((record, index) => (
+                                    // recentRecords.slice(0, 8).map((record, index) => (
+                                    getSprintRecords(activeSprint._id).slice(0, 8).map((record, index) => (
                                         <Box
                                             key={record._id || index}
                                             sx={{
@@ -744,17 +787,22 @@ const UserDashboard = () => {
                                             }}
                                         >
                                             <Typography sx={{ fontWeight: 600, mb: 0.5, color: '#065f46' }}>
-                                                {record.stories && record.stories.length > 0 ? (
+                                                {/* {record.stories && record.stories.length > 0 ? (
                                                     record.stories.map(story =>
                                                         `${story.count} historia(s) de ${story.pointValue || story.points || '0'} punto(s)`
                                                     ).join(', ')
                                                 ) : (
                                                     `${record.points?.toFixed(1) || '0'} punto(s) totales`
-                                                )}
+                                                )} */}
+
+                                                {record.stories.map(story =>
+                                                    `${story.count} historia(s) de ${story.pointValue || story.points || '0'} punto(s)`
+                                                ).join(', ')}
                                             </Typography>
                                             <Typography component="span" sx={{ color: '#6b7280', fontSize: '14px' }}>
-                                                {formatRecordDate(record.date || record.createdAt)}
-                                                {record.sprintName && ` • ${record.sprintName}`}
+                                                {/* {formatRecordDate(record.date || record.createdAt)} */}
+                                                {formatRecordDate(record.registeredAt)}
+                                                {/* {record.sprintName && ` • ${record.sprintName}`} */}
                                                 {record.isInterruption && (
                                                     <Chip
                                                         label="Interrupción"
