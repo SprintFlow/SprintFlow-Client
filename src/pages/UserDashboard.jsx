@@ -19,12 +19,17 @@ const UserDashboard = () => {
     
     // ===== TEMA PERSONALIZADO CON SOPORTE PARA MODO OSCURO =====
     const customTheme = {
-        primary: "#10b981",
-        primaryDark: "#059669",
-        primaryLight: "#34d399",
-        background: theme.palette.mode === 'dark' ? theme.palette.background.default : "#f0fdf4",
+        // primary: "#10b981",
+        primary: "#4CAF50",
+        // primaryDark: "#059669",
+        primaryDark: "#45A049",
+        // primaryLight: "#34d399",
+        primaryLight: "#81C784",
+        // background: theme.palette.mode === 'dark' ? theme.palette.background.default : "#f0fdf4",
+        background: theme.palette.mode === 'dark' ? theme.palette.background.default : "#f8fbf9",
         cardBg: theme.palette.mode === 'dark' ? theme.palette.background.paper : "#ffffff",
-        gradient: "linear-gradient(135deg, #10b981 0%, #34d399 100%)",
+        // gradient: "linear-gradient(135deg, #10b981 0%, #34d399 100%)",
+        gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
         text: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.text.primary,
         textSecondary: theme.palette.mode === 'dark' ? theme.palette.text.secondary : "#6b7280",
         border: theme.palette.mode === 'dark' ? '#333' : '#d1fae5',
@@ -383,15 +388,14 @@ const UserDashboard = () => {
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}> */}
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
                                         Sprint actual
                                     </Typography>
-                                    {/* <Target style={{ color: '#10b981' }} /> */}
-                                    <Target style={{ color: customTheme.primary }} />
+                                    <Target style={{ color: 'grey' }} />
+                                    {/* <Target style={{ color: customTheme.primary }} /> */}
                                 </Box>
-                                {/* <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}> */}
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
+                                {/* <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: 'grey' }}> */}
                                     {activeSprint ? activeSprint.number || '1' : '0'}
                                 </Typography>
                                 {/* <Typography sx={{ fontSize: '12px', color: '#6b7280' }}> */}
@@ -416,12 +420,12 @@ const UserDashboard = () => {
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}> */}
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
+                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}> */}
                                         Mis Puntos (Sprint)
                                     </Typography>
-                                    {/* <TrendingUp style={{ color: '#10b981' }} /> */}
-                                    <TrendingUp style={{ color: customTheme.primary }} />
+                                    <TrendingUp style={{ color: 'grey' }} />
+                                    {/* <TrendingUp style={{ color: customTheme.primary }} /> */}
                                 </Box>
                                 {/* <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}> */}
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
@@ -450,14 +454,14 @@ const UserDashboard = () => {
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}> */}
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
+                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}> */}
                                         Puntos Totales
                                     </Typography>
-                                    {/* <Calendar style={{ color: '#10b981' }} /> */}
-                                    <Calendar style={{ color: customTheme.primary }} />
+                                    <Calendar style={{ color: 'grey' }} />
+                                    {/* <Calendar style={{ color: customTheme.primary }} /> */}
                                 </Box>
-                                {/* <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}> */}
+                                {/* <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: 'grey' }}> */}
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
                                     {/* {dashboardStats.totalPoints.toFixed(1)} */}
                                     {activeSprint?.plannedTotalPoints?.toFixed(1) || 0}
@@ -484,12 +488,12 @@ const UserDashboard = () => {
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#065f46' }}> */}
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
+                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}> */}
                                         Días Restantes
                                     </Typography>
-                                    {/* <Clock style={{ color: '#10b981' }} /> */}
-                                    <Clock style={{ color: customTheme.primary }} />
+                                    <Clock style={{ color: 'grey' }} />
+                                    {/* <Clock style={{ color: customTheme.primary }} /> */}
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#ef4444' }}>
                                     {dashboardStats.daysRemaining}
@@ -518,8 +522,8 @@ const UserDashboard = () => {
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                                        {/* <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, color: '#065f46' }}> */}
-                                        <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, color: customTheme.primary }}>
+                                        <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, color: '#5b5c5c' }}>
+                                        {/* <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, color: customTheme.primary }}> */}
                                             Sprint Activo
                                         </Typography>
                                         <Chip
@@ -555,8 +559,8 @@ const UserDashboard = () => {
                                             <Typography variant="body2" fontWeight={500} color={customTheme.textSecondary}>
                                                 Progreso del Equipo
                                             </Typography>
-                                            {/* <Typography variant='body2' fontWeight={600} color="#065f46"> */}
-                                            <Typography variant='body2' fontWeight={600} color={customTheme.primary}>
+                                            <Typography variant='body2' fontWeight={600} color="grey">
+                                            {/* <Typography variant='body2' fontWeight={600} color={customTheme.primary}> */}
                                                 {dashboardStats.teamTotalPoints.toFixed(1)} / {dashboardStats.teamPlannedPoints.toFixed(1)} puntos
                                             </Typography>
                                         </Box>
@@ -577,8 +581,8 @@ const UserDashboard = () => {
                                                 },
                                             }}
                                         />
-                                        {/* <Typography variant="body2" sx={{ textAlign: "right", mt: 1, color: '#065f46', fontWeight: 500 }}> */}
-                                        <Typography variant="body2" sx={{ textAlign: "right", mt: 1, color: customTheme.primary, fontWeight: 500 }}>
+                                        <Typography variant="body2" sx={{ textAlign: "right", mt: 1, color: 'grey', fontWeight: 500 }}>
+                                        {/* <Typography variant="body2" sx={{ textAlign: "right", mt: 1, color: customTheme.primary, fontWeight: 500 }}> */}
                                             Faltan {dashboardStats.remainingPoints.toFixed(1)} puntos por completar
                                         </Typography>
                                     </Box>
@@ -640,8 +644,8 @@ const UserDashboard = () => {
                             // border: '1px solid #d1fae5'
                             border: `1px solid ${customTheme.border}`
                         }}>
-                            {/* <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#065f46' }}> */}
-                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: customTheme.primary }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#5b5c5c' }}>
+                            {/* <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: customTheme.primary }}> */}
                                 Registrar Puntos Completados
                             </Typography>
                             {/* <Typography sx={{ color: '#6b7280', fontSize: '14px', mb: 3 }}> */}
@@ -650,15 +654,15 @@ const UserDashboard = () => {
                             </Typography>
 
                             <TableContainer component={Paper} elevation={0} sx={{ 
-                                // border: '1px solid #d1fae5',
-                                border: `1px solid ${customTheme.border}`, 
+                                border: '1px solid rgb(222, 221, 221)',
+                                // border: `1px solid ${customTheme.border}`, 
                                 mb: 3, overflow: 'hidden',
                                 bgcolor: customTheme.cardBg }}>
                                 <Table sx={{ minWidth: '100%', tableLayout: 'fixed' }}>
                                     <TableHead>
                                         <TableRow>
-                                            {/* <TableCell sx={{ fontWeight: 600, color: '#065f46', width: '140px', px: 1 }}> */}
-                                            <TableCell sx={{ fontWeight: 600, color: customTheme.primary, width: '140px', px: 1 }}>
+                                            <TableCell sx={{ fontWeight: 600, color: '#5b5c5c', width: '140px', px: 1 }}>
+                                            {/* <TableCell sx={{ fontWeight: 600, color: customTheme.primary, width: '140px', px: 1 }}> */}
                                                 Puntuación
                                             </TableCell>
                                             {pointValues.map((value) => (
@@ -671,8 +675,8 @@ const UserDashboard = () => {
                                     </TableHead>
                                     <TableBody>
                                         <TableRow>
-                                            {/* <TableCell sx={{ fontWeight: 500, color: '#065f46', px: 1 }}> */}
-                                            <TableCell sx={{ fontWeight: 500, color: customTheme.primary, px: 1 }}>
+                                            <TableCell sx={{ fontWeight: 500, color: '#5b5c5c', px: 1 }}>
+                                            {/* <TableCell sx={{ fontWeight: 500, color: customTheme.primary, px: 1 }}> */}
                                                 Historias
                                             </TableCell>
                                             {pointValues.map((value) => (
@@ -865,8 +869,8 @@ const UserDashboard = () => {
                             height: 'fit-content'
                         }}>
                             <CardContent sx={{ p: 3 }}>
-                                {/* <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: '#065f46' }}> */}
-                                <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: customTheme.primary }}>
+                                <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: '#5b5c5c' }}>
+                                {/* <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: customTheme.primary }}> */}
                                     Mis Registros Recientes
                                 </Typography>
 
@@ -899,8 +903,8 @@ const UserDashboard = () => {
                                                 }
                                             }}
                                         >
-                                            {/* <Typography sx={{ fontWeight: 600, mb: 0.5, color: '#065f46' }}> */}
-                                            <Typography sx={{ fontWeight: 600, mb: 0.5, color: customTheme.primary }}>
+                                            <Typography sx={{ fontWeight: 600, mb: 0.5, color: '#5b5c5c' }}>
+                                            {/* <Typography sx={{ fontWeight: 600, mb: 0.5, color: customTheme.primary }}> */}
                                                 {/* {record.stories && record.stories.length > 0 ? (
                                                     record.stories.map(story =>
                                                         `${story.count} historia(s) de ${story.pointValue || story.points || '0'} punto(s)`
