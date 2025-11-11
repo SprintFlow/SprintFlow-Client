@@ -16,7 +16,7 @@ import usePointStore from '../store/pointStore';
 
 const UserDashboard = () => {
     const theme = useTheme();
-    
+
     // ===== TEMA PERSONALIZADO CON SOPORTE PARA MODO OSCURO =====
     const customTheme = {
         // primary: "#10b981",
@@ -312,10 +312,8 @@ const UserDashboard = () => {
                 justifyContent="center"
                 alignItems="center"
                 minHeight="100vh"
-                // sx={{ backgroundColor: '#f0fdf4' }}
                 sx={{ backgroundColor: customTheme.background }}
             >
-                {/* <CircularProgress size={60} sx={{ color: '#10b981' }} /> */}
                 <CircularProgress size={60} sx={{ color: customTheme.primary }} />
             </Box>
         );
@@ -326,7 +324,6 @@ const UserDashboard = () => {
     return (
         <Box sx={{
             minHeight: "100vh",
-            // backgroundColor: '#f0fdf4',
             backgroundColor: customTheme.background,
             py: 3,
             width: '100%',
@@ -336,7 +333,6 @@ const UserDashboard = () => {
             <Box sx={{
                 width: '100%',
                 px: { xs: 2, sm: 3, md: 4 },
-                // maxWidth: '1400px',
                 margin: '0 auto'
             }}>
 
@@ -348,23 +344,18 @@ const UserDashboard = () => {
 
                 {/* Header */}
                 <Card sx={{
-                    // bgcolor: 'background.paper',
                     bgcolor: customTheme.cardBg,
                     borderRadius: 3,
                     p: 3,
                     mb: 3,
                     boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
-                    // border: '1px solid #d1fae5'
                     border: `1px solid ${customTheme.border}`
                 }}>
                     <Box>
-                        {/* <Typography variant='h5' fontWeight="700" sx={{ color: '#065f46' }}> */}
                         <Typography variant='h5' fontWeight="700" sx={{ color: customTheme.primary }}>
                             Mi Dashboard - {user?.role || 'Developer'}
                         </Typography>
-                        {/* <Typography sx={{ color: '#6b7280' }}> */}
                         <Typography sx={{ color: customTheme.textSecondary }}>
-                            {/* Bienvenido, <span style={{ fontWeight: 600, color: '#059669' }}>{user?.name || 'Usuario'}</span> */}
                             Bienvenido, <span style={{ fontWeight: 600, color: customTheme.primary }}>{user?.name || 'Usuario'}</span>
                         </Typography>
                     </Box>
@@ -372,17 +363,21 @@ const UserDashboard = () => {
 
                 {/* Stats Cards */}
                 <Box container spacing={2} sx={{
-                    mb: 4, width: '100%', mx: 0, display: 'flex', gap: 2
+                    mb: 4, width: '100%', mx: 0, display: 'flex', gap: 2, flexWrap: 'wrap'
                 }}>
                     {/* Sprint actual */}
-                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%' }}>
+                    <Box item
+                        sx={{
+                            flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
+                        }}
+                    >
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
                             boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
                             transition: 'transform 0.2s',
-                            // border: '1px solid #d1fae5',
                             border: `1px solid ${customTheme.border}`,
                             '&:hover': { transform: 'translateY(-2px)' }
                         }}>
@@ -392,13 +387,10 @@ const UserDashboard = () => {
                                         Sprint actual
                                     </Typography>
                                     <Target style={{ color: 'grey' }} />
-                                    {/* <Target style={{ color: customTheme.primary }} /> */}
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
-                                {/* <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: 'grey' }}> */}
                                     {activeSprint ? activeSprint.number || '1' : '0'}
                                 </Typography>
-                                {/* <Typography sx={{ fontSize: '12px', color: '#6b7280' }}> */}
                                 <Typography sx={{ fontSize: '12px', color: customTheme.textSecondary }}>
                                     {activeSprint ? 'En progreso' : 'No activo'}
                                 </Typography>
@@ -407,32 +399,31 @@ const UserDashboard = () => {
                     </Box>
 
                     {/* Mis Puntos (Sprint) */}
-                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%' }}>
+                    <Box item
+                        sx={{
+                            flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
+                        }}
+                    >
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
                             boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
                             transition: 'transform 0.2s',
-                            // border: '1px solid #d1fae5',
                             border: `1px solid ${customTheme.border}`,
                             '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
                                     <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
-                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}> */}
                                         Mis Puntos (Sprint)
                                     </Typography>
                                     <TrendingUp style={{ color: 'grey' }} />
-                                    {/* <TrendingUp style={{ color: customTheme.primary }} /> */}
                                 </Box>
-                                {/* <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#10b981' }}> */}
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
-                                    {/* {dashboardStats.currentSprintPoints.toFixed(1)} */}
                                     {activeSprint ? getPointsBySprint(activeSprint._id)?.toFixed(1) : 0}
                                 </Typography>
-                                {/* <Typography sx={{ fontSize: '12px', color: '#6b7280' }}> */}
                                 <Typography sx={{ fontSize: '12px', color: customTheme.textSecondary }}>
                                     Este sprint
                                 </Typography>
@@ -441,32 +432,31 @@ const UserDashboard = () => {
                     </Box>
 
                     {/* Puntos Totales Planificados */}
-                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%' }}>
+                    <Box item
+                        sx={{
+                            flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
+                        }}
+                    >
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
                             boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
                             transition: 'transform 0.2s',
-                            // border: '1px solid #d1fae5',
                             border: `1px solid ${customTheme.border}`,
                             '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
                                     <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
-                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}> */}
                                         Puntos Totales
                                     </Typography>
                                     <Calendar style={{ color: 'grey' }} />
-                                    {/* <Calendar style={{ color: customTheme.primary }} /> */}
                                 </Box>
-                                {/* <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: 'grey' }}> */}
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
-                                    {/* {dashboardStats.totalPoints.toFixed(1)} */}
                                     {activeSprint?.plannedTotalPoints?.toFixed(1) || 0}
                                 </Typography>
-                                {/* <Typography sx={{ fontSize: '12px', color: '#6b7280' }}> */}
                                 <Typography sx={{ fontSize: '12px', color: customTheme.textSecondary }}>
                                     Este sprint
                                 </Typography>
@@ -475,30 +465,31 @@ const UserDashboard = () => {
                     </Box>
 
                     {/* Días Restantes */}
-                    <Box item xs={12} sm={6} md={3} sx={{ width: '100%' }}>
+                    <Box item
+                        sx={{
+                            flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
+                        }}
+                    >
                         <Card sx={{
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
                             boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
                             transition: 'transform 0.2s',
-                            // border: '1px solid #d1fae5',
                             border: `1px solid ${customTheme.border}`,
                             '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
                                     <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
-                                    {/* <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.primary }}> */}
                                         Días Restantes
                                     </Typography>
                                     <Clock style={{ color: 'grey' }} />
-                                    {/* <Clock style={{ color: customTheme.primary }} /> */}
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#ef4444' }}>
                                     {dashboardStats.daysRemaining}
                                 </Typography>
-                                {/* <Typography sx={{ fontSize: '12px', color: '#6b7280' }}> */}
                                 <Typography sx={{ fontSize: '12px', color: customTheme.textSecondary }}>
                                     Para finalizar sprint
                                 </Typography>
@@ -517,21 +508,17 @@ const UserDashboard = () => {
                                 mb: 3,
                                 bgcolor: customTheme.cardBg,
                                 boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
-                                // border: '1px solid #d1fae5'
                                 border: `1px solid ${customTheme.border}`
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
                                         <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, color: '#5b5c5c' }}>
-                                        {/* <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, color: customTheme.primary }}> */}
                                             Sprint Activo
                                         </Typography>
                                         <Chip
                                             label="Activo"
                                             sx={{
-                                                // color: 'background.paper',
                                                 color: 'white',
-                                                // backgroundColor: '#10b981',
                                                 backgroundColor: customTheme.primary,
                                                 fontWeight: 600
                                             }}
@@ -540,11 +527,9 @@ const UserDashboard = () => {
 
                                     <Box sx={{ mb: 3 }}>
                                         <Box>
-                                            {/* <Typography variant="h6" sx={{ fontWeight: 600, color: '#065f46' }}> */}
                                             <Typography variant="h6" sx={{ fontWeight: 600, color: customTheme.primary }}>
                                                 {activeSprint.name}
                                             </Typography>
-                                            {/* <Typography sx={{ color: '#6b7280', fontSize: 14, mt: 0.5 }}> */}
                                             <Typography sx={{ color: customTheme.textSecondary, fontSize: 14, mt: 0.5 }}>
                                                 {formatDate(activeSprint.startDate)} - {formatDate(activeSprint.endDate)}
                                                 {` (${calculateSprintDuration(activeSprint.startDate, activeSprint.endDate)} días)`}
@@ -555,12 +540,10 @@ const UserDashboard = () => {
                                     {/* Progreso del equipo */}
                                     <Box sx={{ mb: 3 }}>
                                         <Box sx={{ display: "flex", justifyContent: 'space-between', alignItems: "center", mb: 1 }}>
-                                            {/* <Typography variant="body2" fontWeight={500} color="#6b7280"> */}
                                             <Typography variant="body2" fontWeight={500} color={customTheme.textSecondary}>
                                                 Progreso del Equipo
                                             </Typography>
                                             <Typography variant='body2' fontWeight={600} color="grey">
-                                            {/* <Typography variant='body2' fontWeight={600} color={customTheme.primary}> */}
                                                 {dashboardStats.teamTotalPoints.toFixed(1)} / {dashboardStats.teamPlannedPoints.toFixed(1)} puntos
                                             </Typography>
                                         </Box>
@@ -571,10 +554,6 @@ const UserDashboard = () => {
                                             sx={{
                                                 height: 8,
                                                 borderRadius: 5,
-                                                // backgroundColor: "#d1fae5",
-                                                // "& .MuiLinearProgress-bar": {
-                                                //     backgroundColor: "#10b981",
-                                                // },
                                                 backgroundColor: theme.palette.mode === 'dark' ? '#1e293b' : "#d1fae5",
                                                 "& .MuiLinearProgress-bar": {
                                                     backgroundColor: customTheme.primary,
@@ -582,33 +561,27 @@ const UserDashboard = () => {
                                             }}
                                         />
                                         <Typography variant="body2" sx={{ textAlign: "right", mt: 1, color: 'grey', fontWeight: 500 }}>
-                                        {/* <Typography variant="body2" sx={{ textAlign: "right", mt: 1, color: customTheme.primary, fontWeight: 500 }}> */}
                                             Faltan {dashboardStats.remainingPoints.toFixed(1)} puntos por completar
                                         </Typography>
                                     </Box>
 
-                                    {/* <Divider sx={{ my: 3, borderColor: '#d1fae5' }} /> */}
                                     <Divider sx={{ my: 3, borderColor: customTheme.border }} />
 
                                     {/* Puntos del usuario vs equipo */}
                                     <Grid container spacing={3}>
                                         <Grid item xs={12} md={6}>
-                                            {/* <Typography variant="subtitle2" color="#6b7280"> */}
                                             <Typography variant="subtitle2" color={customTheme.textSecondary}>
                                                 Mis Puntos
                                             </Typography>
-                                            {/* <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28, color: '#10b981' }}> */}
                                             <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28, color: customTheme.primary }}>
                                                 {dashboardStats.currentSprintPoints.toFixed(1)}
                                             </Typography>
                                         </Grid>
 
                                         <Grid item xs={12} md={6}>
-                                            {/* <Typography variant="subtitle2" color="#6b7280"> */}
                                             <Typography variant="subtitle2" color={customTheme.textSecondary}>
                                                 Equipo Total
                                             </Typography>
-                                            {/* <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28, color: '#10b981' }}> */}
                                             <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 28, color: customTheme.primary }}>
                                                 {dashboardStats.teamTotalPoints.toFixed(1)}
                                             </Typography>
@@ -617,14 +590,11 @@ const UserDashboard = () => {
 
                                     {activeSprint.description && (
                                         <Box>
-                                            {/* <Divider sx={{ my: 3, borderColor: '#d1fae5' }} /> */}
                                             <Divider sx={{ my: 3, borderColor: customTheme.border }} />
                                             <Box>
-                                                {/* <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, color: '#065f46' }}> */}
                                                 <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, color: customTheme.primary }}>
                                                     Observaciones:
                                                 </Typography>
-                                                {/* <Typography variant="body1" color="#6b7280"> */}
                                                 <Typography variant="body1" color={customTheme.textSecondary}>
                                                     {activeSprint.description}
                                                 </Typography>
@@ -641,32 +611,27 @@ const UserDashboard = () => {
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
                             boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
-                            // border: '1px solid #d1fae5'
                             border: `1px solid ${customTheme.border}`
                         }}>
                             <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#5b5c5c' }}>
-                            {/* <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: customTheme.primary }}> */}
                                 Registrar Puntos Completados
                             </Typography>
-                            {/* <Typography sx={{ color: '#6b7280', fontSize: '14px', mb: 3 }}> */}
                             <Typography sx={{ color: customTheme.textSecondary, fontSize: '14px', mb: 3 }}>
                                 Ingresa la cantidad de historias completadas para cada puntuación
                             </Typography>
 
-                            <TableContainer component={Paper} elevation={0} sx={{ 
+                            <TableContainer component={Paper} elevation={0} sx={{
                                 border: '1px solid rgb(222, 221, 221)',
-                                // border: `1px solid ${customTheme.border}`, 
                                 mb: 3, overflow: 'hidden',
-                                bgcolor: customTheme.cardBg }}>
+                                bgcolor: customTheme.cardBg
+                            }}>
                                 <Table sx={{ minWidth: '100%', tableLayout: 'fixed' }}>
                                     <TableHead>
                                         <TableRow>
                                             <TableCell sx={{ fontWeight: 600, color: '#5b5c5c', width: '140px', px: 1 }}>
-                                            {/* <TableCell sx={{ fontWeight: 600, color: customTheme.primary, width: '140px', px: 1 }}> */}
                                                 Puntuación
                                             </TableCell>
                                             {pointValues.map((value) => (
-                                                // <TableCell key={value} align="center" sx={{ fontWeight: 600, color: '#065f46', px: 1 }}>
                                                 <TableCell key={value} align="center" sx={{ fontWeight: 600, color: customTheme.primary, px: 1 }}>
                                                     {value}
                                                 </TableCell>
@@ -676,7 +641,6 @@ const UserDashboard = () => {
                                     <TableBody>
                                         <TableRow>
                                             <TableCell sx={{ fontWeight: 500, color: '#5b5c5c', px: 1 }}>
-                                            {/* <TableCell sx={{ fontWeight: 500, color: customTheme.primary, px: 1 }}> */}
                                                 Historias
                                             </TableCell>
                                             {pointValues.map((value) => (
@@ -691,9 +655,6 @@ const UserDashboard = () => {
                                                                 minWidth: '28px',
                                                                 width: '28px',
                                                                 height: '28px',
-                                                                // borderColor: '#10b981',
-                                                                // color: '#10b981',
-                                                                // '&:hover': { bgcolor: '#f0fdf4' }
                                                                 borderColor: customTheme.primary,
                                                                 color: customTheme.primary,
                                                                 '&:hover': { bgcolor: customTheme.hoverBg }
@@ -717,7 +678,6 @@ const UserDashboard = () => {
                                                             sx={{
                                                                 width: '50px',
                                                                 '& .MuiOutlinedInput-root': {
-                                                                    // bgcolor: 'background.paper',
                                                                     bgcolor: customTheme.cardBg,
                                                                     height: '28px',
                                                                     '& input': {
@@ -743,8 +703,6 @@ const UserDashboard = () => {
                                                                 minWidth: '28px',
                                                                 width: '28px',
                                                                 height: '28px',
-                                                                // bgcolor: '#10b981',
-                                                                // '&:hover': { bgcolor: '#059669' }
                                                                 bgcolor: customTheme.primary,
                                                                 '&:hover': { bgcolor: customTheme.primaryDark }
                                                             }}
@@ -756,12 +714,10 @@ const UserDashboard = () => {
                                             ))}
                                         </TableRow>
                                         <TableRow>
-                                            {/* <TableCell sx={{ fontWeight: 600, color: '#065f46', px: 1 }}> */}
                                             <TableCell sx={{ fontWeight: 600, color: customTheme.primary, px: 1 }}>
                                                 Subtotal
                                             </TableCell>
                                             {pointValues.map((value) => (
-                                                // <TableCell key={value} align="center" sx={{ fontWeight: 500, color: '#065f46', px: 1 }}>
                                                 <TableCell key={value} align="center" sx={{ fontWeight: 500, color: customTheme.primary, px: 1 }}>
                                                     {calculateSubtotal(value)}
                                                 </TableCell>
@@ -778,16 +734,13 @@ const UserDashboard = () => {
                                 alignItems: 'center',
                                 p: 2,
                                 borderRadius: 2,
-                                // border: '1px solid #10b981',
                                 border: `1px solid ${customTheme.primary}`,
                                 mb: 3,
                                 bgcolor: theme.palette.mode === 'dark' ? '#1e293b' : '#f0fdf4'
                             }}>
-                                {/* <Typography variant="h6" sx={{ fontWeight: 600, color: '#065f46' }}> */}
                                 <Typography variant="h6" sx={{ fontWeight: 600, color: customTheme.primary }}>
                                     Total de Puntos a Registrar:
                                 </Typography>
-                                {/* <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#065f46' }}> */}
                                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: customTheme.primary }}>
                                     {totalPoints.toFixed(1)}
                                 </Typography>
@@ -796,8 +749,6 @@ const UserDashboard = () => {
                             {/* Interruption Checkbox */}
                             <Box sx={{
                                 p: 2,
-                                // bgcolor: '#fffbeb',
-                                // border: '1px solid #fcd34d',
                                 bgcolor: customTheme.warningBg,
                                 border: `1px solid ${customTheme.warningBorder}`,
                                 borderRadius: 2,
@@ -809,21 +760,17 @@ const UserDashboard = () => {
                                             checked={isInterruption}
                                             onChange={(e) => setIsInterruption(e.target.checked)}
                                             disabled={!activeSprint || isSubmitting}
-                                            sx={{ 
-                                                // color: '#f59e0b', 
-                                                // '&.Mui-checked': { color: '#f59e0b' } 
-                                                color: customTheme.warningText, 
-                                                '&.Mui-checked': { color: customTheme.warningText } 
+                                            sx={{
+                                                color: customTheme.warningText,
+                                                '&.Mui-checked': { color: customTheme.warningText }
                                             }}
                                         />
                                     }
                                     label={
                                         <Box>
-                                            {/* <Typography variant="body1" sx={{ fontWeight: 500, color: '#92400e' }}> */}
                                             <Typography variant="body1" sx={{ fontWeight: 500, color: customTheme.warningText }}>
                                                 Marcar como interrupción
                                             </Typography>
-                                            {/* <Typography variant="body2" color="#92400e"> */}
                                             <Typography variant="body2" color={customTheme.warningText}>
                                                 Selecciona si estos puntos corresponden a trabajo inesperado o interrupciones
                                             </Typography>
@@ -838,12 +785,10 @@ const UserDashboard = () => {
                                     onClick={handleSubmit}
                                     disabled={!activeSprint || totalPoints === 0 || isSubmitting}
                                     sx={{
-                                        // bgcolor: '#10b981',
                                         bgcolor: customTheme.primary,
                                         color: 'white',
                                         px: 4,
                                         '&:hover': {
-                                            // bgcolor: '#059669',
                                             bgcolor: customTheme.primaryDark,
                                         },
                                         '&:disabled': {
@@ -864,26 +809,21 @@ const UserDashboard = () => {
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
                             boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
-                            // border: '1px solid #d1fae5',
                             border: `1px solid ${customTheme.border}`,
                             height: 'fit-content'
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: '#5b5c5c' }}>
-                                {/* <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: customTheme.primary }}> */}
                                     Mis Registros Recientes
                                 </Typography>
 
-                                {/* {recentRecords.length === 0 ? ( */}
                                 {(!activeSprint || getSprintRecords(activeSprint._id).length === 0) ? (
                                     <Box textAlign="center" py={4}>
-                                        {/* <Typography variant="body1" color="#6b7280"> */}
                                         <Typography variant="body1" color={customTheme.textSecondary}>
                                             No hay registros recientes para este sprint
                                         </Typography>
                                     </Box>
                                 ) : (
-                                    // recentRecords.slice(0, 8).map((record, index) => (
                                     getSprintRecords(activeSprint._id).slice(0, 8).map((record, index) => (
                                         <Box
                                             key={record._id || index}
@@ -892,46 +832,29 @@ const UserDashboard = () => {
                                                 p: 2,
                                                 borderRadius: 2,
                                                 border: "1px solid",
-                                                // borderColor: "#d1fae5",
                                                 borderColor: customTheme.border,
                                                 transition: 'all 0.2s',
                                                 '&:hover': {
-                                                    // borderColor: "#10b981",
-                                                    // bgcolor: "#d1fae5"
                                                     borderColor: customTheme.primary,
                                                     bgcolor: customTheme.hoverBg
                                                 }
                                             }}
                                         >
                                             <Typography sx={{ fontWeight: 600, mb: 0.5, color: '#5b5c5c' }}>
-                                            {/* <Typography sx={{ fontWeight: 600, mb: 0.5, color: customTheme.primary }}> */}
-                                                {/* {record.stories && record.stories.length > 0 ? (
-                                                    record.stories.map(story =>
-                                                        `${story.count} historia(s) de ${story.pointValue || story.points || '0'} punto(s)`
-                                                    ).join(', ')
-                                                ) : (
-                                                    `${record.points?.toFixed(1) || '0'} punto(s) totales`
-                                                )} */}
-
                                                 {record.stories.map(story =>
                                                     `${story.count} historia(s) de ${story.pointValue || story.points || '0'} punto(s)`
                                                 ).join(', ')}
                                             </Typography>
-                                            {/* <Typography component="span" sx={{ color: '#6b7280', fontSize: '14px' }}> */}
                                             <Typography component="span" sx={{ color: customTheme.textSecondary, fontSize: '14px' }}>
-                                                {/* {formatRecordDate(record.date || record.createdAt)} */}
                                                 {formatRecordDate(record.registeredAt)}
-                                                {/* {record.sprintName && ` • ${record.sprintName}`} */}
                                                 {record.isInterruption && (
                                                     <Chip
                                                         label="Interrupción"
                                                         size="small"
-                                                        sx={{ 
-                                                            ml: 1, 
-                                                            // bgcolor: '#fef3c7', 
-                                                            // color: '#92400e' 
-                                                            bgcolor: theme.palette.mode === 'dark' ? '#422006' : '#fef3c7', 
-                                                            color: theme.palette.mode === 'dark' ? '#fbbf24' : '#92400e' 
+                                                        sx={{
+                                                            ml: 1,
+                                                            bgcolor: theme.palette.mode === 'dark' ? '#422006' : '#fef3c7',
+                                                            color: theme.palette.mode === 'dark' ? '#fbbf24' : '#92400e'
                                                         }}
                                                     />
                                                 )}
