@@ -15,9 +15,15 @@ const usePointStore = create(
         set({ isLoading: true, error: null });
         try {
           const data = await pointService.getUserPoints(userId);
+
+          //Ordenamos del más reciente al más antiguo
+          const sorted = data.sort((a,b) => new Date(b.registeredAt) - new Date(a.registeredAt))
+
           set({
-            userPoints: data,
-            recentRecords: data.slice(0, 10),
+            // userPoints: data,
+            userPoints: sorted,
+            // recentRecords: data.slice(0, 10),
+            recentRecords: sorted.slice(0, 10),
             isLoading: false,
           });
           return { success: true };
