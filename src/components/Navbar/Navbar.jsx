@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
     AppBar,
     Toolbar,
@@ -11,6 +12,8 @@ import {
     useTheme,
     useMediaQuery,
     Switch,
+    Divider,
+    Chip,
 } from "@mui/material";
 import {
     AccountCircle,
@@ -19,12 +22,12 @@ import {
     Logout,
     DarkMode,
     LightMode,
+    TrendingUp,
 } from "@mui/icons-material";
-import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
 import SprintFlowLogo from "../SprintFlowLogo";
-import { useThemeContext } from "../../main"; // Importar desde main.jsx
+import { useThemeContext } from "../../main";
 
 export default function Navbar() {
     const navigate = useNavigate();
@@ -62,51 +65,90 @@ export default function Navbar() {
         return null;
     }
 
-    // Definir items del menú fuera del return
+    // Definir items del menú
     const userMenuItems = [
         { path: "/user-dashboard", label: "Mi Dashboard", icon: <Dashboard /> },
-        { path: "/results", label: "Resultados", icon: <Dashboard /> },
+        { path: "/results", label: "Resultados", icon: <TrendingUp /> },
         { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
     ];
 
     const adminMenuItems = [
         { path: "/admin-dashboard", label: "Dashboard Admin", icon: <Dashboard /> },
-        { path: "/create-sprint", label: "Gestión Sprints", icon: <Dashboard /> },
-        { path: "/results", label: "Resultados", icon: <Dashboard /> },
+        { path: "/create-sprint", label: "Gestión Sprints", icon: <AdminPanelSettings /> },
+        { path: "/results", label: "Resultados", icon: <TrendingUp /> },
         { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
     ];
 
+    const currentMenuItems = user?.isAdmin ? adminMenuItems : userMenuItems;
+
+    // Función para verificar si la ruta está activa
+    const isActiveRoute = (path) => {
+        return location.pathname === path;
+    };
+
     // Renderizar items del menú móvil
     const renderMobileMenuItems = () => {
-        if (user && !user.isAdmin) {
-            return userMenuItems.map((item) => (
-                <MenuItem
-                    key={item.path}
-                    onClick={() => handleNavigation(item.path)}
-                >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        return currentMenuItems.map((item) => (
+            <MenuItem
+                key={item.path}
+                onClick={() => handleNavigation(item.path)}
+                selected={isActiveRoute(item.path)}
+                sx={{
+                    backgroundColor: isActiveRoute(item.path) ? 
+                        'rgba(76, 175, 80, 0.1)' : 'transparent',
+                    '&:hover': {
+                        backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                    }
+                }}
+            >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Box sx={{ 
+                        color: isActiveRoute(item.path) ? '#4CAF50' : theme.palette.text.secondary,
+                        display: 'flex',
+                        alignItems: 'center'
+                    }}>
                         {item.icon}
-                        {item.label}
                     </Box>
-                </MenuItem>
-            ));
-        }
-
-        if (user?.isAdmin) {
-            return adminMenuItems.map((item) => (
-                <MenuItem
-                    key={item.path}
-                    onClick={() => handleNavigation(item.path)}
-                >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        {item.icon}
+                    <Typography 
+                        variant="body2"
+                        sx={{ 
+                            fontWeight: isActiveRoute(item.path) ? 600 : 400,
+                            color: isActiveRoute(item.path) ? '#4CAF50' : theme.palette.text.primary,
+                        }}
+                    >
                         {item.label}
-                    </Box>
-                </MenuItem>
-            ));
-        }
+                    </Typography>
+                </Box>
+            </MenuItem>
+        ));
+    };
 
-        return null;
+    // Renderizar botones de navegación para desktop
+    const renderDesktopButtons = () => {
+        return currentMenuItems.map((item) => (
+            <Button
+                key={item.path}
+                color="inherit"
+                onClick={() => navigate(item.path)}
+                startIcon={item.icon}
+                sx={{
+                    backgroundColor: isActiveRoute(item.path) ? 
+                        'rgba(76, 175, 80, 0.1)' : 'transparent',
+                    color: isActiveRoute(item.path) ? '#4CAF50' : theme.palette.text.primary,
+                    fontWeight: isActiveRoute(item.path) ? 600 : 400,
+                    borderRadius: '8px',
+                    px: 2,
+                    py: 1,
+                    '&:hover': {
+                        backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                        transform: 'translateY(-1px)',
+                    },
+                    transition: 'all 0.2s ease',
+                }}
+            >
+                {item.label}
+            </Button>
+        ));
     };
 
     return (
@@ -115,17 +157,38 @@ export default function Navbar() {
             sx={{
                 backgroundColor: theme.palette.background.paper,
                 color: theme.palette.text.primary,
-                boxShadow: 1,
+                boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+                borderBottom: `1px solid ${theme.palette.mode === 'dark' ? '#4A5568' : '#E2E8F0'}`,
                 transition: 'all 0.3s ease',
             }}
         >
-            <Toolbar sx={{ justifyContent: "space-between" }}>
+            <Toolbar sx={{ 
+                justifyContent: "space-between",
+                minHeight: '70px !important',
+                px: { xs: 2, sm: 3, md: 4 },
+            }}>
                 {/* Logo y título */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <SprintFlowLogo size={70} />
+                <Box 
+                    sx={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: 2,
+                        cursor: 'pointer'
+                    }}
+                    onClick={() => navigate(user?.isAdmin ? "/admin-dashboard" : "/user-dashboard")}
+                >
+                    <SprintFlowLogo size={80}/>
                     <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: 600, color: "#10b981", fontSize: "0.95rem" }}
+                        variant="h6"
+                        sx={{ 
+                            fontWeight: 700, 
+                            color: "#4CAF50",
+                            fontSize: { xs: "1rem", sm: "1.25rem" },
+                            background: 'linear-gradient(135deg, #4CAF50 0%, #81C784 100%)',
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                        }}
                     >
                         SprintFlow
                     </Typography>
@@ -133,138 +196,102 @@ export default function Navbar() {
 
                 {/* Menú de navegación - Solo en desktop */}
                 {!isMobile && (
-                    <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                        {/* Botones para usuario regular */}
-                        {user && !user.isAdmin && (
-                            <Box sx={{ display: "flex", gap: 1 }}>
-                                <Button
-                                    color="inherit"
-                                    onClick={() => navigate("/user-dashboard")}
-                                    sx={{
-                                        backgroundColor: location.pathname === "/user-dashboard" ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                                        fontWeight: location.pathname === "/user-dashboard" ? 600 : 400
-                                    }}
-                                >
-                                    Mi Dashboard
-                                </Button>
-                                <Button
-                                    color="inherit"
-                                    onClick={() => navigate("/results")}
-                                    sx={{
-                                        backgroundColor: location.pathname === "/results" ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                                        fontWeight: location.pathname === "/results" ? 600 : 400
-                                    }}
-                                >
-                                    Resultados
-                                </Button>
-                                <Button
-                                    color="inherit"
-                                    onClick={() => navigate("/configuration")}
-                                    startIcon={<AdminPanelSettings />}
-                                    sx={{
-                                        backgroundColor: location.pathname === "/configuration" ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                                        fontWeight: location.pathname === "/configuration" ? 600 : 400
-                                    }}
-                                >
-                                    Mi Perfil
-                                </Button>
-                            </Box>
-                        )}
-
-                        {/* Botones para admin */}
-                        {user?.isAdmin && (
-                            <Box sx={{ display: "flex", gap: 1 }}>
-                                <Button
-                                    color="inherit"
-                                    onClick={() => navigate("/admin-dashboard")}
-                                    startIcon={<Dashboard />}
-                                    sx={{
-                                        backgroundColor: location.pathname === "/admin-dashboard" ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                                        fontWeight: location.pathname === "/admin-dashboard" ? 600 : 400
-                                    }}
-                                >
-                                    Dashboard Admin
-                                </Button>
-                                <Button
-                                    color="inherit"
-                                    onClick={() => navigate("/create-sprint")}
-                                    sx={{
-                                        backgroundColor: location.pathname === "/create-sprint" ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                                        fontWeight: location.pathname === "/create-sprint" ? 600 : 400
-                                    }}
-                                >
-                                    Gestión Sprints
-                                </Button>
-                                <Button
-                                    color="inherit"
-                                    onClick={() => navigate("/results")}
-                                    sx={{
-                                        backgroundColor: location.pathname === "/results" ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                                        fontWeight: location.pathname === "/results" ? 600 : 400
-                                    }}
-                                >
-                                    Resultados
-                                </Button>
-                                <Button
-                                    color="inherit"
-                                    onClick={() => navigate("/configuration")}
-                                    startIcon={<AdminPanelSettings />}
-                                    sx={{
-                                        backgroundColor: location.pathname === "/configuration" ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                                        fontWeight: location.pathname === "/configuration" ? 600 : 400
-                                    }}
-                                >
-                                    Mi Perfil
-                                </Button>
-                            </Box>
-                        )}
+                    <Box sx={{ 
+                        display: "flex", 
+                        gap: 1, 
+                        alignItems: "center",
+                        flex: 1,
+                        justifyContent: 'center',
+                        mx: 4
+                    }}>
+                        {renderDesktopButtons()}
                     </Box>
                 )}
 
                 {/* Menú de usuario y modo oscuro */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Box sx={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: 3 
+                }}>
                     {/* Botón de modo oscuro */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <LightMode sx={{ fontSize: 20, color: theme.palette.text.secondary }} />
+                    <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1,
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                        borderRadius: '20px',
+                        px: 1.5,
+                        py: 0.5,
+                    }}>
+                        <LightMode sx={{ 
+                            fontSize: 20, 
+                            color: !darkMode ? '#4CAF50' : theme.palette.text.secondary 
+                        }} />
                         <Switch
                             checked={darkMode}
                             onChange={toggleDarkMode}
+                            size="small"
                             sx={{
                                 '& .MuiSwitch-switchBase.Mui-checked': {
-                                    color: '#10b981',
+                                    color: '#4CAF50',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                    },
                                 },
                                 '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                    backgroundColor: '#10b981',
+                                    backgroundColor: '#4CAF50',
                                 },
                             }}
                         />
-                        <DarkMode sx={{ fontSize: 20, color: theme.palette.text.secondary }} />
+                        <DarkMode sx={{ 
+                            fontSize: 20, 
+                            color: darkMode ? '#4CAF50' : theme.palette.text.secondary 
+                        }} />
                     </Box>
 
-                    <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>
-                        Hola, {user?.name}
-                    </Typography>
+                    {/* Información del usuario */}
+                    {!isMobile && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                    fontWeight: 500,
+                                    color: theme.palette.text.primary
+                                }}
+                            >
+                                Hola, {user?.name}
+                            </Typography>
+                        </Box>
+                    )}
 
+                    {/* Avatar y menú */}
                     <IconButton
                         onClick={handleMenu}
                         sx={{
-                            border: "2px solid",
-                            borderColor: "primary.main"
+                            border: `2px solid ${theme.palette.primary.main}`,
+                            '&:hover': {
+                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                transform: 'scale(1.05)',
+                            },
+                            transition: 'all 0.2s ease',
                         }}
                     >
                         <Avatar
                             src={user?.avatar}
                             sx={{
-                                width: 32,
-                                height: 32,
-                                bgcolor: "#10b981",
-                                fontSize: "0.875rem"
+                                width: 36,
+                                height: 36,
+                                bgcolor: theme.palette.primary.main,
+                                fontSize: "0.875rem",
+                                fontWeight: 600,
                             }}
                         >
                             {!user?.avatar && (user?.name?.charAt(0)?.toUpperCase() || <AccountCircle />)}
                         </Avatar>
                     </IconButton>
 
+                    {/* Menú desplegable */}
                     <Menu
                         anchorEl={anchorEl}
                         open={Boolean(anchorEl)}
@@ -272,41 +299,66 @@ export default function Navbar() {
                         PaperProps={{
                             sx: {
                                 mt: 1.5,
-                                minWidth: 200,
+                                minWidth: 240,
                                 backgroundColor: theme.palette.background.paper,
+                                border: `1px solid ${theme.palette.mode === 'dark' ? '#4A5568' : '#E2E8F0'}`,
+                                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                                borderRadius: '12px',
+                                overflow: 'hidden',
                             }
                         }}
+                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                     >
                         {/* Menú móvil - Navegación */}
                         {isMobile && (
                             <Box>
                                 {renderMobileMenuItems()}
-                                <MenuItem divider />
+                                <Divider />
                             </Box>
                         )}
 
                         {/* Información del usuario */}
-                        <MenuItem disabled>
-                            <Box>
-                                <Typography variant="subtitle2">{user?.name}</Typography>
-                                <Typography variant="body2" color="text.secondary">
+                        <MenuItem disabled sx={{ opacity: 1, py: 2 }}>
+                            <Box sx={{ width: '100%' }}>
+                                <Typography variant="subtitle2" fontWeight={600}>
+                                    {user?.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" noWrap>
                                     {user?.email}
                                 </Typography>
-                                <Typography variant="caption" color="primary">
-                                    {user?.isAdmin ? "Administrador" : user?.role}
-                                </Typography>
+                                <Chip
+                                    label={user?.isAdmin ? "Administrador" : "Usuario"}
+                                    size="small"
+                                    sx={{
+                                        backgroundColor: user?.isAdmin ? '#8E44AD' : '#4CAF50',
+                                        color: 'white',
+                                        fontWeight: 600,
+                                        fontSize: '0.65rem',
+                                        height: '20px',
+                                        mt: 0.5,
+                                    }}
+                                />
                             </Box>
                         </MenuItem>
-                        <MenuItem divider />
+                        <Divider />
 
                         {/* Cerrar sesión */}
                         <MenuItem
                             onClick={handleLogout}
-                            sx={{ color: "error.main" }}
+                            sx={{ 
+                                color: theme.palette.error.main,
+                                py: 1.5,
+                                '&:hover': {
+                                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                                }
+                            }}
                         >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                                 <Logout fontSize="small" />
-                                Cerrar Sesión
+                                <Typography variant="body2" fontWeight={500}>
+                                    Cerrar Sesión
+                                </Typography>
                             </Box>
                         </MenuItem>
                     </Menu>
