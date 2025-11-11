@@ -53,6 +53,7 @@ export default function SprintDetail() {
   const [completions, setCompletions] = useState([]);
   const [completionsLoading, setCompletionsLoading] = useState(true);
 
+  // Usar el tema de Material-UI para modo oscuro
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -81,7 +82,7 @@ export default function SprintDetail() {
   // Puntos de Fibonacci para la tabla
   const fibonacciPoints = [0.5, 1, 2, 3, 5, 8, 13, 21];
 
-  // Función para calcular puntos planificados correctamente
+  // CORREGIDO: Función para calcular puntos planificados correctamente
   const calculateTotalPlannedPoints = (sprint) => {
     if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
       return 0;
@@ -92,7 +93,7 @@ export default function SprintDetail() {
     }, 0);
   };
 
-  // Función para calcular historias planificadas correctamente
+  // CORREGIDO: Función para calcular historias planificadas correctamente
   const calculateTotalPlannedStories = (sprint) => {
     if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
       return 0;
@@ -103,92 +104,24 @@ export default function SprintDetail() {
     }, 0);
   };
 
-  // NUEVO: Función para validar y filtrar puntos completados
-  const getValidCompletedPoints = () => {
-    let totalValidPoints = 0;
-    const validCompletions = [];
-
-    completions.forEach(completion => {
-      if (completion.completedStories) {
-        let userValidPoints = 0;
-        const validStories = [];
-
-        completion.completedStories.forEach(story => {
-          // Verificar si este tamaño de historia estaba planificado
-          const plannedStory = currentSprint?.plannedStories?.find(
-            planned => planned.score === story.score
-          );
-          
-          if (plannedStory) {
-            // Limitar la cantidad completada a la máxima planificada
-            const maxAllowed = plannedStory.quantity;
-            const completedCount = Math.min(story.completedCount || 0, maxAllowed);
-            
-            if (completedCount > 0) {
-              userValidPoints += story.score * completedCount;
-              validStories.push({
-                ...story,
-                completedCount: completedCount,
-                maxAllowed: maxAllowed
-              });
-            }
-          }
-        });
-
-        if (userValidPoints > 0) {
-          totalValidPoints += userValidPoints;
-          validCompletions.push({
-            ...completion,
-            totalAchievedPoints: userValidPoints,
-            completedStories: validStories
-          });
-        }
-      }
-    });
-
-    return { totalValidPoints, validCompletions };
+  // CORREGIDO: Función para calcular puntos completados correctamente
+  const calculateTotalCompletedPoints = () => {
+    return completions.reduce((sum, completion) => {
+      return sum + (completion.totalAchievedPoints || 0);
+    }, 0);
   };
 
-  // NUEVO: Calcular subtotales con validación
-  const calculateSubtotals = () => {
-    const planned = Array(8).fill(0);
-    const completed = Array(8).fill(0);
-    const plannedSubtotal = Array(8).fill(0);
-    const completedSubtotal = Array(8).fill(0);
-
-    // Calcular puntos planificados
-    if (currentSprint?.plannedStories) {
-      currentSprint.plannedStories.forEach(story => {
-        const index = fibonacciPoints.indexOf(story.score);
-        if (index !== -1) {
-          planned[index] = story.quantity;
-          plannedSubtotal[index] = story.score * story.quantity;
-        }
-      });
-    }
-
-    // Calcular puntos completados VÁLIDOS (solo los planificados)
-    const { totalValidPoints, validCompletions } = getValidCompletedPoints();
-    
-    validCompletions.forEach(completion => {
+  // CORREGIDO: Función para calcular historias completadas
+  const calculateTotalCompletedStories = () => {
+    let totalStories = 0;
+    completions.forEach(completion => {
       if (completion.completedStories) {
         completion.completedStories.forEach(story => {
-          const index = fibonacciPoints.indexOf(story.score);
-          if (index !== -1) {
-            completed[index] += story.completedCount || 0;
-            completedSubtotal[index] += story.score * (story.completedCount || 0);
-          }
+          totalStories += story.completedCount || 0;
         });
       }
     });
-
-    return { 
-      planned, 
-      completed, 
-      plannedSubtotal, 
-      completedSubtotal,
-      totalValidPoints 
-    };
+    return totalStories;
   };
 
   // Fetch completions data
@@ -245,7 +178,7 @@ export default function SprintDetail() {
     }
   };
 
-  // Resto de funciones existentes...
+  // Función para calcular estado automático - CORREGIDA
   const calculateSprintStatus = (sprint) => {
     const today = new Date();
     const startDate = new Date(sprint.startDate);
@@ -260,9 +193,11 @@ export default function SprintDetail() {
       status = "Completado";
     }
 
+    // Si está completado, verificar si alcanzó los puntos planificados
     if (status === "Completado") {
       const plannedPoints = calculateTotalPlannedPoints(sprint);
-      const completedPoints = getValidCompletedPoints().totalValidPoints;
+      const completedPoints = calculateTotalCompletedPoints();
+
       if (plannedPoints > 0 && completedPoints < plannedPoints) {
         return "Completado Parcial";
       }
@@ -287,38 +222,48 @@ export default function SprintDetail() {
   const calculateDuration = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
+    // total de días incluyendo inicio y fin
     return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
   };
 
+  // Días que han pasado desde el inicio (solo días completos)
   const getDaysElapsed = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const today = new Date();
+
+    // Normalizar a medianoche
     const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
     const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
     const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    if (todayDay < startDay) return 0;
-    if (todayDay > endDay) return calculateDuration(startDate, endDate);
+    if (todayDay < startDay) return 0; // antes de empezar
+    if (todayDay > endDay) return calculateDuration(startDate, endDate); // sprint terminado
+
+    // días completos que han pasado, hoy no cuenta
     return Math.floor((todayDay - startDay) / (1000 * 60 * 60 * 24));
   };
 
+  // Días restantes incluyendo hoy
   const getDaysRemaining = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const today = new Date();
+
+    // Normalizar a medianoche
     const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
     const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
     const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    if (todayDay < startDay) return calculateDuration(startDate, endDate);
-    if (todayDay > endDay) return 0;
+    if (todayDay < startDay) return calculateDuration(startDate, endDate); // sprint no empezado
+    if (todayDay > endDay) return 0; // sprint terminado
+
     return Math.floor((endDay - todayDay) / (1000 * 60 * 60 * 24)) + 1;
   };
 
   const getProgressPercentage = (sprint) => {
     const plannedPoints = calculateTotalPlannedPoints(sprint);
-    const completedPoints = getValidCompletedPoints().totalValidPoints;
+    const completedPoints = calculateTotalCompletedPoints();
     if (plannedPoints === 0) return 0;
     return Math.min(100, Math.round((completedPoints / plannedPoints) * 100));
   };
@@ -339,16 +284,23 @@ export default function SprintDetail() {
     }
   };
 
+  // Cálculos para la sección de Velocidad - CORREGIDOS
   const calculateVelocityMetrics = (sprint) => {
     const duration = calculateDuration(sprint.startDate, sprint.endDate);
     const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
     const plannedPoints = calculateTotalPlannedPoints(sprint);
-    const completedPoints = getValidCompletedPoints().totalValidPoints;
+    const completedPoints = calculateTotalCompletedPoints();
 
+    // Velocidad ideal (puntos por día según planificación)
     const idealVelocity = duration > 0 ? (plannedPoints / duration).toFixed(1) : 0;
+
+    // Velocidad equivalente (puntos por día realmente completados)
     const equivalentVelocity = daysElapsed > 0 ? (completedPoints / daysElapsed).toFixed(1) : 0;
+
+    // Días con interrupciones (días sin progreso)
     const interruptionDays = Math.max(0, daysElapsed - (completedPoints / (plannedPoints / duration)));
 
+    // Determinar si va bien de velocidad
     const isOnTrack = equivalentVelocity >= idealVelocity;
 
     return {
@@ -359,11 +311,41 @@ export default function SprintDetail() {
     };
   };
 
+  // Calcular puntos completados por tamaño basado en los datos reales - CORREGIDO
+  const getCompletedPointsBySize = (sprint) => {
+    const planned = Array(8).fill(0);
+    const completed = Array(8).fill(0);
+
+    // Calcular puntos planificados - CORREGIDO
+    if (sprint.plannedStories) {
+      sprint.plannedStories.forEach(story => {
+        const index = fibonacciPoints.indexOf(story.score);
+        if (index !== -1) {
+          planned[index] = story.quantity;
+        }
+      });
+    }
+
+    // Calcular puntos completados basado en los completions - CORREGIDO
+    completions.forEach(completion => {
+      if (completion.completedStories) {
+        completion.completedStories.forEach(story => {
+          const index = fibonacciPoints.indexOf(story.score);
+          if (index !== -1) {
+            completed[index] += story.completedCount || 0;
+          }
+        });
+      }
+    });
+
+    return { planned, completed };
+  };
+
+  // Obtener registros recientes de puntos desde los completions
   const getRecentRecords = () => {
     const records = [];
-    const { validCompletions } = getValidCompletedPoints();
-    
-    validCompletions.forEach(completion => {
+
+    completions.forEach(completion => {
       if (completion.completedStories) {
         completion.completedStories.forEach(story => {
           if (story.completedCount > 0) {
@@ -382,19 +364,19 @@ export default function SprintDetail() {
       }
     });
 
+    // Ordenar por fecha más reciente y limitar a 5 registros
     return records
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 5);
   };
 
+  // Calcular progreso individual de desarrolladores - CORREGIDO
   const getDeveloperProgress = (sprint) => {
     if (!sprint.usersAssigned || !sprint.usersAssigned.length) return [];
 
-    const { validCompletions } = getValidCompletedPoints();
-
     return sprint.usersAssigned.map((member) => {
       const user = member.userId || {};
-      const userCompletion = validCompletions.find(c => c.userId?._id === user._id);
+      const userCompletion = completions.find(c => c.userId?._id === user._id);
       const completedPoints = userCompletion?.totalAchievedPoints || 0;
       const totalSprintPoints = calculateTotalPlannedPoints(sprint);
 
@@ -440,23 +422,21 @@ export default function SprintDetail() {
 
   // CORREGIDO: Usar las funciones corregidas para calcular puntos
   const plannedPoints = calculateTotalPlannedPoints(sprint);
-  const { totalValidPoints: totalCompletedPoints } = getValidCompletedPoints();
+  const totalCompletedPoints = calculateTotalCompletedPoints();
   const totalPlannedStories = calculateTotalPlannedStories(sprint);
+  const totalCompletedStories = calculateTotalCompletedStories();
   const remainingPoints = Math.max(0, plannedPoints - totalCompletedPoints);
 
   const velocityMetrics = calculateVelocityMetrics(sprint);
+  const pointsData = getCompletedPointsBySize(sprint);
   const recentRecords = getRecentRecords();
   const developerProgress = getDeveloperProgress(sprint);
 
-  // Calcular subtotales para la nueva tabla
-  const { planned, completed, plannedSubtotal, completedSubtotal } = calculateSubtotals();
-  
-  // Totales generales
-  const totalPlannedCount = planned.reduce((sum, count) => sum + count, 0);
-  const totalCompletedCount = completed.reduce((sum, count) => sum + count, 0);
-  const totalPlannedSubtotal = plannedSubtotal.reduce((sum, points) => sum + points, 0);
-  const totalCompletedSubtotal = completedSubtotal.reduce((sum, points) => sum + points, 0);
+  // Calcular totales para la tabla - CORREGIDOS
+  const totalPlannedCount = pointsData.planned.reduce((sum, count) => sum + count, 0);
+  const totalCompletedCount = pointsData.completed.reduce((sum, count) => sum + count, 0);
 
+  // Calcular progreso temporal CORREGIDO - sin porcentaje
   const timeProgress = sprintStatus === "Completado" || sprintStatus === "Completado Parcial"
     ? 100
     : Math.min(100, (daysElapsed / duration) * 100);
@@ -643,11 +623,13 @@ export default function SprintDetail() {
 
                 <Divider sx={{ my: 2 }} />
 
+                {/* Cuadros de métricas más compactos */}
                 <Grid container spacing={1}>
                   <Grid item xs={6}>
                     <Box textAlign="center" p={1.5} sx={{
                       background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#F1F8E9",
                       borderRadius: 2,
+                      border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : 'transparent'}`
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: customTheme.primary }}>
                         {duration}
@@ -661,6 +643,7 @@ export default function SprintDetail() {
                     <Box textAlign="center" p={1.5} sx={{
                       background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E8F5E9",
                       borderRadius: 2,
+                      border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : 'transparent'}`
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#26A69A" }}>
                         {daysElapsed}
@@ -674,6 +657,7 @@ export default function SprintDetail() {
                     <Box textAlign="center" p={1.5} sx={{
                       background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#FFF9C4",
                       borderRadius: 2,
+                      border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : 'transparent'}`
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#F57F17" }}>
                         {daysRemaining}
@@ -687,6 +671,7 @@ export default function SprintDetail() {
                     <Box textAlign="center" p={1.5} sx={{
                       background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E3F2FD",
                       borderRadius: 2,
+                      border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : 'transparent'}`
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#42A5F5" }}>
                         {plannedPoints}
@@ -721,6 +706,7 @@ export default function SprintDetail() {
                   Velocidad del Sprint
                 </Typography>
 
+                {/* Velocidad Ideal */}
                 <Box display="flex" alignItems="center" gap={2} mb={2.5}>
                   <Avatar sx={{ bgcolor: "#4CAF50", width: 36, height: 36 }}>
                     <TrendingUp />
@@ -735,6 +721,7 @@ export default function SprintDetail() {
                   </Box>
                 </Box>
 
+                {/* Velocidad Equivalente */}
                 <Box display="flex" alignItems="center" gap={2} mb={2.5}>
                   <Avatar sx={{ bgcolor: "#2196F3", width: 36, height: 36 }}>
                     <Speed />
@@ -749,6 +736,7 @@ export default function SprintDetail() {
                   </Box>
                 </Box>
 
+                {/* Días con Interrupciones */}
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
                   <Avatar sx={{ bgcolor: "#FF9800", width: 36, height: 36 }}>
                     <Warning />
@@ -765,6 +753,7 @@ export default function SprintDetail() {
 
                 <Divider sx={{ my: 2 }} />
 
+                {/* Indicador de Rendimiento */}
                 <Box
                   sx={{
                     p: 1.5,
@@ -889,7 +878,7 @@ export default function SprintDetail() {
                   Puntos Completados
                 </Typography>
 
-                <TableContainer component={Paper} elevation={0} sx={{ mb: 2 }}>
+                <TableContainer component={Paper} elevation={0}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -908,7 +897,7 @@ export default function SprintDetail() {
                       {/* Fila Planificado */}
                       <TableRow>
                         <TableCell sx={{ fontWeight: 700 }}>Planificado</TableCell>
-                        {planned.map((count, index) => (
+                        {pointsData.planned.map((count, index) => (
                           <TableCell key={index} align="center">
                             <Chip
                               label={count}
@@ -937,7 +926,7 @@ export default function SprintDetail() {
                       {/* Fila Completado */}
                       <TableRow>
                         <TableCell sx={{ fontWeight: 700 }}>Completado</TableCell>
-                        {completed.map((count, index) => (
+                        {pointsData.completed.map((count, index) => (
                           <TableCell key={index} align="center">
                             <Chip
                               label={count}
@@ -959,31 +948,6 @@ export default function SprintDetail() {
                               backgroundColor: totalCompletedCount > 0 ? customTheme.primary :
                                 theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
                               color: totalCompletedCount > 0 ? "white" : "text.secondary",
-                              fontWeight: 600
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-
-                      {/* NUEVA FILA: Subtotal Completado */}
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 700, fontStyle: 'italic' }}>Subtotal</TableCell>
-                        {completedSubtotal.map((points, index) => (
-                          <TableCell key={index} align="center">
-                            <Typography variant="body2" fontWeight="600" sx={{ 
-                              color: points > 0 ? '#2E7D32' : 'text.secondary' 
-                            }}>
-                              {points > 0 ? `${points} pts` : '-'}
-                            </Typography>
-                          </TableCell>
-                        ))}
-                        <TableCell align="center" sx={{ backgroundColor: theme.palette.mode === 'dark' ? '#2e2e2e' : '#f5f5f5' }}>
-                          <Chip
-                            label={`${totalCompletedSubtotal} pts`}
-                            size="small"
-                            sx={{
-                              backgroundColor: '#2E7D32',
-                              color: 'white',
                               fontWeight: 600
                             }}
                           />
@@ -1152,13 +1116,14 @@ export default function SprintDetail() {
                           </Box>
                         </Box>
 
+                        {/* Barra de progreso basada en el total del sprint */}
                         <Box mb={1}>
                           <Box display="flex" justifyContent="space-between" mb={0.5}>
                             <Typography variant="caption" color="text.secondary">
-                              Progreso
+                              Historias realizadas
                             </Typography>
                             <Typography variant="caption" fontWeight="600">
-                              {Math.round(dev.progressPercentage)}%
+                              {dev.completed} / {dev.totalSprintPoints} pts
                             </Typography>
                           </Box>
                           <LinearProgress
@@ -1171,6 +1136,22 @@ export default function SprintDetail() {
                               "& .MuiLinearProgress-bar": {
                                 background: customTheme.gradient,
                               },
+                            }}
+                          />
+                        </Box>
+
+                        <Box display="flex" gap={1} mt={1} flexWrap="wrap">
+                          <Chip
+                            label={`Completado: ${dev.completed}pts`}
+                            size="small"
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={`${dev.progressPercentage.toFixed(1)}% del sprint`}
+                            size="small"
+                            sx={{
+                              backgroundColor: customTheme.primaryLight,
+                              color: 'white'
                             }}
                           />
                         </Box>
