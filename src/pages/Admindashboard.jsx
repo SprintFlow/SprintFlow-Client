@@ -47,7 +47,7 @@ import useAuthStore from "../store/authStore";
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const theme = useTheme();
-  
+
   const { sprints, isLoading, error, fetchSprints, deleteSprint } = useSprintStore();
   const { user } = useAuthStore();
 
@@ -69,29 +69,29 @@ export default function AdminDashboard() {
     success: "#27AE60",
     warning: "#F39C12",
     error: "#E74C3C",
-    background: theme.palette.mode === 'dark' ? 
-      "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)" : 
+    background: theme.palette.mode === 'dark' ?
+      "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)" :
       "linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%)",
     cardBg: theme.palette.mode === 'dark' ? "#2D3748" : "#FFFFFF",
-    cardHover: theme.palette.mode === 'dark' ? 
-      "linear-gradient(135deg, #2D3748 0%, #4A5568 100%)" : 
+    cardHover: theme.palette.mode === 'dark' ?
+      "linear-gradient(135deg, #2D3748 0%, #4A5568 100%)" :
       "linear-gradient(135deg, #FFFFFF 0%, #F7FAFC 100%)",
     textPrimary: theme.palette.mode === 'dark' ? "#FFFFFF" : "#1A202C",
     textSecondary: theme.palette.mode === 'dark' ? "#A0AEC0" : "#718096",
     textTertiary: theme.palette.mode === 'dark' ? "#718096" : "#A0AEC0",
     border: theme.palette.mode === 'dark' ? "1px solid #4A5568" : "1px solid #E2E8F0",
-    shadow: theme.palette.mode === 'dark' ? 
-      "0 4px 24px rgba(0, 0, 0, 0.3)" : 
+    shadow: theme.palette.mode === 'dark' ?
+      "0 4px 24px rgba(0, 0, 0, 0.3)" :
       "0 4px 24px rgba(0, 0, 0, 0.06)",
-    shadowHover: theme.palette.mode === 'dark' ? 
-      "0 8px 32px rgba(0, 0, 0, 0.4)" : 
+    shadowHover: theme.palette.mode === 'dark' ?
+      "0 8px 32px rgba(0, 0, 0, 0.4)" :
       "0 8px 32px rgba(0, 0, 0, 0.12)",
   };
 
   // Colores CORREGIDOS para estados de sprints
   const statusColors = {
     Activo: "#3498DB",
-    Planificado: "#8E44AD", 
+    Planificado: "#8E44AD",
     Completado: "#27AE60",
     "Completado Parcial": "#F39C12",
   };
@@ -106,11 +106,11 @@ export default function AdminDashboard() {
   // Función para calcular estado automático basado en fechas
   const calculateSprintStatus = (sprint) => {
     if (!sprint.startDate || !sprint.endDate) return "Planificado";
-    
+
     const today = new Date();
     const startDate = new Date(sprint.startDate);
     const endDate = new Date(sprint.endDate);
-    
+
     let status;
     if (today < startDate) {
       status = "Planificado";
@@ -119,16 +119,16 @@ export default function AdminDashboard() {
     } else {
       status = "Completado";
     }
-    
+
     if (status === "Completado") {
       const plannedPoints = sprint.plannedTotalPoints || 0;
       const completedPoints = sprint.completedPoints || 0;
-      
+
       if (plannedPoints > 0 && completedPoints < plannedPoints) {
         return "Completado Parcial";
       }
     }
-    
+
     return status;
   };
 
@@ -169,11 +169,11 @@ export default function AdminDashboard() {
     return [...sprintsList].sort((a, b) => {
       const statusA = getSprintStatus(a);
       const statusB = getSprintStatus(b);
-      
+
       if (statusPriority[statusA] !== statusPriority[statusB]) {
         return statusPriority[statusA] - statusPriority[statusB];
       }
-      
+
       return new Date(b.startDate) - new Date(a.startDate);
     });
   };
@@ -181,32 +181,32 @@ export default function AdminDashboard() {
   // NUEVA FUNCIÓN: Obtener sprints temporalmente relevantes
   const getTemporallyRelevantSprints = (sprintsList, limit) => {
     if (sprintsList.length === 0) return [];
-    
+
     // Encontrar el sprint activo (si existe)
     const activeSprint = sprintsList.find(sprint => getSprintStatus(sprint) === "Activo");
-    
+
     // Si hay sprint activo, lo incluimos y buscamos los más recientes completados
     if (activeSprint) {
       const completedSprints = sprintsList.filter(sprint => {
         const status = getSprintStatus(sprint);
         return (status === "Completado" || status === "Completado Parcial") && sprint._id !== activeSprint._id;
       });
-      
+
       // Ordenar completados por fecha de fin (más recientes primero)
-      const recentCompleted = [...completedSprints].sort((a, b) => 
+      const recentCompleted = [...completedSprints].sort((a, b) =>
         new Date(b.endDate) - new Date(a.endDate)
       ).slice(0, limit - 1);
-      
+
       return [activeSprint, ...recentCompleted];
     }
-    
+
     // Si no hay activo, mostrar los más recientes completados/incompletos
     const recentSprints = sprintsList.filter(sprint => {
       const status = getSprintStatus(sprint);
       return status === "Completado" || status === "Completado Parcial";
     }).sort((a, b) => new Date(b.endDate) - new Date(a.endDate))
       .slice(0, limit);
-    
+
     return recentSprints;
   };
 
@@ -214,15 +214,15 @@ export default function AdminDashboard() {
   const getFilteredSprints = () => {
     let filtered = sprints.filter(sprint => {
       const matchesSearch = sprint.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           sprint.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+        sprint.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
       const sprintStatus = getSprintStatus(sprint);
       const matchesStatus = statusFilter === "all" || sprintStatus === statusFilter;
-      
+
       // FILTRO POR AÑO
       const sprintYear = sprint.startDate ? new Date(sprint.startDate).getFullYear().toString() : null;
       const matchesYear = yearFilter === "all" || sprintYear === yearFilter;
-      
+
       return matchesSearch && matchesStatus && matchesYear;
     });
 
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
       const sprintYear = new Date(sprint.startDate).getFullYear().toString();
       return yearFilter === "all" || sprintYear === yearFilter;
     });
-    
+
     return {
       active: yearSprints.filter(s => getSprintStatus(s) === "Activo").length,
       planned: yearSprints.filter(s => getSprintStatus(s) === "Planificado").length,
@@ -255,8 +255,8 @@ export default function AdminDashboard() {
   const filteredSprints = getFilteredSprints();
   const indexOfLastSprint = currentPage * sprintsPerPage;
   const indexOfFirstSprint = indexOfLastSprint - sprintsPerPage;
-  const currentSprints = showAllSprints ? 
-    filteredSprints.slice(indexOfFirstSprint, indexOfLastSprint) : 
+  const currentSprints = showAllSprints ?
+    filteredSprints.slice(indexOfFirstSprint, indexOfLastSprint) :
     filteredSprints;
   const totalPages = Math.ceil(filteredSprints.length / sprintsPerPage);
 
@@ -328,26 +328,26 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         minHeight="100vh"
         sx={{ background: modernTheme.background }}
       >
         <Box textAlign="center">
-          <CircularProgress 
-            size={60} 
-            sx={{ 
+          <CircularProgress
+            size={60}
+            sx={{
               color: modernTheme.primary,
-              mb: 2 
-            }} 
+              mb: 2
+            }}
           />
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               color: modernTheme.textSecondary,
-              fontWeight: 500 
+              fontWeight: 500
             }}
           >
             Cargando dashboard...
@@ -358,17 +358,17 @@ export default function AdminDashboard() {
   }
 
   return (
-    <Box sx={{ 
-      minHeight: "100vh", 
-      background: modernTheme.background,
+    <Box sx={{
+      minHeight: "100vh",
+      // background: modernTheme.background,
       py: 3,
       width: '100vw',
       overflowX: 'hidden',
-      margin: 0,
+      margin: '2% 0',
       padding: 0,
     }}>
       {/* Container principal */}
-      <Box sx={{ 
+      <Box sx={{
         width: '100%',
         maxWidth: '1400px',
         margin: '0 auto',
@@ -388,17 +388,17 @@ export default function AdminDashboard() {
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
             <Box>
-              <Typography 
-                variant="h4" 
-                fontWeight="700" 
-                sx={{ 
+              <Typography
+                variant="h5"
+                fontWeight="700"
+                sx={{
                   color: modernTheme.success,
                   mb: 0.5
                 }}
               >
                 Sprint Dashboard
               </Typography>
-              <Typography variant="h6" sx={{ color: modernTheme.textSecondary, fontWeight: 400 }}>
+              <Typography variant="h6" sx={{ color: modernTheme.textSecondary, fontWeight: 400, fontSize: 15 }}>
                 Gestión profesional • {user?.name || "Admin"}
               </Typography>
             </Box>
@@ -429,10 +429,10 @@ export default function AdminDashboard() {
         </Box>
 
         {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3, 
+          <Alert
+            severity="error"
+            sx={{
+              mb: 3,
               borderRadius: 2,
               border: `1px solid ${modernTheme.error}`,
               background: alpha(modernTheme.error, 0.05),
@@ -576,9 +576,22 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Métricas Modernas */}
-        <Grid container spacing={2} mb={3}>
+        <Box container spacing={2} sx={{
+          mb: 4, width: '100%', mx: 0, borderRadius: 2, boxShadow: modernTheme.shadow,
+          border: modernTheme.border, display: 'flex', gap: 2, flexWrap: 'wrap', bgcolor: modernTheme.cardBg, py: 2, px: 3
+        }}>
+          <Box sx={{
+            flex: '1 1 calc(20% - 16px)', // 4 columnas en desktop
+            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(20% - 16px)' }, display: 'flex', alignItems: 'center',
+            
+          }}>
+            <Typography>Filtrar búsqueda por estado:</Typography>
+          </Box>
           {/* Activo - AZUL */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Box item sx={{
+            flex: '1 1 calc(20% - 16px)', // 4 columnas en desktop
+            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(20% - 16px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -587,7 +600,7 @@ export default function AdminDashboard() {
                 border: `1px solid ${alpha(statusColors.Activo, 0.2)}`,
                 boxShadow: modernTheme.shadow,
                 transition: "all 0.2s ease",
-                "&:hover": { 
+                "&:hover": {
                   transform: "translateY(-2px)",
                   boxShadow: modernTheme.shadowHover,
                   cursor: 'pointer'
@@ -595,20 +608,24 @@ export default function AdminDashboard() {
               }}
               onClick={() => handleMetricClick("Activo")}
             >
-              <CardContent sx={{ p: 2 }}>
+              <CardContent sx={{
+                py: 1, '&:last-child': {
+                  paddingBottom: '8px'
+                }
+              }}>
                 <Box display="flex" alignItems="center" gap={2}>
-                  <Box sx={{ 
-                    background: statusColors.Activo, 
-                    borderRadius: '12px', 
-                    p: 1.5,
+                  <Box sx={{
+                    background: statusColors.Activo,
+                    borderRadius: '12px',
+                    p: '5px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
                     <PlayArrow sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
-                  <Box>
-                    <Typography variant="h4" fontWeight="700" color={statusColors.Activo}>
+                  <Box display='flex' alignItems="center" gap={1}>
+                    <Typography variant="h5" fontWeight="700" color={statusColors.Activo}>
                       {metrics.active}
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 600, color: modernTheme.textPrimary }}>
@@ -618,10 +635,13 @@ export default function AdminDashboard() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Planificado - LILA */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Box item sx={{
+            flex: '1 1 calc(20% - 16px)', // 4 columnas en desktop
+            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(20% - 16px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -630,7 +650,7 @@ export default function AdminDashboard() {
                 border: `1px solid ${alpha(statusColors.Planificado, 0.2)}`,
                 boxShadow: modernTheme.shadow,
                 transition: "all 0.2s ease",
-                "&:hover": { 
+                "&:hover": {
                   transform: "translateY(-2px)",
                   boxShadow: modernTheme.shadowHover,
                   cursor: 'pointer'
@@ -638,20 +658,24 @@ export default function AdminDashboard() {
               }}
               onClick={() => handleMetricClick("Planificado")}
             >
-              <CardContent sx={{ p: 2 }}>
+              <CardContent sx={{
+                py: 1, '&:last-child': {
+                  paddingBottom: '8px'
+                }
+              }}>
                 <Box display="flex" alignItems="center" gap={2}>
-                  <Box sx={{ 
-                    background: statusColors.Planificado, 
-                    borderRadius: '12px', 
-                    p: 1.5,
+                  <Box sx={{
+                    background: statusColors.Planificado,
+                    borderRadius: '12px',
+                    p: '5px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
                     <Schedule sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
-                  <Box>
-                    <Typography variant="h4" fontWeight="700" color={statusColors.Planificado}>
+                  <Box display='flex' alignItems="center" gap={1}>
+                    <Typography variant="h5" fontWeight="700" color={statusColors.Planificado}>
                       {metrics.planned}
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 600, color: modernTheme.textPrimary }}>
@@ -661,10 +685,13 @@ export default function AdminDashboard() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Completado - VERDE */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Box item sx={{
+            flex: '1 1 calc(20% - 16px)', // 4 columnas en desktop
+            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(20% - 16px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -673,7 +700,7 @@ export default function AdminDashboard() {
                 border: `1px solid ${alpha(statusColors.Completado, 0.2)}`,
                 boxShadow: modernTheme.shadow,
                 transition: "all 0.2s ease",
-                "&:hover": { 
+                "&:hover": {
                   transform: "translateY(-2px)",
                   boxShadow: modernTheme.shadowHover,
                   cursor: 'pointer'
@@ -681,20 +708,24 @@ export default function AdminDashboard() {
               }}
               onClick={() => handleMetricClick("Completado")}
             >
-              <CardContent sx={{ p: 2 }}>
+              <CardContent sx={{
+                py: 1, '&:last-child': {
+                  paddingBottom: '8px'
+                }
+              }}>
                 <Box display="flex" alignItems="center" gap={2}>
-                  <Box sx={{ 
-                    background: statusColors.Completado, 
-                    borderRadius: '12px', 
-                    p: 1.5,
+                  <Box sx={{
+                    background: statusColors.Completado,
+                    borderRadius: '12px',
+                    p: '5px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
                     <CheckCircle sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
-                  <Box>
-                    <Typography variant="h4" fontWeight="700" color={statusColors.Completado}>
+                  <Box display='flex' alignItems="center" gap={1}>
+                    <Typography variant="h5" fontWeight="700" color={statusColors.Completado}>
                       {metrics.completed}
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 600, color: modernTheme.textPrimary }}>
@@ -704,10 +735,13 @@ export default function AdminDashboard() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Completado Parcial - NARANJA */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Box item sx={{
+            flex: '1 1 calc(20% - 16px)', // 4 columnas en desktop
+            minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(20% - 16px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -716,7 +750,7 @@ export default function AdminDashboard() {
                 border: `1px solid ${alpha(statusColors["Completado Parcial"], 0.2)}`,
                 boxShadow: modernTheme.shadow,
                 transition: "all 0.2s ease",
-                "&:hover": { 
+                "&:hover": {
                   transform: "translateY(-2px)",
                   boxShadow: modernTheme.shadowHover,
                   cursor: 'pointer'
@@ -724,20 +758,25 @@ export default function AdminDashboard() {
               }}
               onClick={() => handleMetricClick("Completado Parcial")}
             >
-              <CardContent sx={{ p: 2 }}>
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Box sx={{ 
-                    background: statusColors["Completado Parcial"], 
-                    borderRadius: '12px', 
-                    p: 1.5,
+              <CardContent sx={{
+                py: 1,
+                '&:last-child': {
+                  paddingBottom: '8px'
+                }
+              }}>
+                <Box display="flex" alignItems="center" gap={2} pb={0}>
+                  <Box sx={{
+                    background: statusColors["Completado Parcial"],
+                    borderRadius: '12px',
+                    p: '5px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
                     <Assessment sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
-                  <Box>
-                    <Typography variant="h4" fontWeight="700" color={statusColors["Completado Parcial"]}>
+                  <Box display='flex' alignItems="center" gap={1}>
+                    <Typography variant="h5" fontWeight="700" color={statusColors["Completado Parcial"]}>
                       {metrics.partial}
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 600, color: modernTheme.textPrimary }}>
@@ -747,8 +786,8 @@ export default function AdminDashboard() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Lista de Sprints con Límite Temporal Inteligente */}
         <Card
@@ -789,7 +828,7 @@ export default function AdminDashboard() {
                   const sprintStatus = getSprintStatus(sprint);
                   const progress = getProgressPercentage(sprint);
                   const isClosed = isSprintClosed(sprint);
-                  
+
                   return (
                     <Card
                       key={sprint._id}
@@ -815,7 +854,7 @@ export default function AdminDashboard() {
                               <Chip
                                 label={sprintStatus}
                                 size="small"
-                                sx={{ 
+                                sx={{
                                   background: statusColors[sprintStatus],
                                   color: 'white',
                                   fontWeight: 600,
@@ -827,11 +866,11 @@ export default function AdminDashboard() {
                                 {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
                               </Typography>
                             </Box>
-                            
+
                             <Typography variant="subtitle1" fontWeight="600" sx={{ color: modernTheme.textPrimary, mb: 0.5 }}>
                               {sprint.name}
                             </Typography>
-                            
+
                             <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
                               <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 600, color: modernTheme.textPrimary }}>
                                 {sprint.plannedTotalPoints || 0} pts
@@ -849,14 +888,14 @@ export default function AdminDashboard() {
                               </Typography>
                             </Box>
                           </Box>
-                          
+
                           <Box display="flex" gap={0.5} onClick={(e) => e.stopPropagation()}>
                             {!isClosed && (
                               <Tooltip title="Editar">
-                                <IconButton 
+                                <IconButton
                                   size="small"
                                   onClick={() => handleEditSprint(sprint._id)}
-                                  sx={{ 
+                                  sx={{
                                     color: modernTheme.primary,
                                     background: alpha(modernTheme.primary, 0.1),
                                   }}
@@ -865,12 +904,12 @@ export default function AdminDashboard() {
                                 </IconButton>
                               </Tooltip>
                             )}
-                            
+
                             <Tooltip title="Eliminar">
-                              <IconButton 
+                              <IconButton
                                 size="small"
                                 onClick={() => openDeleteDialog(sprint)}
-                                sx={{ 
+                                sx={{
                                   color: modernTheme.error,
                                   background: alpha(modernTheme.error, 0.1),
                                 }}
@@ -901,7 +940,7 @@ export default function AdminDashboard() {
                     </Card>
                   );
                 })}
-                
+
                 {/* Paginación SOLO cuando se muestran todos */}
                 {showAllSprints && totalPages > 1 && (
                   <Box display="flex" justifyContent="center" mt={3}>
@@ -932,15 +971,15 @@ export default function AdminDashboard() {
         </DialogTitle>
         <DialogContent>
           <Typography>
-            ¿Estás seguro de que quieres eliminar el sprint "{deleteDialog.sprint?.name}"? 
+            ¿Estás seguro de que quieres eliminar el sprint "{deleteDialog.sprint?.name}"?
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={closeDeleteDialog}>
             Cancelar
           </Button>
-          <Button 
-            onClick={() => handleDeleteSprint(deleteDialog.sprint?._id)} 
+          <Button
+            onClick={() => handleDeleteSprint(deleteDialog.sprint?._id)}
             color="error"
             variant="contained"
           >
