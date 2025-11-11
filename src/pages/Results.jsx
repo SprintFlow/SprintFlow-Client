@@ -29,10 +29,10 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { 
-  ArrowBack, 
-  TrendingUp, 
-  CheckCircle, 
+import {
+  ArrowBack,
+  TrendingUp,
+  CheckCircle,
   Warning,
   Assessment,
   Analytics,
@@ -70,7 +70,7 @@ export default function Results() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { sprints, isLoading, fetchSprints } = useSprintStore();
-  
+
   const [selectedSprints, setSelectedSprints] = useState([]);
   const [timeFilter, setTimeFilter] = useState("last4");
   const [startDate, setStartDate] = useState("");
@@ -144,13 +144,13 @@ export default function Results() {
     const today = new Date();
     const startDate = new Date(sprint.startDate);
     const endDate = new Date(sprint.endDate);
-    
+
     if (today < startDate) return "Planificado";
     if (today >= startDate && today <= endDate) return "Activo";
-    
+
     const plannedPoints = calculateTotalPlannedPoints(sprint);
     const completedPoints = sprint.completedPoints || 0;
-    
+
     if (plannedPoints > 0 && completedPoints < plannedPoints) {
       return "Completado Parcial";
     }
@@ -161,7 +161,7 @@ export default function Results() {
     if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
       return 0;
     }
-    
+
     return sprint.plannedStories.reduce((total, story) => {
       return total + (story.score * story.quantity);
     }, 0);
@@ -199,9 +199,9 @@ export default function Results() {
     // Estadísticas resumen
     const totalPlannedPoints = velocityData.reduce((sum, sprint) => sum + sprint.plannedPoints, 0);
     const totalCompletedPoints = velocityData.reduce((sum, sprint) => sum + sprint.completedPoints, 0);
-    const averageCompletion = velocityData.length > 0 ? 
+    const averageCompletion = velocityData.length > 0 ?
       Math.round(velocityData.reduce((sum, sprint) => sum + sprint.completionRate, 0) / velocityData.length) : 0;
-    const averageVelocity = velocityData.length > 0 ? 
+    const averageVelocity = velocityData.length > 0 ?
       (velocityData.reduce((sum, sprint) => sum + sprint.velocityReal, 0) / velocityData.length).toFixed(1) : 0;
 
     setComparisonData({
@@ -219,18 +219,18 @@ export default function Results() {
 
   const fetchTeamPerformanceData = async (sprintsToCompare) => {
     const performanceData = {};
-    
+
     for (const sprint of sprintsToCompare) {
       try {
         const response = await axiosClient.get(`/completions/sprint/${sprint._id}`);
         const completions = response.data.completions || [];
-        
+
         completions.forEach(completion => {
           const memberName = completion.userId?.name || 'Usuario';
           if (!performanceData[memberName]) {
             performanceData[memberName] = [];
           }
-          
+
           performanceData[memberName].push({
             sprint: sprint.name,
             sprintId: sprint._id,
@@ -243,7 +243,7 @@ export default function Results() {
         console.error(`Error fetching completions for sprint ${sprint._id}:`, error);
       }
     }
-    
+
     setTeamPerformanceData(performanceData);
   };
 
@@ -304,7 +304,7 @@ export default function Results() {
   };
 
   const getChartColors = () => {
-    return theme.palette.mode === 'dark' 
+    return theme.palette.mode === 'dark'
       ? ['#4CAF50', '#81C784', '#66BB6A', '#388E3C']
       : ['#4CAF50', '#81C784', '#66BB6A', '#388E3C'];
   };
@@ -321,14 +321,14 @@ export default function Results() {
 
   if (completedSprints.length === 0) {
     return (
-      <Box sx={{ 
-        minHeight: "100vh", 
+      <Box sx={{
+        minHeight: "100vh",
         backgroundColor: customTheme.background,
         width: "100vw",
         margin: 0,
         padding: 0,
       }}>
-        <Box sx={{ 
+        <Box sx={{
           width: "100%",
           px: { xs: 2, sm: 3, md: 4 },
           py: 4,
@@ -353,7 +353,7 @@ export default function Results() {
           </Box>
 
           <Alert severity="info" sx={{ maxWidth: 800, mx: "auto" }}>
-            No hay sprints completados disponibles para mostrar resultados. 
+            No hay sprints completados disponibles para mostrar resultados.
             Los resultados se mostrarán aquí una vez que los sprints hayan finalizado.
           </Alert>
         </Box>
@@ -362,14 +362,14 @@ export default function Results() {
   }
 
   return (
-    <Box sx={{ 
-      minHeight: "100vh", 
+    <Box sx={{
+      minHeight: "100vh",
       backgroundColor: customTheme.background,
       width: "100vw",
       margin: 0,
       padding: 0,
     }}>
-      <Box sx={{ 
+      <Box sx={{
         width: "100%",
         px: { xs: 2, sm: 3, md: 4 },
         py: 4,
@@ -404,7 +404,7 @@ export default function Results() {
                 Volver al Dashboard
               </Button>
               <Box>
-                <Typography variant="h4" fontWeight="700" sx={{ color: customTheme.primary }}>
+                <Typography variant="h5" fontWeight="700" sx={{ color: customTheme.primary }}>
                   📊 Comparativa de Sprints
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -466,7 +466,7 @@ export default function Results() {
               </>
             )}
 
-            <Chip 
+            <Chip
               label={`${selectedSprints.length} sprint(s) seleccionados`}
               variant="outlined"
               sx={{ alignSelf: 'center', borderColor: customTheme.primary, color: customTheme.primary }}
@@ -477,8 +477,13 @@ export default function Results() {
         {comparisonData && (
           <>
             {/* Métricas Resumen - Diseño Compacto y Elegante */}
-            <Grid container spacing={3} mb={4}>
-              <Grid item xs={12} sm={6} md={3}>
+            <Box container spacing={2} sx={{
+              mb: 4, width: '100%', mx: 0, display: 'flex', gap: 2, flexWrap: 'wrap'
+            }}>
+              <Box item sx={{
+                flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
+              }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -491,21 +496,26 @@ export default function Results() {
                     '&:hover': { transform: 'translateY(-2px)' }
                   }}
                 >
-                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                    <Avatar sx={{ bgcolor: customTheme.primary, width: 48, height: 48, mx: 'auto', mb: 2 }}>
-                      <TrendingUp />
-                    </Avatar>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Total Sprints
-                    </Typography>
+                  <CardContent sx={{ p: 3, textAlign: 'center'  }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        Total Sprints
+                      </Typography>
+                      <Avatar sx={{ bgcolor: customTheme.primary, width: 35, height: 30, mb: 2 }}>
+                        <TrendingUp />
+                      </Avatar>
+                    </Box>
                     <Typography variant="h3" fontWeight="700" sx={{ color: customTheme.primary }}>
-                      {comparisonData.summary.totalSprints}
+                      {comparisonData.summary.totalSprints} 
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Box item sx={{
+                flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
+              }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -519,20 +529,25 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                    <Avatar sx={{ bgcolor: "#1976D2", width: 48, height: 48, mx: 'auto', mb: 2 }}>
-                      <CheckCircle />
-                    </Avatar>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Tasa Completado
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        Tasa Completado
+                      </Typography>
+                      <Avatar sx={{ bgcolor: "#1976D2", width: 35, height: 30, mb: 2 }}>
+                        <CheckCircle sx={{ height: 20 }} />
+                      </Avatar>
+                    </Box>
                     <Typography variant="h3" fontWeight="700" sx={{ color: "#1976D2" }}>
                       {comparisonData.summary.overallCompletionRate}%
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Box item sx={{
+                flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
+              }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -546,23 +561,30 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                    <Avatar sx={{ bgcolor: "#FF9800", width: 48, height: 48, mx: 'auto', mb: 2 }}>
-                      <Speed />
-                    </Avatar>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Velocidad Promedio
-                    </Typography>
-                    <Typography variant="h4" fontWeight="700" sx={{ color: "#FF9800" }}>
-                      {comparisonData.summary.averageVelocity}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      puntos/día
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        Velocidad Promedio
+                      </Typography>
+                      <Avatar sx={{ bgcolor: "#FF9800", width: 35, height: 30, mb: 2 }}>
+                        <Speed sx={{ height: 20 }} />
+                      </Avatar>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography variant="h3" fontWeight="700" sx={{ color: "#FF9800" }}>
+                        {comparisonData.summary.averageVelocity}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        puntos/día
+                      </Typography>
+                    </Box>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Box item sx={{
+                flex: '1 1 calc(25% - 16px)', // 4 columnas en desktop
+                minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
+              }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -576,37 +598,49 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                    <Avatar sx={{ 
-                      bgcolor: comparisonData.summary.averageCompletion >= 80 ? customTheme.primary : "#FF9800", 
-                      width: 48, 
-                      height: 48, 
-                      mx: 'auto', 
-                      mb: 2 
-                    }}>
-                      <Assessment />
-                    </Avatar>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Objetivo Promedio
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        Objetivo Promedio
+                      </Typography>
+                      <Avatar sx={{
+                        bgcolor: comparisonData.summary.averageCompletion >= 80 ? customTheme.primary : "#FF9800",
+                        width: 35,
+                        height: 30,
+                        mb: 2
+                      }}>
+                        <Assessment sx={{ height: 20 }} />
+                      </Avatar>
+                    </Box>
+
                     <Chip
                       label={`${comparisonData.summary.averageCompletion}%`}
                       color={comparisonData.summary.averageCompletion >= 80 ? "success" : "warning"}
-                      sx={{ 
-                        fontWeight: 700, 
-                        fontSize: "1rem", 
-                        py: 1,
-                        px: 2
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "30px",
+                        py: 3,
+                        px: 1,
+                        borderRadius:10
                       }}
                     />
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
             {/* Segunda Fila: Gráficos Principales */}
-            <Grid container spacing={3} mb={4}>
+            <Box container sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 3,
+              width: '100%',
+              mb: 4
+            }}>
               {/* Gráfico de Comparativa de Puntos */}
-              <Grid item xs={12} lg={8}>
+              <Box sx={{
+                flex: '1 1 calc(60%  - 12px)',
+                minWidth: { xs: '100%', lg: 'calc(60% - 12px)' }
+              }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -618,9 +652,9 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                      <Typography variant="h6" fontWeight="600" sx={{ color: customTheme.primary }}>
-                        📈 Comparativa de Puntos por Sprint:
+                    <Box display="flex" sx={{gap: 2}} justifyContent="space-between" alignItems="center" mb={3}>
+                      <Typography variant="h6" fontWeight="600" sx={{ color: '#5b5c5c' }}>
+                        Comparativa de Puntos por Sprint:
                       </Typography>
                       <ToggleButtonGroup
                         value={chartType}
@@ -680,10 +714,13 @@ export default function Results() {
                     </Box>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
 
               {/* Gráfico de Velocidad */}
-              <Grid item xs={12} lg={4}>
+              <Box sx={{
+                flex: '1 1 calc(40% - 12px)',
+                minWidth: { xs: '100%', lg: 'calc(40% - 12px)' }
+              }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -695,8 +732,8 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: customTheme.primary }}>
-                      🚀 Velocidad por Sprint
+                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: '#5b5c5c' }}>
+                      Velocidad por Sprint
                     </Typography>
 
                     <Box sx={{ height: 300 }}>
@@ -714,13 +751,22 @@ export default function Results() {
                     </Box>
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
             {/* Tercera Fila: Rendimiento del Equipo y Tabla Resumen */}
-            <Grid container spacing={3}>
+            <Box sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 3,
+              width: '100%',
+              mb: 3
+            }}>
               {/* Rendimiento del Equipo */}
-              <Grid item xs={12} lg={6}>
+              <Box item sx={{
+                flex: '1 1 calc(50% - 12px)',
+                minWidth: { xs: '100%', lg: 'calc(50% - 12px)' }
+              }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -732,8 +778,8 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: customTheme.primary }}>
-                      👥 Rendimiento del Equipo por Miembro
+                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: '#5b5c5c' }}>
+                      Rendimiento del Equipo por Miembro
                     </Typography>
 
                     {Object.entries(teamPerformanceData).length > 0 ? (
@@ -744,7 +790,7 @@ export default function Results() {
                               <Typography variant="body2" fontWeight="600">
                                 {memberName}
                               </Typography>
-                              <Typography variant="body2" sx={{ 
+                              <Typography variant="body2" sx={{
                                 color: performances[0]?.completionRate >= 80 ? customTheme.primary : "#ED6C02",
                                 fontWeight: 600
                               }}>
@@ -754,8 +800,8 @@ export default function Results() {
                             <LinearProgress
                               variant="determinate"
                               value={performances[0]?.completionRate || 0}
-                              sx={{ 
-                                height: 6, 
+                              sx={{
+                                height: 6,
                                 borderRadius: 3,
                                 backgroundColor: theme.palette.mode === 'dark' ? '#333' : "#e0e0e0",
                                 "& .MuiLinearProgress-bar": {
@@ -783,10 +829,13 @@ export default function Results() {
                     )}
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
 
               {/* Tabla Resumen de Sprints */}
-              <Grid item xs={12} lg={6}>
+              <Box item sx={{
+                flex: '1 1 calc(50% - 12px)',
+                minWidth: { xs: '100%', lg: 'calc(50% - 12px)' }
+              }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -798,10 +847,10 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={2} sx={{ color: customTheme.primary }}>
-                      📋 Resumen por Sprint
+                    <Typography variant="h6" fontWeight="600" mb={2} sx={{ color: '#5b5c5c' }}>
+                      Resumen por Sprint
                     </Typography>
-                    
+
                     <TableContainer sx={{ maxHeight: 400 }}>
                       <Table size="small" stickyHeader>
                         <TableHead>
@@ -833,11 +882,11 @@ export default function Results() {
                                   label={`${sprint.completionRate}%`}
                                   size="small"
                                   sx={{
-                                    backgroundColor: sprint.completionRate >= 80 ? 
-                                      (theme.palette.mode === 'dark' ? '#1B5E20' : "#E8F5E9") : 
+                                    backgroundColor: sprint.completionRate >= 80 ?
+                                      (theme.palette.mode === 'dark' ? '#1B5E20' : "#E8F5E9") :
                                       (theme.palette.mode === 'dark' ? '#E65100' : "#FFF3E0"),
-                                    color: sprint.completionRate >= 80 ? 
-                                      (theme.palette.mode === 'dark' ? '#81C784' : "#2E7D32") : 
+                                    color: sprint.completionRate >= 80 ?
+                                      (theme.palette.mode === 'dark' ? '#81C784' : "#2E7D32") :
                                       (theme.palette.mode === 'dark' ? '#FFB74D' : "#ED6C02"),
                                     fontWeight: 600,
                                     minWidth: 60
@@ -859,8 +908,8 @@ export default function Results() {
                     </TableContainer>
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </>
         )}
       </Box>
