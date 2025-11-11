@@ -348,8 +348,10 @@ const UserDashboard = () => {
                     borderRadius: 3,
                     p: 3,
                     mb: 3,
-                    boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
-                    border: `1px solid ${customTheme.border}`
+                    // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                    // border: `1px solid ${customTheme.border}`
+                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                 }}>
                     <Box>
                         <Typography variant='h5' fontWeight="700" sx={{ color: customTheme.primary }}>
@@ -376,17 +378,19 @@ const UserDashboard = () => {
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
-                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                            border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                             transition: 'transform 0.2s',
-                            border: `1px solid ${customTheme.border}`,
-                            '&:hover': { transform: 'translateY(-2px)' }
+                            // border: `1px solid ${customTheme.border}`,
+                            // '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#5b5c5c' }}>
                                         Sprint actual
                                     </Typography>
-                                    <Target style={{ color: 'grey' }} />
+                                    <Target style={{ color: '#5b5c5c' }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
                                     {activeSprint ? activeSprint.number || '1' : '0'}
@@ -409,17 +413,19 @@ const UserDashboard = () => {
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
-                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                            border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                             transition: 'transform 0.2s',
-                            border: `1px solid ${customTheme.border}`,
-                            '&:hover': { transform: 'translateY(-2px)' }
+                            // border: `1px solid ${customTheme.border}`,
+                            // '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#5b5c5c' }}>
                                         Mis Puntos (Sprint)
                                     </Typography>
-                                    <TrendingUp style={{ color: 'grey' }} />
+                                    <TrendingUp style={{ color: '#5b5c5c' }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
                                     {activeSprint ? getPointsBySprint(activeSprint._id)?.toFixed(1) : 0}
@@ -442,17 +448,19 @@ const UserDashboard = () => {
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
-                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                            border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                             transition: 'transform 0.2s',
-                            border: `1px solid ${customTheme.border}`,
-                            '&:hover': { transform: 'translateY(-2px)' }
+                            // border: `1px solid ${customTheme.border}`,
+                            // '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#5b5c5c' }}>
                                         Puntos Totales
                                     </Typography>
-                                    <Calendar style={{ color: 'grey' }} />
+                                    <Calendar style={{ color: '#5b5c5c' }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
                                     {activeSprint?.plannedTotalPoints?.toFixed(1) || 0}
@@ -475,17 +483,19 @@ const UserDashboard = () => {
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
-                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                            border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                             transition: 'transform 0.2s',
-                            border: `1px solid ${customTheme.border}`,
-                            '&:hover': { transform: 'translateY(-2px)' }
+                            // border: `1px solid ${customTheme.border}`,
+                            // '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: 'grey' }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#5b5c5c' }}>
                                         Días Restantes
                                     </Typography>
-                                    <Clock style={{ color: 'grey' }} />
+                                    <Clock style={{ color: '#5b5c5c' }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#ef4444' }}>
                                     {dashboardStats.daysRemaining}
@@ -507,8 +517,10 @@ const UserDashboard = () => {
                                 borderRadius: 3,
                                 mb: 3,
                                 bgcolor: customTheme.cardBg,
-                                boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
-                                border: `1px solid ${customTheme.border}`
+                                // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                                // border: `1px solid ${customTheme.border}`
+                                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                                border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -610,8 +622,10 @@ const UserDashboard = () => {
                             p: 3,
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
-                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
-                            border: `1px solid ${customTheme.border}`
+                            // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            // border: `1px solid ${customTheme.border}`
+                            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                            border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                         }}>
                             <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#5b5c5c' }}>
                                 Registrar Puntos Completados
@@ -808,8 +822,10 @@ const UserDashboard = () => {
                         <Card sx={{
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
-                            boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
-                            border: `1px solid ${customTheme.border}`,
+                            // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
+                            // border: `1px solid ${customTheme.border}`,
+                            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                            border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                             height: 'fit-content'
                         }}>
                             <CardContent sx={{ p: 3 }}>
