@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import "./index.css";
 import routerSprint from "./router/Router";
-import useAuthStore from "./store/authStore"; // ✅ Agregar esta importación
+import useAuthStore from "./store/authStore";
 
 // ✅ SOLUCIÓN DEFINITIVA - Ignorar error de Fragment en Menu
 if (import.meta.env.DEV) {
@@ -19,52 +19,37 @@ if (import.meta.env.DEV) {
   };
 }
 
-// Tema claro - Verde menta original
-const lightTheme = createTheme({
+// TEMA UNIFICADO - Se adapta automáticamente al modo
+const getTheme = (mode) => createTheme({
   palette: {
-    mode: 'light',
+    mode,
     primary: {
-      main: "#10b981",
-      light: "#34d399",
-      dark: "#059669",
+      main: "#4CAF50",      // Verde principal
+      light: "#81C784",     // Verde claro
+      dark: "#45A049",      // Verde oscuro
     },
     secondary: {
-      main: "#065f46",
-      light: "#047857",
-      dark: "#064e3b",
+      main: "#8E44AD",      // Violeta principal
+      light: "#9C27B0",     // Violeta claro
+      dark: "#7B1FA2",      // Violeta oscuro
     },
     background: {
-      default: "#f0fdf4",
-      paper: "#ffffff",
+      default: mode === 'dark' ? "#1a1a1a" : "#e6f2ed",
+      paper: mode === 'dark' ? "#2D3748" : "#ffffff",
     },
     text: {
-      primary: "#1f2937",
-      secondary: "#6b7280",
+      primary: mode === 'dark' ? "#FFFFFF" : "#1A202C",
+      secondary: mode === 'dark' ? "#A0AEC0" : "#718096",
     },
-  },
-});
-
-// Tema oscuro - Verde profundo y elegante
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: "#10b981", // Verde menta para acentos
-      light: "#34d399",
-      dark: "#059669",
+    success: {
+      main: "#27AE60",
+      dark: "#219653",
     },
-    secondary: {
-      main: "#065f46", // Verde oscuro elegante
-      light: "#047857",
-      dark: "#064e3b",
+    warning: {
+      main: "#F39C12",
     },
-    background: {
-      default: "#0a0f1a", // Azul noche muy oscuro
-      paper: "#111827",   // Azul grisáceo profundo
-    },
-    text: {
-      primary: "#f3f4f6",
-      secondary: "#d1d5db",
+    error: {
+      main: "#E74C3C",
     },
   },
   components: {
@@ -79,6 +64,12 @@ const darkTheme = createTheme({
           backgroundColor: theme.palette.background.default,
           color: theme.palette.text.primary,
         },
+        '#root': {
+          width: '100vw',
+          minHeight: '100vh',
+          margin: 0,
+          padding: 0,
+        }
       }),
     },
     MuiCard: {
@@ -86,17 +77,19 @@ const darkTheme = createTheme({
         root: ({ theme }) => ({
           backgroundColor: theme.palette.background.paper,
           backgroundImage: 'none',
-          border: `1px solid ${theme.palette.mode === 'dark' ? '#1f2937' : '#e5e7eb'}`,
+          border: `1px solid ${theme.palette.mode === 'dark' ? '#4A5568' : '#E2E8F0'}`,
+          borderRadius: '12px',
         }),
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: ({ theme }) => ({
-          backgroundColor: theme.palette.mode === 'dark' ? '#111827' : '#ffffff',
+          backgroundColor: theme.palette.background.paper,
           backgroundImage: 'none',
-          borderBottom: `1px solid ${theme.palette.mode === 'dark' ? '#1f2937' : '#e5e7eb'}`,
+          borderBottom: `1px solid ${theme.palette.mode === 'dark' ? '#4A5568' : '#E2E8F0'}`,
           color: theme.palette.text.primary,
+          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
         }),
       },
     },
@@ -107,52 +100,62 @@ const darkTheme = createTheme({
         },
       },
     },
-    MuiTable: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          backgroundColor: theme.palette.background.paper,
-        }),
-      },
-    },
-    MuiTableHead: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          backgroundColor: theme.palette.mode === 'dark' ? '#1a2332' : '#f8fafc',
-          '& th': {
-            color: theme.palette.text.primary,
-            fontWeight: 600,
-          },
-        }),
-      },
-    },
-    MuiTableRow: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          '&:nth-of-type(odd)': {
-            backgroundColor: theme.palette.mode === 'dark' ? '#131b28' : '#f9fafb',
-          },
-          '&:hover': {
-            backgroundColor: theme.palette.mode === 'dark' ? '#1a2332' : '#f3f4f6',
-          },
-        }),
-      },
-    },
-    MuiTableCell: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          borderBottom: `1px solid ${theme.palette.mode === 'dark' ? '#1f2937' : '#e5e7eb'}`,
-          color: theme.palette.text.primary,
-        }),
-      },
-    },
     MuiButton: {
       styleOverrides: {
         contained: ({ theme }) => ({
           backgroundColor: theme.palette.primary.main,
+          fontWeight: 600,
+          borderRadius: '8px',
+          textTransform: 'none',
           '&:hover': {
             backgroundColor: theme.palette.primary.dark,
+            transform: 'translateY(-1px)',
+            boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
+          },
+          transition: 'all 0.2s ease',
+        }),
+        outlined: ({ theme }) => ({
+          borderColor: theme.palette.primary.main,
+          color: theme.palette.primary.main,
+          fontWeight: 600,
+          borderRadius: '8px',
+          textTransform: 'none',
+          '&:hover': {
+            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)',
+            borderColor: theme.palette.primary.dark,
           },
         }),
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+            '&:hover fieldset': {
+              borderColor: theme.palette.primary.light,
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: theme.palette.primary.main,
+            },
+          },
+        }),
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          borderRadius: '6px',
+          fontWeight: 600,
+        }),
+      },
+    },
+    MuiLinearProgress: {
+      styleOverrides: {
+        root: {
+          borderRadius: '4px',
+          height: '6px',
+        },
       },
     },
   },
@@ -176,7 +179,10 @@ function ThemedApp() {
     return saved ? JSON.parse(saved) : false;
   });
 
-  const theme = darkMode ? darkTheme : lightTheme;
+  const theme = React.useMemo(
+    () => getTheme(darkMode ? 'dark' : 'light'),
+    [darkMode]
+  );
 
   // ✅ INICIALIZAR AUTH STORE AL CARGAR LA APP
   useEffect(() => {
@@ -204,3 +210,5 @@ createRoot(document.getElementById("root")).render(
     <ThemedApp />
   </StrictMode>
 );
+
+export { ThemeContext };
