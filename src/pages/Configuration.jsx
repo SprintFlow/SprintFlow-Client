@@ -49,10 +49,23 @@ const Configuration = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { darkMode, toggleDarkMode } = useThemeContext();
   const appTheme = useAppTheme();
-  
+
+  // Tema verde menta profesional con soporte para modo oscuro
+  const customTheme = {
+    primary: "#4CAF50",
+    primaryDark: "#45A049",
+    primaryLight: "#81C784",
+    background: theme.palette.mode === 'dark' ? theme.palette.background.default : "#e6f2ed",
+    cardBg: theme.palette.mode === 'dark' ? theme.palette.background.paper : "#ffffff",
+    gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
+    gradientAlt: "linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)",
+    text: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.text.primary,
+    textSecondary: theme.palette.mode === 'dark' ? theme.palette.text.secondary : theme.palette.text.secondary,
+  };
+
   // Obtener usuario y métodos desde el store (localStorage)
   const { user: currentUser, updateUser } = useAuthStore();
-  
+
   const [personalInfo, setPersonalInfo] = useState({
     fullName: '',
     email: '',
@@ -83,10 +96,10 @@ const Configuration = () => {
   // Validación: Si no hay usuario, mostrar loading
   if (!currentUser) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         minHeight: '100vh',
         backgroundColor: appTheme.background
       }}>
@@ -161,7 +174,7 @@ const Configuration = () => {
         setError('Debes proporcionar tu contraseña actual para cambiarla');
         return;
       }
-      
+
       if (personalInfo.newPassword !== personalInfo.confirmPassword) {
         setError('Las contraseñas nuevas no coinciden');
         return;
@@ -172,7 +185,7 @@ const Configuration = () => {
         return;
       }
     }
-    
+
     try {
       setLoading(true);
       setError('');
@@ -195,26 +208,26 @@ const Configuration = () => {
           email: personalInfo.email,
           avatar: personalInfo.avatar
         };
-        
-        console.log('💾 Guardando perfil:', { 
-          nameChanged, 
-          emailChanged, 
+
+        console.log('💾 Guardando perfil:', {
+          nameChanged,
+          emailChanged,
           avatarChanged,
           currentAvatar: currentUser?.avatar?.substring(0, 50),
           newAvatar: personalInfo.avatar === '' ? 'CADENA VACÍA' : personalInfo.avatar?.substring(0, 50),
           avatarLength: personalInfo.avatar?.length,
           avatarType: typeof personalInfo.avatar
         });
-        
+
         await UserService.updateProfile(profileData);
-        
+
         // Actualizar el store de Zustand con la nueva información
         updateUser({
           name: personalInfo.fullName,
           email: personalInfo.email,
           avatar: personalInfo.avatar
         });
-        
+
         console.log('✅ Store actualizado con avatar:', personalInfo.avatar === '' ? 'CADENA VACÍA' : 'TIENE CONTENIDO');
       }
 
@@ -234,7 +247,7 @@ const Configuration = () => {
       } else {
         setError('No hay cambios para guardar');
       }
-      
+
       // Limpiar campos de contraseña
       setPersonalInfo(prev => ({
         ...prev,
@@ -245,10 +258,10 @@ const Configuration = () => {
 
     } catch (error) {
       console.error('Error al guardar cambios:', error);
-      
+
       // Mensajes de error específicos
       let errorMessage = 'Error al guardar los cambios';
-      
+
       if (error.response?.status === 413 || error.message?.includes('413')) {
         errorMessage = 'La imagen es demasiado grande. Por favor, usa una imagen más pequeña (máximo 2MB).';
       } else if (error.response?.data?.message) {
@@ -256,7 +269,7 @@ const Configuration = () => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -328,7 +341,7 @@ const Configuration = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const file = e.dataTransfer.files[0];
     handleAvatarChange(file);
   };
@@ -357,7 +370,7 @@ const Configuration = () => {
     const name = prompt('Nombre del nuevo usuario:');
     const email = prompt('Email del nuevo usuario:');
     const role = prompt('Rol del nuevo usuario (Developer/Scrum Master/QA):') || 'Developer';
-    
+
     if (name && email) {
       try {
         setLoading(true);
@@ -368,7 +381,7 @@ const Configuration = () => {
           role,
           password: 'temporal123'
         });
-        
+
         await loadUsers();
         setSuccess('Usuario agregado exitosamente');
       } catch (error) {
@@ -386,7 +399,7 @@ const Configuration = () => {
       const newName = prompt('Nuevo nombre:', user.name);
       const newEmail = prompt('Nuevo email:', user.email);
       const newRole = prompt('Nuevo rol:', user.role);
-      
+
       if (newName && newEmail && newRole) {
         try {
           setLoading(true);
@@ -396,7 +409,7 @@ const Configuration = () => {
             email: newEmail,
             role: newRole
           });
-          
+
           await loadUsers();
           setSuccess('Usuario actualizado exitosamente');
         } catch (error) {
@@ -444,10 +457,10 @@ const Configuration = () => {
 
   if (loading && users.length === 0) {
     return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         minHeight="100vh"
         sx={{ backgroundColor: appTheme.background }}
       >
@@ -457,18 +470,18 @@ const Configuration = () => {
   }
 
   return (
-    <Box sx={{ 
-      minHeight: "100vh", 
+    <Box sx={{
+      minHeight: "100vh",
       backgroundColor: appTheme.background,
       py: 3,
       width: '100%',
-      margin: 0,
+      margin: '2% 0',
       padding: 0,
       display: 'flex',
       flexDirection: 'column',
     }}>
       {/* Container principal - Ocupa todo el espacio disponible */}
-      <Box sx={{ 
+      <Box sx={{
         flex: 1,
         width: '100%',
         maxWidth: '1400px',
@@ -490,21 +503,21 @@ const Configuration = () => {
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
             <Box>
-              <Typography 
-                variant="h4" 
-                fontWeight="700" 
-                sx={{ 
+              <Typography
+                variant="h5"
+                fontWeight="700"
+                sx={{
                   color: appTheme.primaryDark,
                   mb: 0.5
                 }}
               >
                 Configuración
               </Typography>
-              <Typography variant="h6" color="text.secondary">
+              <Typography variant="h7" color="text.secondary">
                 Gestiona tu cuenta y preferencias
               </Typography>
             </Box>
-            <IconButton 
+            <IconButton
               onClick={handleGoBack}
               sx={{
                 backgroundColor: appTheme.primary,
@@ -521,34 +534,43 @@ const Configuration = () => {
 
         {/* Mostrar mensajes */}
         {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3, 
+          <Alert
+            severity="error"
+            sx={{
+              mb: 3,
               borderRadius: 2,
-            }} 
+            }}
             onClose={() => setError('')}
           >
             {error}
           </Alert>
         )}
-        
+
         {success && (
-          <Alert 
-            severity="success" 
-            sx={{ 
-              mb: 3, 
+          <Alert
+            severity="success"
+            sx={{
+              mb: 3,
               borderRadius: 2,
-            }} 
+            }}
             onClose={() => setSuccess('')}
           >
             {success}
           </Alert>
         )}
 
-        <Grid container spacing={3} sx={{ flex: 1 }}>
+        <Box container sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 3,
+          width: '100%',
+          mb: 2
+        }}>
           {/* Información Personal */}
-          <Grid item xs={12} md={6}>
+          <Box sx={{
+            flex: '1 1 calc(60%  - 12px)',
+            minWidth: { xs: '100%', lg: 'calc(60% - 12px)' }
+          }}>
             <Card
               sx={{
                 borderRadius: 2,
@@ -560,11 +582,11 @@ const Configuration = () => {
               }}
             >
               <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Typography 
-                  variant="h6" 
-                  fontWeight="700" 
+                <Typography
+                  variant="h6"
+                  fontWeight="700"
                   mb={1}
-                  sx={{ color: appTheme.primaryDark }}
+                  sx={{ color: customTheme.textPrimary }}
                 >
                   Información Personal
                 </Typography>
@@ -572,128 +594,139 @@ const Configuration = () => {
                   Actualiza tus datos de perfil
                 </Typography>
 
-                {/* Avatar Section */}
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    mb: 3,
-                  }}
-                >
+                <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
+                  <Box sx={{
+                    display: 'flex', flexDirection: 'column', gap: 2,
+                    flex: '1 1 calc(60%  - 12px)',
+                    minWidth: { xs: '100%', lg: 'calc(60% - 12px)' }
+                  }}>
+                    <TextField
+                      label="Nombre Completo"
+                      value={personalInfo.fullName}
+                      onChange={(e) => handlePersonalInfoChange('fullName', e.target.value)}
+                      fullWidth
+                      disabled={loading}
+                    />
+
+                    <TextField
+                      label="Correo electrónico"
+                      type="email"
+                      value={personalInfo.email}
+                      onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
+                      fullWidth
+                      disabled={loading}
+                    />
+
+                    <TextField
+                      label="Rol"
+                      value={personalInfo.role}
+                      fullWidth
+                      disabled
+                      helperText="Contacta a un administrador para cambiar tu rol"
+                    />
+                  </Box>
+
+                  {/* Avatar Section */}
                   <Box
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
                     sx={{
-                      position: 'relative',
-                      cursor: 'pointer',
-                      transition: 'transform 0.2s',
-                      '&:hover': {
-                        transform: 'scale(1.05)',
-                      },
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      mb: 3,
+                      flex: '1 1 calc(40% - 12px)',
+                      minWidth: { xs: '100%', lg: 'calc(40% - 12px)' }
                     }}
                   >
-                    <Badge
-                      overlap="circular"
-                      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                      badgeContent={
+                    <Box
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      sx={{
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                        },
+                      }}
+                    >
+                      <Badge
+                        overlap="circular"
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                        badgeContent={
+                          <IconButton
+                            sx={{
+                              backgroundColor: appTheme.primary,
+                              color: 'white',
+                              width: 40,
+                              height: 40,
+                              '&:hover': {
+                                backgroundColor: appTheme.primaryDark,
+                              },
+                            }}
+                            onClick={handleAvatarClick}
+                            disabled={loading}
+                          >
+                            <PhotoCamera fontSize="small" />
+                          </IconButton>
+                        }
+                      >
+                        <Avatar
+                          src={personalInfo.avatar}
+                          alt={personalInfo.fullName}
+                          sx={{
+                            width: 120,
+                            height: 120,
+                            fontSize: '3rem',
+                            backgroundColor: appTheme.primary,
+                            border: `4px solid ${appTheme.primary}`,
+                          }}
+                        >
+                          {!personalInfo.avatar && personalInfo.fullName.charAt(0).toUpperCase()}
+                        </Avatar>
+                      </Badge>
+
+                      {/* Botón para eliminar avatar */}
+                      {personalInfo.avatar && (
                         <IconButton
                           sx={{
-                            backgroundColor: appTheme.primary,
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            backgroundColor: '#f44336',
                             color: 'white',
-                            width: 40,
-                            height: 40,
+                            width: 32,
+                            height: 32,
                             '&:hover': {
-                              backgroundColor: appTheme.primaryDark,
+                              backgroundColor: '#d32f2f',
                             },
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                           }}
-                          onClick={handleAvatarClick}
+                          onClick={handleRemoveAvatar}
                           disabled={loading}
+                          size="small"
                         >
-                          <PhotoCamera fontSize="small" />
+                          <Close fontSize="small" />
                         </IconButton>
-                      }
+                      )}
+                    </Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mt: 1, textAlign: 'center' }}
                     >
-                      <Avatar
-                        src={personalInfo.avatar}
-                        alt={personalInfo.fullName}
-                        sx={{
-                          width: 120,
-                          height: 120,
-                          fontSize: '3rem',
-                          backgroundColor: appTheme.primary,
-                          border: `4px solid ${appTheme.primary}`,
-                        }}
-                      >
-                        {!personalInfo.avatar && personalInfo.fullName.charAt(0).toUpperCase()}
-                      </Avatar>
-                    </Badge>
-                    
-                    {/* Botón para eliminar avatar */}
-                    {personalInfo.avatar && (
-                      <IconButton
-                        sx={{
-                          position: 'absolute',
-                          top: -8,
-                          right: -8,
-                          backgroundColor: '#f44336',
-                          color: 'white',
-                          width: 32,
-                          height: 32,
-                          '&:hover': {
-                            backgroundColor: '#d32f2f',
-                          },
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                        }}
-                        onClick={handleRemoveAvatar}
-                        disabled={loading}
-                        size="small"
-                      >
-                        <Close fontSize="small" />
-                      </IconButton>
-                    )}
+                      Click o arrastra una imagen aquí
+                    </Typography>
                   </Box>
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
-                    sx={{ mt: 1, textAlign: 'center' }}
-                  >
-                    Click o arrastra una imagen aquí
-                  </Typography>
-                </Box>
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
-                  <TextField
-                    label="Nombre Completo"
-                    value={personalInfo.fullName}
-                    onChange={(e) => handlePersonalInfoChange('fullName', e.target.value)}
-                    fullWidth
-                    disabled={loading}
-                  />
-
-                  <TextField
-                    label="Correo electrónico"
-                    type="email"
-                    value={personalInfo.email}
-                    onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
-                    fullWidth
-                    disabled={loading}
-                  />
-
-                  <TextField
-                    label="Rol"
-                    value={personalInfo.role}
-                    fullWidth
-                    disabled
-                    helperText="Contacta a un administrador para cambiar tu rol"
-                  />
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Columna derecha - Contraseña y Preferencias */}
-          <Grid item xs={12} md={6}>
+          <Box sx={{
+            flex: '1 1 calc(40% - 12px)',
+            minWidth: { xs: '100%', lg: 'calc(40% - 12px)' }
+          }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, height: '100%' }}>
               {/* Cambiar Contraseña */}
               <Card
@@ -705,11 +738,11 @@ const Configuration = () => {
                 }}
               >
                 <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <Typography 
-                    variant="h6" 
-                    fontWeight="700" 
+                  <Typography
+                    variant="h6"
+                    fontWeight="700"
                     mb={1}
-                    sx={{ color: appTheme.primaryDark }}
+                    sx={{ color: customTheme.textPrimary }}
                   >
                     Cambiar Contraseña
                   </Typography>
@@ -793,7 +826,7 @@ const Configuration = () => {
               </Card>
 
               {/* Preferencias */}
-              <Card
+              {/* <Card
                 sx={{
                   borderRadius: 2,
                   boxShadow: appTheme.shadow,
@@ -848,15 +881,15 @@ const Configuration = () => {
                     />
                   </Box>
                 </CardContent>
-              </Card>
+              </Card> */}
             </Box>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Botón Guardar */}
-        <Box sx={{ 
-          mt: 4, 
-          display: 'flex', 
+        <Box sx={{
+          mt: 1,
+          display: 'flex',
           justifyContent: 'center',
           flexShrink: 0,
         }}>
@@ -866,7 +899,7 @@ const Configuration = () => {
             startIcon={loading ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <Save />}
             onClick={handleSaveChanges}
             disabled={loading}
-            sx={{ 
+            sx={{
               minWidth: 250,
               background: appTheme.gradient,
               textTransform: "none",
@@ -884,9 +917,9 @@ const Configuration = () => {
 
         {/* Gestión de Usuarios - Solo visible para admin */}
         {isAdmin && users.length > 0 && (
-          <Card 
-            sx={{ 
-              mt: 4,
+          <Card
+            sx={{
+              mt: 2,
               borderRadius: 2,
               boxShadow: appTheme.shadow,
               border: appTheme.border,
@@ -896,10 +929,10 @@ const Configuration = () => {
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
                 <Box>
-                  <Typography 
-                    variant="h6" 
+                  <Typography
+                    variant="h6"
                     fontWeight="700"
-                    sx={{ color: appTheme.primaryDark }}
+                    sx={{ color: customTheme.textPrimary }}
                   >
                     Gestión de Usuarios
                   </Typography>
@@ -925,10 +958,10 @@ const Configuration = () => {
                 </Button>
               </Box>
 
-              <TableContainer 
-                component={Paper} 
-                sx={{ 
-                  boxShadow: 'none', 
+              <TableContainer
+                component={Paper}
+                sx={{
+                  boxShadow: 'none',
                   border: appTheme.border,
                   borderRadius: 2,
                   backgroundColor: 'transparent',
@@ -936,8 +969,8 @@ const Configuration = () => {
               >
                 <Table>
                   <TableHead>
-                    <TableRow sx={{ 
-                      bgcolor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' 
+                    <TableRow sx={{
+                      bgcolor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'
                     }}>
                       <TableCell><strong>Nombre</strong></TableCell>
                       <TableCell><strong>Email</strong></TableCell>
@@ -947,10 +980,10 @@ const Configuration = () => {
                   </TableHead>
                   <TableBody>
                     {users.map((user) => (
-                      <TableRow 
-                        key={user._id} 
+                      <TableRow
+                        key={user._id}
                         hover
-                        sx={{ 
+                        sx={{
                           '&:last-child td, &:last-child th': { border: 0 },
                           backgroundColor: appTheme.cardBg
                         }}
@@ -965,16 +998,16 @@ const Configuration = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          <IconButton 
-                            size="small" 
+                          <IconButton
+                            size="small"
                             color="primary"
                             onClick={() => handleEditUser(user._id)}
                             disabled={loading}
                           >
                             <Edit fontSize="small" />
                           </IconButton>
-                          <IconButton 
-                            size="small" 
+                          <IconButton
+                            size="small"
                             color="error"
                             onClick={() => handleDeleteUser(user._id)}
                             disabled={loading || user._id === currentUser?.id}
