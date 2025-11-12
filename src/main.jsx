@@ -161,8 +161,11 @@ const getTheme = (mode) => createTheme({
   },
 });
 
-// Crear contexto del tema
-const ThemeContext = React.createContext();
+// Crear contexto del tema con valores por defecto
+const ThemeContext = React.createContext({
+  darkMode: false,
+  toggleDarkMode: () => {}
+});
 
 export const useThemeContext = () => {
   const context = React.useContext(ThemeContext);
