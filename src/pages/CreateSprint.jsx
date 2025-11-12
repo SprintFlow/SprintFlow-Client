@@ -778,7 +778,7 @@ export default function CreateSprint() {
             </Grid>
 
             {/* COLUMNA DERECHA - Equipo y Acciones */}
-            <Grid item xs={12} lg={4}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%'}}>
               {/* Equipo Asignado */}
               <Card
                 elevation={0}
@@ -1050,7 +1050,7 @@ export default function CreateSprint() {
                   {loading ? "Creando Sprint..." : "Crear Sprint"}
                 </Button>
               </Box>
-            </Grid>
+            </Box>
           </Grid>
         </Box>
       </Box>
