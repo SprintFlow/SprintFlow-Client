@@ -375,8 +375,7 @@ const Configuration = () => {
         '<input id="swal-email" class="swal2-input" placeholder="Email">' +
         '<select id="swal-role" class="swal2-input">' +
         '<option value="Developer">Developer</option>' +
-        '<option value="Scrum Master">Scrum Master</option>' +
-        '<option value="QA">QA</option>' +
+        '<option value="Admin">Admin</option>' +
         '</select>',
       focusConfirm: false,
       showCancelButton: true,
@@ -436,8 +435,7 @@ const Configuration = () => {
           `<input id="swal-email" class="swal2-input" placeholder="Email" value="${user.email}">` +
           '<select id="swal-role" class="swal2-input">' +
           `<option value="Developer" ${user.role === 'Developer' ? 'selected' : ''}>Developer</option>` +
-          `<option value="Scrum Master" ${user.role === 'Scrum Master' ? 'selected' : ''}>Scrum Master</option>` +
-          `<option value="QA" ${user.role === 'QA' ? 'selected' : ''}>QA</option>` +
+          `<option value="Admin" ${user.role === 'Admin' ? 'selected' : ''}>Admin</option>` +
           '</select>',
         focusConfirm: false,
         showCancelButton: true,
