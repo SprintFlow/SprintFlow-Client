@@ -22,7 +22,6 @@ export default function LoadingOverlay({ open }) {
           className="overflow-visible"
         >
           <defs>
-            {/* Definimos el path del canal */}
             <path
               id="canal"
               d="M380,50 
@@ -38,7 +37,6 @@ export default function LoadingOverlay({ open }) {
                  L380,350"
             />
             
-            {/* Animación para las bolitas */}
             <style>
               {`
                 @keyframes flowPath {
@@ -70,7 +68,6 @@ export default function LoadingOverlay({ open }) {
             </style>
           </defs>
 
-          {/* Fondo blanco interno del canal */}
           <path
             d="M380,50 
                L120,50
@@ -90,15 +87,12 @@ export default function LoadingOverlay({ open }) {
             strokeLinejoin="round"
           />
 
-          {/* Canal principal en forma de S */}
           <use href="#canal" stroke="#8cc8b5" strokeWidth="35" fill="none" strokeLinecap="round" strokeLinejoin="round" />
 
-          {/* Bolitas amarillas animadas */}
           <circle className="bolita1" r="13" fill="#fbbf24" />
           <circle className="bolita2" r="13" fill="#fbbf24" />
           <circle className="bolita3" r="13" fill="#fbbf24" />
 
-          {/* Texto SprintFlow */}
           <text
             x="225"
             y="210"
