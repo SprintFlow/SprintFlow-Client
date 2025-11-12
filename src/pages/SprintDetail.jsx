@@ -85,7 +85,7 @@ export default function SprintDetail() {
     if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
       return 0;
     }
-    
+
     return sprint.plannedStories.reduce((total, story) => {
       return total + (story.score * story.quantity);
     }, 0);
@@ -96,7 +96,7 @@ export default function SprintDetail() {
     if (!sprint.plannedStories || sprint.plannedStories.length === 0) {
       return 0;
     }
-    
+
     return sprint.plannedStories.reduce((total, story) => {
       return total + story.quantity;
     }, 0);
@@ -117,12 +117,12 @@ export default function SprintDetail() {
           const plannedStory = currentSprint?.plannedStories?.find(
             planned => planned.score === story.score
           );
-          
+
           if (plannedStory) {
             // Limitar la cantidad completada a la máxima planificada
             const maxAllowed = plannedStory.quantity;
             const completedCount = Math.min(story.completedCount || 0, maxAllowed);
-            
+
             if (completedCount > 0) {
               userValidPoints += story.score * completedCount;
               validStories.push({
@@ -168,7 +168,7 @@ export default function SprintDetail() {
 
     // Calcular puntos completados VÁLIDOS (solo los planificados)
     const { totalValidPoints, validCompletions } = getValidCompletedPoints();
-    
+
     validCompletions.forEach(completion => {
       if (completion.completedStories) {
         completion.completedStories.forEach(story => {
@@ -181,12 +181,12 @@ export default function SprintDetail() {
       }
     });
 
-    return { 
-      planned, 
-      completed, 
-      plannedSubtotal, 
+    return {
+      planned,
+      completed,
+      plannedSubtotal,
       completedSubtotal,
-      totalValidPoints 
+      totalValidPoints
     };
   };
 
@@ -354,7 +354,7 @@ export default function SprintDetail() {
   const getRecentRecords = () => {
     const records = [];
     const { validCompletions } = getValidCompletedPoints();
-    
+
     validCompletions.forEach(completion => {
       if (completion.completedStories) {
         completion.completedStories.forEach(story => {
@@ -390,7 +390,7 @@ export default function SprintDetail() {
       const completedPoints = userCompletion?.totalAchievedPoints || 0;
       const totalSprintPoints = calculateTotalPlannedPoints(sprint);
 
-      const progressPercentage = totalSprintPoints > 0 
+      const progressPercentage = totalSprintPoints > 0
         ? Math.min(100, (completedPoints / totalSprintPoints) * 100)
         : 0;
 
@@ -428,19 +428,19 @@ export default function SprintDetail() {
   const duration = calculateDuration(sprint.startDate, sprint.endDate);
   const daysElapsed = getDaysElapsed(sprint.startDate, sprint.endDate);
   const daysRemaining = getDaysRemaining(sprint.startDate, sprint.endDate);
-  
+
   const plannedPoints = calculateTotalPlannedPoints(sprint);
   const { totalValidPoints: totalCompletedPoints } = getValidCompletedPoints();
   const totalPlannedStories = calculateTotalPlannedStories(sprint);
   const remainingPoints = Math.max(0, plannedPoints - totalCompletedPoints);
-  
+
   const velocityMetrics = calculateVelocityMetrics(sprint);
   const recentRecords = getRecentRecords();
   const developerProgress = getDeveloperProgress(sprint);
 
   // Calcular subtotales para la nueva tabla
   const { planned, completed, plannedSubtotal, completedSubtotal } = calculateSubtotals();
-  
+
   // Totales generales
   const totalPlannedCount = planned.reduce((sum, count) => sum + count, 0);
   const totalCompletedCount = completed.reduce((sum, count) => sum + count, 0);
@@ -499,7 +499,7 @@ export default function SprintDetail() {
               </Button>
               <Divider orientation="vertical" flexItem />
               <Box>
-                <Typography variant="h4" fontWeight="700" sx={{ color: customTheme.primary }}>
+                <Typography variant="h5" fontWeight="700" sx={{ color: customTheme.primary }}>
                   {sprint.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -558,9 +558,18 @@ export default function SprintDetail() {
         </Box>
 
         {/* PRIMERA FILA: Tres tarjetas equilibradas */}
-        <Grid container spacing={3} mb={3}>
+        <Box container sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 2,
+          width: '100%',
+          mb: 3
+        }}>
           {/* 📊 Progreso del Sprint */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(45% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(40% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -572,8 +581,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  📊 Progreso del Sprint
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Progreso del Sprint
                 </Typography>
 
                 <Box mb={3}>
@@ -626,8 +635,8 @@ export default function SprintDetail() {
 
                 <Grid container spacing={1}>
                   <Grid item xs={6}>
-                    <Box textAlign="center" p={1.5} sx={{ 
-                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#F1F8E9", 
+                    <Box textAlign="center" p={1.5} sx={{
+                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#F1F8E9",
                       borderRadius: 2,
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: customTheme.primary }}>
@@ -639,8 +648,8 @@ export default function SprintDetail() {
                     </Box>
                   </Grid>
                   <Grid item xs={6}>
-                    <Box textAlign="center" p={1.5} sx={{ 
-                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E8F5E9", 
+                    <Box textAlign="center" p={1.5} sx={{
+                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E8F5E9",
                       borderRadius: 2,
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#26A69A" }}>
@@ -652,8 +661,8 @@ export default function SprintDetail() {
                     </Box>
                   </Grid>
                   <Grid item xs={6}>
-                    <Box textAlign="center" p={1.5} sx={{ 
-                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#FFF9C4", 
+                    <Box textAlign="center" p={1.5} sx={{
+                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#FFF9C4",
                       borderRadius: 2,
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#F57F17" }}>
@@ -665,8 +674,8 @@ export default function SprintDetail() {
                     </Box>
                   </Grid>
                   <Grid item xs={6}>
-                    <Box textAlign="center" p={1.5} sx={{ 
-                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E3F2FD", 
+                    <Box textAlign="center" p={1.5} sx={{
+                      background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#E3F2FD",
                       borderRadius: 2,
                     }}>
                       <Typography variant="h5" fontWeight="700" sx={{ color: "#42A5F5" }}>
@@ -680,10 +689,13 @@ export default function SprintDetail() {
                 </Grid>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* 🚀 Velocidad del Sprint */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(25% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(25% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -695,8 +707,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  🚀 Velocidad del Sprint
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Velocidad del Sprint
                 </Typography>
 
                 <Box display="flex" alignItems="center" gap={2} mb={2.5}>
@@ -766,10 +778,13 @@ export default function SprintDetail() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* ℹ️ Información General */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(25% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(25% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -781,8 +796,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  ℹ️ Información General
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Información General
                 </Typography>
 
                 <Box display="flex" alignItems="center" gap={2} mb={2.5}>
@@ -844,13 +859,16 @@ export default function SprintDetail() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* SEGUNDA FILA: Puntos Completados y Progreso de Miembros - SIN ESPACIO */}
-        <Grid container spacing={3}>
+        <Box container sx={{ display: 'flex', flexWrap: 'wrap', width: '100%', gap: 2 }}>
           {/* 📊 Puntos Completados - Ahora a la izquierda */}
-          <Grid item xs={12} md={8}>
+          <Box sx={{
+            flex: '1 1 calc(60%  - 12px)',
+            minWidth: { xs: '100%', lg: 'calc(60% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -861,8 +879,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  📊 Puntos Completados
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Puntos Completados
                 </Typography>
 
                 <TableContainer component={Paper} elevation={0} sx={{ mb: 2 }}>
@@ -883,14 +901,14 @@ export default function SprintDetail() {
                     <TableBody>
                       {/* Fila Planificado */}
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 700 }}>Planificado</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Historias</TableCell>
                         {planned.map((count, index) => (
                           <TableCell key={index} align="center">
                             <Chip
                               label={count}
                               size="small"
                               variant="outlined"
-                              sx={{ 
+                              sx={{
                                 fontWeight: 600,
                                 borderColor: theme.palette.mode === 'dark' ? '#555' : '#ddd'
                               }}
@@ -909,14 +927,14 @@ export default function SprintDetail() {
                           />
                         </TableCell>
                       </TableRow>
-                      
+
                       {/* NUEVA FILA: Subtotal Planificado */}
                       <TableRow>
                         <TableCell sx={{ fontWeight: 700, fontStyle: 'italic' }}>Subtotal</TableCell>
                         {plannedSubtotal.map((points, index) => (
                           <TableCell key={index} align="center">
-                            <Typography variant="body2" fontWeight="600" sx={{ 
-                              color: points > 0 ? customTheme.primary : 'text.secondary' 
+                            <Typography variant="body2" fontWeight="600" sx={{
+                              color: points > 0 ? customTheme.primary : 'text.secondary'
                             }}>
                               {points > 0 ? `${points} pts` : '-'}
                             </Typography>
@@ -934,18 +952,18 @@ export default function SprintDetail() {
                           />
                         </TableCell>
                       </TableRow>
-                      
+
                       {/* Fila Completado */}
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 700 }}>Completado</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Completadas</TableCell>
                         {completed.map((count, index) => (
                           <TableCell key={index} align="center">
                             <Chip
                               label={count}
                               size="small"
                               sx={{
-                                backgroundColor: count > 0 ? customTheme.primaryLight : 
-                                              theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
+                                backgroundColor: count > 0 ? customTheme.primaryLight :
+                                  theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
                                 color: count > 0 ? "white" : "text.secondary",
                                 fontWeight: 600
                               }}
@@ -957,8 +975,8 @@ export default function SprintDetail() {
                             label={totalCompletedCount}
                             size="small"
                             sx={{
-                              backgroundColor: totalCompletedCount > 0 ? customTheme.primary : 
-                                            theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
+                              backgroundColor: totalCompletedCount > 0 ? customTheme.primary :
+                                theme.palette.mode === 'dark' ? '#333' : "#f5f5f5",
                               color: totalCompletedCount > 0 ? "white" : "text.secondary",
                               fontWeight: 600
                             }}
@@ -971,8 +989,8 @@ export default function SprintDetail() {
                         <TableCell sx={{ fontWeight: 700, fontStyle: 'italic' }}>Subtotal</TableCell>
                         {completedSubtotal.map((points, index) => (
                           <TableCell key={index} align="center">
-                            <Typography variant="body2" fontWeight="600" sx={{ 
-                              color: points > 0 ? '#2E7D32' : 'text.secondary' 
+                            <Typography variant="body2" fontWeight="600" sx={{
+                              color: points > 0 ? '#2E7D32' : 'text.secondary'
                             }}>
                               {points > 0 ? `${points} pts` : '-'}
                             </Typography>
@@ -996,9 +1014,9 @@ export default function SprintDetail() {
 
                 {/* Fila de puntos pendientes */}
                 <Box mt={2} display="flex" justifyContent="flex-end">
-                  <Box 
-                    sx={{ 
-                      p: 2, 
+                  <Box
+                    sx={{
+                      p: 2,
                       background: theme.palette.mode === 'dark' ? '#1e1e1e' : "#FFF3E0",
                       borderRadius: 1,
                       border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#FFE0B2'}`,
@@ -1017,8 +1035,8 @@ export default function SprintDetail() {
 
                 {/* Registros Recientes */}
                 <Box mt={4}>
-                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.primary }}>
-                    📋 Registros Recientes
+                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.textPrimary }}>
+                    Registros Recientes
                   </Typography>
                   {recentRecords.length > 0 ? (
                     <Box display="flex" flexDirection="column" gap={1}>
@@ -1036,11 +1054,11 @@ export default function SprintDetail() {
                           }}
                         >
                           <Box display="flex" alignItems="center" gap={2}>
-                            <Avatar sx={{ 
-                              width: 32, 
-                              height: 32, 
-                              bgcolor: customTheme.primary, 
-                              fontSize: '0.8rem' 
+                            <Avatar sx={{
+                              width: 32,
+                              height: 32,
+                              bgcolor: customTheme.primary,
+                              fontSize: '0.8rem'
                             }}>
                               {record.developer?.split(' ').map(n => n[0]).join('') || 'U'}
                             </Avatar>
@@ -1104,8 +1122,8 @@ export default function SprintDetail() {
                 }}
               >
                 <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.primary }}>
-                    📋 Observaciones
+                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.textPrimary }}>
+                    Observaciones
                   </Typography>
                   <Box
                     sx={{
@@ -1131,10 +1149,13 @@ export default function SprintDetail() {
                 </CardContent>
               </Card>
             </Box>
-          </Grid>
+          </Box>
 
           {/* 👥 Progreso de Miembros - Ahora a la derecha */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(40% - 12px)',
+            minWidth: { xs: '100%', lg: 'calc(40% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -1146,8 +1167,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  👥 Progreso de Miembros
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Progreso de Miembros
                 </Typography>
 
                 {developerProgress.length > 0 ? (
@@ -1234,13 +1255,13 @@ export default function SprintDetail() {
                 )}
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Box>
 
       {/* Dialog de confirmación de eliminación */}
-      <Dialog 
-        open={deleteDialogOpen} 
+      <Dialog
+        open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         PaperProps={{
           sx: {
