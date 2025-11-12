@@ -42,6 +42,7 @@ import UserService from '../services/UserService';
 import useAuthStore from '../store/authStore';
 import { useThemeContext } from '../theme/useThemeContext';
 import useAppTheme from '../theme/useAppTheme';
+import Swal from 'sweetalert2';
 
 const Configuration = () => {
   const navigate = useNavigate();
@@ -367,25 +368,57 @@ const Configuration = () => {
   };
 
   const handleNewUser = async () => {
-    const name = prompt('Nombre del nuevo usuario:');
-    const email = prompt('Email del nuevo usuario:');
-    const role = prompt('Rol del nuevo usuario (Developer/Scrum Master/QA):') || 'Developer';
+    const { value: formValues } = await Swal.fire({
+      title: 'Nuevo Usuario',
+      html:
+        '<input id="swal-name" class="swal2-input" placeholder="Nombre completo">' +
+        '<input id="swal-email" class="swal2-input" placeholder="Email">' +
+        '<select id="swal-role" class="swal2-input">' +
+        '<option value="Developer">Developer</option>' +
+        '<option value="Scrum Master">Scrum Master</option>' +
+        '<option value="QA">QA</option>' +
+        '</select>',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Crear',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#4CAF50',
+      preConfirm: () => {
+        return {
+          name: document.getElementById('swal-name').value,
+          email: document.getElementById('swal-email').value,
+          role: document.getElementById('swal-role').value
+        };
+      }
+    });
 
-    if (name && email) {
+    if (formValues && formValues.name && formValues.email) {
       try {
         setLoading(true);
         setError('');
         await UserService.create({
-          name,
-          email,
-          role,
+          name: formValues.name,
+          email: formValues.email,
+          role: formValues.role,
           password: 'temporal123'
         });
 
         await loadUsers();
+        Swal.fire({
+          icon: 'success',
+          title: '¡Usuario creado!',
+          text: 'El usuario ha sido agregado exitosamente',
+          confirmButtonColor: '#4CAF50'
+        });
         setSuccess('Usuario agregado exitosamente');
       } catch (error) {
         console.error('Error al crear usuario:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.message || error.message,
+          confirmButtonColor: '#4CAF50'
+        });
         setError('Error al crear usuario: ' + (error.response?.data?.message || error.message));
       } finally {
         setLoading(false);
@@ -396,24 +429,56 @@ const Configuration = () => {
   const handleEditUser = async (userId) => {
     const user = users.find(u => u._id === userId);
     if (user) {
-      const newName = prompt('Nuevo nombre:', user.name);
-      const newEmail = prompt('Nuevo email:', user.email);
-      const newRole = prompt('Nuevo rol:', user.role);
+      const { value: formValues } = await Swal.fire({
+        title: 'Editar Usuario',
+        html:
+          `<input id="swal-name" class="swal2-input" placeholder="Nombre completo" value="${user.name}">` +
+          `<input id="swal-email" class="swal2-input" placeholder="Email" value="${user.email}">` +
+          '<select id="swal-role" class="swal2-input">' +
+          `<option value="Developer" ${user.role === 'Developer' ? 'selected' : ''}>Developer</option>` +
+          `<option value="Scrum Master" ${user.role === 'Scrum Master' ? 'selected' : ''}>Scrum Master</option>` +
+          `<option value="QA" ${user.role === 'QA' ? 'selected' : ''}>QA</option>` +
+          '</select>',
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Actualizar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#4CAF50',
+        preConfirm: () => {
+          return {
+            name: document.getElementById('swal-name').value,
+            email: document.getElementById('swal-email').value,
+            role: document.getElementById('swal-role').value
+          };
+        }
+      });
 
-      if (newName && newEmail && newRole) {
+      if (formValues && formValues.name && formValues.email) {
         try {
           setLoading(true);
           setError('');
           await UserService.update(userId, {
-            name: newName,
-            email: newEmail,
-            role: newRole
+            name: formValues.name,
+            email: formValues.email,
+            role: formValues.role
           });
 
           await loadUsers();
+          Swal.fire({
+            icon: 'success',
+            title: '¡Usuario actualizado!',
+            text: 'Los datos han sido actualizados exitosamente',
+            confirmButtonColor: '#4CAF50'
+          });
           setSuccess('Usuario actualizado exitosamente');
         } catch (error) {
           console.error('Error al actualizar usuario:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.response?.data?.message || error.message,
+            confirmButtonColor: '#4CAF50'
+          });
           setError('Error al actualizar usuario: ' + (error.response?.data?.message || error.message));
         } finally {
           setLoading(false);
@@ -424,18 +489,44 @@ const Configuration = () => {
 
   const handleDeleteUser = async (userId) => {
     const user = users.find(u => u._id === userId);
-    if (user && window.confirm(`¿Estás seguro de eliminar a ${user.name}?`)) {
-      try {
-        setLoading(true);
-        setError('');
-        await UserService.delete(userId);
-        await loadUsers();
-        setSuccess('Usuario eliminado exitosamente');
-      } catch (error) {
-        console.error('Error al eliminar usuario:', error);
-        setError('Error al eliminar usuario: ' + (error.response?.data?.message || error.message));
-      } finally {
-        setLoading(false);
+    if (user) {
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        html: `Se eliminará al usuario <strong>${user.name}</strong>.<br/>Esta acción no se puede deshacer.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#4CAF50',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          setLoading(true);
+          setError('');
+          await UserService.delete(userId);
+          await loadUsers();
+          Swal.fire({
+            icon: 'success',
+            title: '¡Eliminado!',
+            text: 'El usuario ha sido eliminado exitosamente',
+            confirmButtonColor: '#4CAF50'
+          });
+          setSuccess('Usuario eliminado exitosamente');
+        } catch (error) {
+          console.error('Error al eliminar usuario:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.response?.data?.message || error.message,
+            confirmButtonColor: '#4CAF50'
+          });
+          setError('Error al eliminar usuario: ' + (error.response?.data?.message || error.message));
+        } finally {
+          setLoading(false);
+        }
       }
     }
   };
