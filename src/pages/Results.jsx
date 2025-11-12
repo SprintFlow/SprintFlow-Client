@@ -653,7 +653,7 @@ export default function Results() {
                 >
                   <CardContent sx={{ p: 3 }}>
                     <Box display="flex" sx={{gap: 2}} justifyContent="space-between" alignItems="center" mb={3}>
-                      <Typography variant="h6" fontWeight="600" sx={{ color: '#5b5c5c' }}>
+                      <Typography variant="h6" fontWeight="600" sx={{ color: customTheme.textPrimary }}>
                         Comparativa de Puntos por Sprint:
                       </Typography>
                       <ToggleButtonGroup
@@ -732,7 +732,7 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: '#5b5c5c' }}>
+                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: customTheme.textPrimary }}>
                       Velocidad por Sprint
                     </Typography>
 
@@ -778,7 +778,7 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: '#5b5c5c' }}>
+                    <Typography variant="h6" fontWeight="600" mb={3} sx={{ color: customTheme.textPrimary }}>
                       Rendimiento del Equipo por Miembro
                     </Typography>
 
@@ -847,7 +847,7 @@ export default function Results() {
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="600" mb={2} sx={{ color: '#5b5c5c' }}>
+                    <Typography variant="h6" fontWeight="600" mb={2} sx={{ color: customTheme.textPrimary }}>
                       Resumen por Sprint
                     </Typography>
 
