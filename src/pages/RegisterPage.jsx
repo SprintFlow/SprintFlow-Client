@@ -28,7 +28,6 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
 
-  // Preguntas de seguridad predefinidas
   const securityQuestions = [
     "¿Cuál es el nombre de tu primera mascota?",
     "¿En qué ciudad naciste?",
@@ -76,7 +75,6 @@ export default function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // Validaciones
     if (form.password !== form.confirmPassword) {
       setError("Las contraseñas no coinciden");
       return;
@@ -123,7 +121,6 @@ export default function RegisterPage() {
         overflow: "hidden",
       }}
     >
-      {/* Lado izquierdo: animación - Más pequeño */}
       <Box
         sx={{
           flex: 1,
@@ -131,13 +128,12 @@ export default function RegisterPage() {
           justifyContent: "center",
           alignItems: "center",
           height: "100vh",
-          transform: "scale(1)", // ✅ Más reducido
+          transform: "scale(1)",
         }}
       >
         <SprintFlowLogo />
       </Box>
 
-      {/* Lado derecho: formulario - Sin scroll */}
       <Box
         sx={{
           flex: 1,
@@ -150,34 +146,34 @@ export default function RegisterPage() {
       >
         <Card sx={{ 
           width: "100%", 
-          maxWidth: 420, // ✅ Un poco más estrecho
+          maxWidth: 420,
           boxShadow: 6,
-          overflow: "visible", // ✅ Quitar scroll
+          overflow: "visible",
         }}>
           <CardHeader
             sx={{ 
               textAlign: "center", 
               pb: 0,
-              pt: 1, // ✅ Mínimo padding superior
+              pt: 1,
             }}
             title={
-              <Stack alignItems="center" spacing={0.5}> {/* ✅ Espacio mínimo */}
+              <Stack alignItems="center" spacing={0.5}>
                 <Avatar sx={{ 
                   bgcolor: greenS, 
                   width: 44, 
-                  height: 44, // ✅ Avatar más pequeño
+                  height: 44,
                 }}>
-                  <PersonAddIcon sx={{ fontSize: 24 }} /> {/* ✅ Icono más pequeño */}
+                  <PersonAddIcon sx={{ fontSize: 24 }} />
                 </Avatar>
-                <Typography variant="h6" color="text.primary"> {/* ✅ h6 en lugar de h5 */}
+                <Typography variant="h6" color="text.primary">
                   Crear una cuenta
                 </Typography>
               </Stack>
             }
           />
-          <CardContent sx={{ py: 1, px: 2 }}> {/* ✅ Padding muy reducido */}
+          <CardContent sx={{ py: 1, px: 2 }}>
             <Box component="form" noValidate>
-              <Stack spacing={1} sx={{ mt: 0.5 }}> {/* ✅ Espacio mínimo entre campos */}
+              <Stack spacing={1} sx={{ mt: 0.5 }}>
                 <TextField
                   id="name"
                   label="Nombre completo"
@@ -252,7 +248,6 @@ export default function RegisterPage() {
                   }}
                 />
 
-                {/* ✅ Pregunta de seguridad */}
                 <FormControl fullWidth required size="small">
                   <InputLabel id="security-question-label">
                     Pregunta de seguridad
@@ -317,7 +312,7 @@ export default function RegisterPage() {
                   size="medium"
                   fullWidth
                   sx={{
-                    mt: 1.5, // ✅ Margen muy reducido
+                    mt: 1.5,
                     mb: 0.5,
                     backgroundColor: greenS,
                     '&:hover': { backgroundColor: greenShover },

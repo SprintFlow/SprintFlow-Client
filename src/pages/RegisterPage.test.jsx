@@ -1,58 +1,51 @@
-// src/pages/RegisterPage.test.jsx
-
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import { vi } from 'vitest';
+import { describe, test, expect, afterEach, vi } from 'vitest';
 import RegisterPage from './RegisterPage';
 import useAuthStore from '../store/authStore';
 
-// Mockeamos el store de Zustand.
-// Esto intercepta la importación de 'useAuthStore' y la reemplaza por nuestra simulación.
 vi.mock('../store/authStore');
 
 describe('RegisterPage', () => {
-
   const renderRegisterPage = () => {
-    render(
+    return render(
       <BrowserRouter>
         <RegisterPage />
       </BrowserRouter>
     );
   };
 
-  // Limpiamos los mocks después de cada test para que no interfieran entre sí.
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-
-  // Test 1: Verificar que la página se renderiza correctamente.
-  test('debería renderizar el formulario de registro con todos sus campos', () => {
-    renderRegisterPage();
-
-    expect(screen.getByRole('heading', { name: /crear cuenta/i })).toBeInTheDocument();
+  test('should render registration form with all fields', () => {
+    const { container } = renderRegisterPage();
     
-    // El formulario de registro tiene un campo más.
-    expect(screen.getByLabelText(/nombre/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument(); // Busca "Correo electrónico"
-    expect(screen.getByLabelText(/^contraseña$/i)).toBeInTheDocument(); // Busca "Contraseña" exactamente
-    expect(screen.getByLabelText(/confirmar contraseña/i)).toBeInTheDocument(); // Busca "Confirmar contraseña"
+    expect(screen.getByRole('heading', { name: /crear una cuenta/i })).toBeInTheDocument();
+    
+    expect(screen.getByLabelText(/nombre completo/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
+    
+    expect(container.querySelector('#password')).toBeInTheDocument();
+    expect(screen.getByLabelText(/confirmar contraseña/i)).toBeInTheDocument();
+    
+    expect(screen.getByLabelText(/pregunta de seguridad/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/respuesta de seguridad/i)).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: /registrarse/i })).toBeInTheDocument();
   });
 
-  // Test 2: Simular que un usuario escribe en los campos.
-  test('debería permitir al usuario escribir en los campos de nombre, email y contraseña', async () => {
+  test('should allow user to type in name, email and password fields', async () => {
     const user = userEvent.setup();
-    renderRegisterPage();
+    const { container } = renderRegisterPage();
 
     const nameInput = screen.getByLabelText(/nombre completo/i);
     const emailInput = screen.getByLabelText(/correo electrónico/i);
-    // Usamos selectores más específicos para diferenciar los campos de contraseña
-    const passwordInput = screen.getByLabelText(/^contraseña$/i);
-    const confirmPasswordInput = screen.getByLabelText(/confirmar contraseña/i);
+    const passwordInput = container.querySelector('#password');
+    const confirmPasswordInput = container.querySelector('#confirmPassword');
 
     await user.type(nameInput, 'Test User');
     await user.type(emailInput, 'register@example.com');
@@ -65,42 +58,41 @@ describe('RegisterPage', () => {
     expect(confirmPasswordInput).toHaveValue('newPassword123');
   });
 
-  // Test 3: Verificar que la función de registro es llamada.
-  test('debería llamar a la función de register al hacer clic en el botón', async () => {
+  test('should call register function when submit button is clicked', async () => {
     const user = userEvent.setup();
-
-    // Creamos una función mock para 'register' que devuelve una promesa resuelta.
     const mockRegister = vi.fn().mockResolvedValue({ success: true });
 
-    // Configuramos nuestro mock de `useAuthStore` para que devuelva la función mockeada.
-    useAuthStore.mockImplementation((selector) => {
-      // Esto simula la llamada `useAuthStore(state => state.register)`
-      return mockRegister;
-    });
+    useAuthStore.mockReturnValue(mockRegister);
 
-    renderRegisterPage();
+    const { container } = renderRegisterPage();
 
-    // Obtenemos los campos y el botón
     const nameInput = screen.getByLabelText(/nombre completo/i);
     const emailInput = screen.getByLabelText(/correo electrónico/i);
-    const passwordInput = screen.getByLabelText(/^contraseña$/i);
-    const confirmPasswordInput = screen.getByLabelText(/confirmar contraseña/i);
+    const passwordInput = container.querySelector('#password');
+    const confirmPasswordInput = container.querySelector('#confirmPassword');
+    const securityAnswerInput = screen.getByLabelText(/respuesta de seguridad/i);
     const submitButton = screen.getByRole('button', { name: /registrarse/i });
 
-    // Simulamos que el usuario rellena el formulario
     await user.type(nameInput, 'Nuevo Usuario');
     await user.type(emailInput, 'nuevo@usuario.com');
     await user.type(passwordInput, 'passwordValida');
     await user.type(confirmPasswordInput, 'passwordValida');
-
-    // Simulamos el clic en el botón de registro
+    
+    const securityQuestionSelect = container.querySelector('#securityQuestion');
+    await user.click(securityQuestionSelect);
+    
+    const option = await screen.findByText('¿Cuál es tu comida favorita?');
+    await user.click(option);
+    
+    await user.type(securityAnswerInput, 'Pizza');
     await user.click(submitButton);
 
-    // Verificamos que la función `register` fue llamada con los datos correctos
     expect(mockRegister).toHaveBeenCalledWith({
       name: 'Nuevo Usuario',
       email: 'nuevo@usuario.com',
       password: 'passwordValida',
+      securityQuestion: '¿Cuál es tu comida favorita?',
+      securityAnswer: 'Pizza'
     });
   });
 });

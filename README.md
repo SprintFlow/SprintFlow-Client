@@ -65,9 +65,17 @@ El sistema de autenticación es el punto de entrada a **SprintFlow**. Permite a 
 ### Registro de Nuevos Usuarios
 *   **Ruta:** `/register`
 *   **Componente Principal:** `src/pages/RegisterPage.jsx`
-*   **Flujo:** El usuario completa un formulario con su nombre, email y contraseña. Tras una validación exitosa, se crea la cuenta y se le redirige a la página de inicio de sesión.
+*   **Flujo:** El usuario completa un formulario con su nombre, email, contraseña y **selecciona una pregunta de seguridad con su respuesta**. Esta pregunta será clave para la recuperación de la cuenta. Tras una validación exitosa, se crea la cuenta y se le redirige a la página de inicio de sesión.
 
 ### Inicio de Sesión
 *   **Ruta:** `/` (o `/login`)
 *   **Componente Principal:** `src/pages/LoginPage.jsx`
 *   **Flujo:** El usuario introduce su email y contraseña. Si las credenciales son correctas, la API devuelve un **JSON Web Token (JWT)** que se almacena en el cliente para mantener la sesión. El usuario es redirigido a su dashboard correspondiente (`/user-dashboard` o `/admin-dashboard`).
+
+### Recuperación de Contraseña
+*   **Ruta:** `/forgot-password`
+*   **Componente Principal:** `src/pages/ForgotPasswordPage.jsx`
+*   **Flujo:** Si un usuario olvida su contraseña, puede iniciar un proceso de recuperación en varios pasos:
+    1.  **Verificación de Email:** El usuario introduce su correo para buscar la cuenta.
+    2.  **Pregunta de Seguridad:** El sistema le muestra la pregunta de seguridad que configuró en el registro.
+    3.  **Nueva Contraseña:** Si la respuesta a la pregunta es correcta, se le permite establecer una nueva contraseña.

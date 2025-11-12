@@ -1,69 +1,96 @@
-// src/pages/LoginPage.test.jsx
-
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom'; // Necesario si tu componente usa <Link> o <Navigate>
+import { BrowserRouter } from 'react-router-dom';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import LoginPage from './LoginPage';
+import useAuthStore from '../store/authStore';
 
-// `describe` agrupa tests relacionados. Es como una sección de tu fichero de pruebas.
+vi.mock('../store/authStore');
+
 describe('LoginPage', () => {
 
-  // Creamos una función de renderizado reutilizable que envuelve el componente
-  // con los Providers que necesite (en este caso, el Router).
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   const renderLoginPage = () => {
-    render(
+    return render(
       <BrowserRouter>
         <LoginPage />
       </BrowserRouter>
     );
   };
 
-  // Test 1: Verificar que la página se renderiza correctamente.
   test('debería renderizar el formulario de login con todos sus campos', () => {
+    // Mock Zustand selector
+    useAuthStore.mockImplementation((selector) => {
+      const state = {
+        login: vi.fn(),
+        error: null,
+        isLoading: false,
+        user: null
+      };
+      return selector(state);
+    });
+
     renderLoginPage();
 
-    // `screen` es tu vista sobre el componente renderizado.
-    // `getByRole` busca elementos como lo haría un usuario con lector de pantalla.
-    expect(screen.getByRole('heading', { name: /iniciar sesión/i })).toBeInTheDocument();
-    
-    // `getByLabelText` es ideal para inputs de formulario. Busca el <label> y encuentra su input.
+    expect(screen.getByRole('heading', { name: /sprintflow/i })).toBeInTheDocument();
+    expect(screen.getByText(/gestión ágil de sprints para cohispania/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
-
-    // Buscamos el botón por su texto visible.
     expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /¿olvidaste tu contraseña\?/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /regístrate aquí/i })).toBeInTheDocument();
   });
 
-  // Test 2: Simular que un usuario escribe en los campos.
   test('debería permitir al usuario escribir en los campos de email y contraseña', async () => {
-    // `userEvent` simula interacciones de usuario de forma más realista que `fireEvent`.
+    useAuthStore.mockImplementation((selector) => {
+      const state = {
+        login: vi.fn(),
+        error: null,
+        isLoading: false,
+        user: null
+      };
+      return selector(state);
+    });
+
     const user = userEvent.setup();
     renderLoginPage();
 
     const emailInput = screen.getByLabelText(/correo electrónico/i);
     const passwordInput = screen.getByLabelText(/contraseña/i);
 
-    // Simulamos que el usuario escribe en los campos.
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
 
-    // Verificamos que el valor de los inputs ha cambiado.
     expect(emailInput).toHaveValue('test@example.com');
     expect(passwordInput).toHaveValue('password123');
   });
 
-  // Test 3: Simular un envío de formulario exitoso.
-  // NOTA: Para este test, necesitarás "mockear" la función que hace la llamada a la API.
-  // Por ahora, vamos a simular el clic y verificar que los campos se usan.
   test('debería llamar a la función de login al hacer clic en el botón', async () => {
     const user = userEvent.setup();
-    renderLoginPage();
+    const mockLogin = vi.fn().mockResolvedValue({ success: true });
+    
+    // Mock both selector and getState for login function
+    useAuthStore.mockImplementation((selector) => {
+      const state = {
+        login: mockLogin,
+        error: null,
+        isLoading: false,
+        user: { isAdmin: false }
+      };
+      return selector(state);
+    });
 
-    // Aquí haríamos un mock de la función de login de tu hook o servicio.
-    // Por ejemplo: `const mockLogin = jest.fn();`
-    // Y se lo pasaríamos al componente si lo aceptara como prop, o mockearíamos el hook.
-    // Como es un test de componente, nos centramos en la interacción.
+    useAuthStore.getState = vi.fn(() => ({
+      login: mockLogin,
+      error: null,
+      user: { isAdmin: false }
+    }));
+
+    renderLoginPage();
 
     const emailInput = screen.getByLabelText(/correo electrónico/i);
     const passwordInput = screen.getByLabelText(/contraseña/i);
@@ -73,14 +100,9 @@ describe('LoginPage', () => {
     await user.type(passwordInput, 'securePassword');
     await user.click(submitButton);
 
-    // En un test más avanzado, verificaríamos que la función mockeada fue llamada:
-    // expect(mockLogin).toHaveBeenCalledWith({
-    //   email: 'test@user.com',
-    //   password: 'securePassword'
-    // });
-    
-    // Por ahora, podemos verificar que se muestra un estado de "cargando" si lo tienes.
-    // Por ejemplo, si el botón se deshabilita:
-    // expect(submitButton).toBeDisabled();
+    expect(mockLogin).toHaveBeenCalledWith({
+      email: 'test@user.com',
+      password: 'securePassword'
+    });
   });
 });
