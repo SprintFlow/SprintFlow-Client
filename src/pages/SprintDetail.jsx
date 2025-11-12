@@ -557,7 +557,7 @@ export default function SprintDetail() {
         }}>
           {/* 📊 Progreso del Sprint - Más compacto */}
           <Box sx={{
-            flex: '1 1 calc(40% - 12px)',
+            flex: '1 1 calc(45% - 12px)',
             minWidth: { xs: '100%', md: 'calc(40% - 12px)' }
           }}>
             <Card
