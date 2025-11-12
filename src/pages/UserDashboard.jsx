@@ -19,16 +19,11 @@ const UserDashboard = () => {
 
     // ===== TEMA PERSONALIZADO CON SOPORTE PARA MODO OSCURO =====
     const customTheme = {
-        // primary: "#10b981",
         primary: "#4CAF50",
-        // primaryDark: "#059669",
         primaryDark: "#45A049",
-        // primaryLight: "#34d399",
         primaryLight: "#81C784",
-        // background: theme.palette.mode === 'dark' ? theme.palette.background.default : "#f0fdf4",
         background: theme.palette.mode === 'dark' ? theme.palette.background.default : "#f8fbf9",
         cardBg: theme.palette.mode === 'dark' ? theme.palette.background.paper : "#ffffff",
-        // gradient: "linear-gradient(135deg, #10b981 0%, #34d399 100%)",
         gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
         text: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.text.primary,
         textPrimary: theme.palette.mode === 'dark' ? "#FFFFFF" : "#1A202C",
@@ -101,40 +96,6 @@ const UserDashboard = () => {
         }
     };
 
-    // Encontrar sprint activo y calcular estadísticas
-    // useEffect(() => {
-    //     if (sprints && sprints.length > 0) {
-    //         const active = sprints.find(sprint => {
-    //             const sprintStatus = sprint.calculatedStatus || 'Planificado';
-    //             return sprintStatus === 'Activo';
-    //         });
-
-    //         setActiveSprint(active || null);
-
-    //         if (active && user?.id) {
-    //             const userSprintPoints = getPointsBySprint(active._id);
-    //             const totalUserPoints = getTotalPoints();
-
-    //             const teamTotalPoints = active.completedPoints || 0;
-    //             const teamPlannedPoints = active.plannedTotalPoints || 0;
-    //             const remainingPoints = Math.max(0, teamPlannedPoints - teamTotalPoints);
-    //             const teamProgress = teamPlannedPoints > 0 ?
-    //                 (teamTotalPoints / teamPlannedPoints) * 100 : 0;
-
-    //             const daysRemaining = calculateDaysRemaining(active.endDate);
-
-    //             setDashboardStats({
-    //                 currentSprintPoints: userSprintPoints,
-    //                 totalPoints: totalUserPoints,
-    //                 teamProgress: teamProgress,
-    //                 daysRemaining: daysRemaining,
-    //                 teamTotalPoints: teamTotalPoints,
-    //                 teamPlannedPoints: teamPlannedPoints,
-    //                 remainingPoints: remainingPoints
-    //             });
-    //         }
-    //     }
-    // }, [sprints, userPoints, user]);
     useEffect(() => {
         if (!activeSprint || !user) return;
 
@@ -400,7 +361,6 @@ const UserDashboard = () => {
                                     <Target style={{ color: '#5b5c5c' }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
-                                    {/* {activeSprint ? activeSprint.number || '1' : '0'} */}
                                     {activeSprint ? extractSprintNumber(activeSprint.name) : '0'}
                                 </Typography>
                                 <Typography sx={{ fontSize: '12px', color: customTheme.textSecondary }}>
