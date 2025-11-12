@@ -558,9 +558,18 @@ export default function SprintDetail() {
         </Box>
 
         {/* PRIMERA FILA: Tres tarjetas equilibradas */}
-        <Grid container spacing={3} mb={3}>
+        <Box container sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 2,
+          width: '100%',
+          mb: 3
+        }}>
           {/* 📊 Progreso del Sprint */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(45% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(40% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -680,10 +689,13 @@ export default function SprintDetail() {
                 </Grid>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* 🚀 Velocidad del Sprint */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(25% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(25% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -766,10 +778,13 @@ export default function SprintDetail() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* ℹ️ Información General */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{
+            flex: '1 1 calc(25% - 12px)',
+            minWidth: { xs: '100%', md: 'calc(25% - 12px)' }
+          }}>
             <Card
               elevation={0}
               sx={{
@@ -844,8 +859,8 @@ export default function SprintDetail() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* SEGUNDA FILA: Puntos Completados y Progreso de Miembros - SIN ESPACIO */}
         <Grid container spacing={3}>
