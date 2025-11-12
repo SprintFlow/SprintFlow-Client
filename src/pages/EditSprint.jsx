@@ -907,7 +907,6 @@ export default function EditSprint() {
                                         variant="caption"
                                         sx={{
                                           color: styles.textSecondary,
-                                          display: 'block',
                                           display: '-webkit-box',
                                           WebkitLineClamp: 1,
                                           WebkitBoxOrient: 'vertical',
