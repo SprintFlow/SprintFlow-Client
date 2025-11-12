@@ -36,11 +36,8 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // 1) Intentamos usar tu login del store (no cambiamos la lógica)
       const result = await login({ email, password });
 
-      // Si el login del store devuelve un objeto con success (tu lógica actual),
-      // seguimos el flujo original.
       if (result && typeof result.success !== "undefined") {
         if (result.success) {
           const currentUser = useAuthStore.getState().user;
@@ -58,17 +55,12 @@ export default function LoginPage() {
         return;
       }
 
-      // ---------------------------
-      // FALLBACK (solo si el store.login no devolvió lo esperado)
-      // ---------------------------
-      // Hacemos una petición directa al backend usando credentials: 'include'
-      // Esto funciona con la implementación del backend que setea cookie httpOnly.
-      // No cambia tu lógica original: solo actúa si el store.login no cerró el flujo.
+      // Fallback: direct backend request with httpOnly cookies
       try {
         const res = await fetch("http://localhost:4000/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include", // <- IMPORTANT para cookies httpOnly
+          credentials: "include",
           body: JSON.stringify({ email, password }),
         });
 
@@ -79,13 +71,11 @@ export default function LoginPage() {
           return;
         }
 
-        // Si tu store tiene setUser, actualizamos el estado global (no obligatorio)
         const maybeSetUser = useAuthStore.getState().setUser;
         if (typeof maybeSetUser === "function" && data.user) {
           maybeSetUser(data.user);
         }
 
-        // Redirigir según rol (igual que antes)
         if (data.user?.isAdmin) {
           navigate("/admin-dashboard");
         } else {
@@ -118,7 +108,6 @@ export default function LoginPage() {
     navigate("/forgot-password");
   };
 
-  // Color verde de la "S" animada
   const greenS = "#4CAF50";
   const greenShover = "#45A049";
   const backgroundMint = "#e6f2ed";
@@ -133,10 +122,8 @@ export default function LoginPage() {
         overflow: "hidden",
       }}
     >
-      {/* LoadingOverlay sobre toda la página */}
       <LoadingOverlay open={isLoading} />
 
-      {/* Lado izquierdo: animación */}
       <Box
         sx={{
           flex: 1,
@@ -149,7 +136,6 @@ export default function LoginPage() {
         <SprintFlowLogo />
       </Box>
 
-      {/* Lado derecho: formulario */}
       <Box
         sx={{
           flex: 1,
