@@ -499,7 +499,7 @@ export default function SprintDetail() {
               </Button>
               <Divider orientation="vertical" flexItem />
               <Box>
-                <Typography variant="h4" fontWeight="700" sx={{ color: customTheme.primary }}>
+                <Typography variant="h5" fontWeight="700" sx={{ color: customTheme.primary }}>
                   {sprint.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -572,8 +572,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  📊 Progreso del Sprint
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Progreso del Sprint
                 </Typography>
 
                 <Box mb={3}>
@@ -695,8 +695,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  🚀 Velocidad del Sprint
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Velocidad del Sprint
                 </Typography>
 
                 <Box display="flex" alignItems="center" gap={2} mb={2.5}>
@@ -781,8 +781,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  ℹ️ Información General
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Información General
                 </Typography>
 
                 <Box display="flex" alignItems="center" gap={2} mb={2.5}>
@@ -861,8 +861,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  📊 Puntos Completados
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Puntos Completados
                 </Typography>
 
                 <TableContainer component={Paper} elevation={0} sx={{ mb: 2 }}>
@@ -1017,8 +1017,8 @@ export default function SprintDetail() {
 
                 {/* Registros Recientes */}
                 <Box mt={4}>
-                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.primary }}>
-                    📋 Registros Recientes
+                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.textPrimary }}>
+                    Registros Recientes
                   </Typography>
                   {recentRecords.length > 0 ? (
                     <Box display="flex" flexDirection="column" gap={1}>
@@ -1104,8 +1104,8 @@ export default function SprintDetail() {
                 }}
               >
                 <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.primary }}>
-                    📋 Observaciones
+                  <Typography variant="h6" fontWeight="700" mb={2} sx={{ color: customTheme.textPrimary }}>
+                    Observaciones
                   </Typography>
                   <Box
                     sx={{
@@ -1146,8 +1146,8 @@ export default function SprintDetail() {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.primary }}>
-                  👥 Progreso de Miembros
+                <Typography variant="h6" fontWeight="700" mb={3} sx={{ color: customTheme.textPrimary }}>
+                  Progreso de Miembros
                 </Typography>
 
                 {developerProgress.length > 0 ? (
