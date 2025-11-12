@@ -21,7 +21,10 @@ import {
   CircularProgress,
   Alert,
   Avatar,
-  Badge
+  Badge,
+  InputAdornment,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   ArrowBack,
@@ -30,14 +33,22 @@ import {
   Delete,
   PersonAdd,
   PhotoCamera,
-  Close
+  Close,
+  Visibility,
+  VisibilityOff
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import UserService from '../services/UserService';
 import useAuthStore from '../store/authStore';
+import { useThemeContext } from '../theme/useThemeContext';
+import useAppTheme from '../theme/useAppTheme';
 
 const Configuration = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { darkMode, toggleDarkMode } = useThemeContext();
+  const appTheme = useAppTheme();
   
   // Obtener usuario y métodos desde el store (localStorage)
   const { user: currentUser, updateUser } = useAuthStore();
@@ -53,10 +64,15 @@ const Configuration = () => {
   });
 
   const [preferences, setPreferences] = useState({
-    theme: 'light',
+    theme: darkMode ? 'dark' : 'light',
     emailNotifications: true,
     dailyReminders: true
   });
+
+  // Estados para mostrar/ocultar contraseñas
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Estados para el backend
   const [users, setUsers] = useState([]);
@@ -67,22 +83,17 @@ const Configuration = () => {
   // Validación: Si no hay usuario, mostrar loading
   if (!currentUser) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        backgroundColor: appTheme.background
+      }}>
         <CircularProgress />
       </Box>
     );
   }
-
-  // Colores del tema verde profesional (igual que AdminDashboard)
-  const theme = {
-    primary: "#4CAF50",
-    primaryDark: "#45A049",
-    primaryLight: "#81C784",
-    background: "#e6f2ed",
-    cardBg: "#ffffff",
-    gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
-    gradientAlt: "linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)",
-  };
 
   // Cargar datos del usuario actual al montar el componente
   useEffect(() => {
@@ -92,6 +103,13 @@ const Configuration = () => {
       loadUsers();
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    setPreferences(prev => ({
+      ...prev,
+      theme: darkMode ? 'dark' : 'light'
+    }));
+  }, [darkMode]);
 
   const loadCurrentUser = () => {
     if (currentUser) {
@@ -129,6 +147,11 @@ const Configuration = () => {
       ...prev,
       [field]: value
     }));
+
+    // Manejar cambio de tema global
+    if (field === 'theme' && value === 'dark' !== darkMode) {
+      toggleDarkMode();
+    }
   };
 
   const handleSaveChanges = async () => {
@@ -222,7 +245,19 @@ const Configuration = () => {
 
     } catch (error) {
       console.error('Error al guardar cambios:', error);
-      setError('Error al guardar los cambios: ' + (error.response?.data?.message || error.message));
+      
+      // Mensajes de error específicos
+      let errorMessage = 'Error al guardar los cambios';
+      
+      if (error.response?.status === 413 || error.message?.includes('413')) {
+        errorMessage = 'La imagen es demasiado grande. Por favor, usa una imagen más pequeña (máximo 2MB).';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -266,12 +301,16 @@ const Configuration = () => {
     }
 
     try {
+      setSuccess('Procesando imagen...');
       const base64 = await convertToBase64(file);
       console.log('Avatar convertido a Base64:', {
-        length: base64.length,
+        fileName: file.name,
+        fileSize: file.size,
+        base64Length: base64.length,
         preview: base64.substring(0, 50) + '...'
       });
       handlePersonalInfoChange('avatar', base64);
+      setSuccess('Imagen cargada. Haz click en "Guardar Cambios" para aplicar.');
       setError(''); // Limpiar cualquier error previo
     } catch (error) {
       console.error('Error al convertir imagen:', error);
@@ -410,9 +449,9 @@ const Configuration = () => {
         justifyContent="center" 
         alignItems="center" 
         minHeight="100vh"
-        sx={{ backgroundColor: theme.background }}
+        sx={{ backgroundColor: appTheme.background }}
       >
-        <CircularProgress size={60} sx={{ color: theme.primary }} />
+        <CircularProgress size={60} sx={{ color: appTheme.primary }} />
       </Box>
     );
   }
@@ -420,27 +459,33 @@ const Configuration = () => {
   return (
     <Box sx={{ 
       minHeight: "100vh", 
-      backgroundColor: theme.background,
+      backgroundColor: appTheme.background,
       py: 3,
-      width: '100vw',
-      overflowX: 'hidden',
+      width: '100%',
       margin: 0,
       padding: 0,
+      display: 'flex',
+      flexDirection: 'column',
     }}>
-      {/* Container principal */}
+      {/* Container principal - Ocupa todo el espacio disponible */}
       <Box sx={{ 
+        flex: 1,
         width: '100%',
+        maxWidth: '1400px',
+        mx: 'auto',
         px: { xs: 2, sm: 3, md: 4 },
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {/* Header */}
         <Box
           sx={{
-            background: theme.cardBg,
+            background: appTheme.cardBg,
             borderRadius: 2,
             p: 3,
             mb: 3,
-            boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-            border: `1px solid #e0e0e0`,
+            boxShadow: appTheme.shadow,
+            border: appTheme.border,
           }}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
@@ -449,7 +494,7 @@ const Configuration = () => {
                 variant="h4" 
                 fontWeight="700" 
                 sx={{ 
-                  color: theme.primaryDark,
+                  color: appTheme.primaryDark,
                   mb: 0.5
                 }}
               >
@@ -462,10 +507,10 @@ const Configuration = () => {
             <IconButton 
               onClick={handleGoBack}
               sx={{
-                backgroundColor: theme.primary,
+                backgroundColor: appTheme.primary,
                 color: 'white',
                 '&:hover': {
-                  backgroundColor: theme.primaryDark,
+                  backgroundColor: appTheme.primaryDark,
                 },
               }}
             >
@@ -501,23 +546,25 @@ const Configuration = () => {
           </Alert>
         )}
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ flex: 1 }}>
           {/* Información Personal */}
           <Grid item xs={12} md={6}>
             <Card
               sx={{
                 borderRadius: 2,
-                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                border: `1px solid #e0e0e0`,
+                boxShadow: appTheme.shadow,
+                border: appTheme.border,
                 height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              <CardContent sx={{ p: 3 }}>
+              <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Typography 
                   variant="h6" 
                   fontWeight="700" 
                   mb={1}
-                  sx={{ color: theme.primaryDark }}
+                  sx={{ color: appTheme.primaryDark }}
                 >
                   Información Personal
                 </Typography>
@@ -552,12 +599,12 @@ const Configuration = () => {
                       badgeContent={
                         <IconButton
                           sx={{
-                            backgroundColor: theme.primary,
+                            backgroundColor: appTheme.primary,
                             color: 'white',
                             width: 40,
                             height: 40,
                             '&:hover': {
-                              backgroundColor: theme.primaryDark,
+                              backgroundColor: appTheme.primaryDark,
                             },
                           }}
                           onClick={handleAvatarClick}
@@ -574,8 +621,8 @@ const Configuration = () => {
                           width: 120,
                           height: 120,
                           fontSize: '3rem',
-                          backgroundColor: theme.primary,
-                          border: `4px solid ${theme.primary}`,
+                          backgroundColor: appTheme.primary,
+                          border: `4px solid ${appTheme.primary}`,
                         }}
                       >
                         {!personalInfo.avatar && personalInfo.fullName.charAt(0).toUpperCase()}
@@ -615,7 +662,7 @@ const Configuration = () => {
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
                   <TextField
                     label="Nombre Completo"
                     value={personalInfo.fullName}
@@ -645,154 +692,164 @@ const Configuration = () => {
             </Card>
           </Grid>
 
-          {/* Cambiar Contraseña */}
+          {/* Columna derecha - Contraseña y Preferencias */}
           <Grid item xs={12} md={6}>
-            <Card
-              sx={{
-                borderRadius: 2,
-                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                border: `1px solid #e0e0e0`,
-                height: '100%',
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography 
-                  variant="h6" 
-                  fontWeight="700" 
-                  mb={1}
-                  sx={{ color: theme.primaryDark }}
-                >
-                  Cambiar Contraseña
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={3}>
-                  Actualiza tu contraseña de acceso
-                </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, height: '100%' }}>
+              {/* Cambiar Contraseña */}
+              <Card
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: appTheme.shadow,
+                  border: appTheme.border,
+                  flex: 1,
+                }}
+              >
+                <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Typography 
+                    variant="h6" 
+                    fontWeight="700" 
+                    mb={1}
+                    sx={{ color: appTheme.primaryDark }}
+                  >
+                    Cambiar Contraseña
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={3}>
+                    Actualiza tu contraseña de acceso
+                  </Typography>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <TextField
-                    label="Contraseña Actual"
-                    type="password"
-                    value={personalInfo.currentPassword}
-                    onChange={(e) => handlePersonalInfoChange('currentPassword', e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    fullWidth
-                    disabled={loading}
-                  />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
+                    <TextField
+                      label="Contraseña Actual"
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={personalInfo.currentPassword}
+                      onChange={(e) => handlePersonalInfoChange('currentPassword', e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      fullWidth
+                      disabled={loading}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              edge="end"
+                              disabled={loading}
+                            >
+                              {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }}
+                    />
 
-                  <TextField
-                    label="Nueva Contraseña"
-                    type="password"
-                    value={personalInfo.newPassword}
-                    onChange={(e) => handlePersonalInfoChange('newPassword', e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Mínimo 6 caracteres"
-                    fullWidth
-                    disabled={loading}
-                  />
+                    <TextField
+                      label="Nueva Contraseña"
+                      type={showNewPassword ? "text" : "password"}
+                      value={personalInfo.newPassword}
+                      onChange={(e) => handlePersonalInfoChange('newPassword', e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Mínimo 6 caracteres"
+                      fullWidth
+                      disabled={loading}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              edge="end"
+                              disabled={loading}
+                            >
+                              {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }}
+                    />
 
-                  <TextField
-                    label="Confirmar Nueva Contraseña"
-                    type="password"
-                    value={personalInfo.confirmPassword}
-                    onChange={(e) => handlePersonalInfoChange('confirmPassword', e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Repite la nueva contraseña"
-                    fullWidth
-                    disabled={loading}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                    <TextField
+                      label="Confirmar Nueva Contraseña"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={personalInfo.confirmPassword}
+                      onChange={(e) => handlePersonalInfoChange('confirmPassword', e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Repite la nueva contraseña"
+                      fullWidth
+                      disabled={loading}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              edge="end"
+                              disabled={loading}
+                            >
+                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }}
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
 
-          {/* Preferencias */}
-          <Grid item xs={12}>
-            <Card
-              sx={{
-                borderRadius: 2,
-                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-                border: `1px solid #e0e0e0`,
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography 
-                  variant="h6" 
-                  fontWeight="700" 
-                  mb={1}
-                  sx={{ color: theme.primaryDark }}
-                >
-                  Preferencias
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={3}>
-                  Personaliza tu experiencia
-                </Typography>
+              {/* Preferencias */}
+              <Card
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: appTheme.shadow,
+                  border: appTheme.border,
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography 
+                    variant="h6" 
+                    fontWeight="700" 
+                    mb={1}
+                    sx={{ color: appTheme.primaryDark }}
+                  >
+                    Preferencias
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={3}>
+                    Personaliza tu experiencia
+                  </Typography>
 
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={4}>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium" mb={1}>
-                        Tema de la aplicación
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                        Cambia entre modo claro y oscuro
-                      </Typography>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={preferences.theme === 'dark'}
-                            onChange={(e) => handlePreferenceChange('theme', e.target.checked ? 'dark' : 'light')}
-                            disabled={loading}
-                          />
-                        }
-                        label={preferences.theme === 'dark' ? 'Oscuro' : 'Claro'}
-                      />
-                    </Box>
-                  </Grid>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={preferences.theme === 'dark'}
+                          onChange={(e) => handlePreferenceChange('theme', e.target.checked ? 'dark' : 'light')}
+                          color="primary"
+                        />
+                      }
+                      label="Modo Oscuro"
+                    />
 
-                  <Grid item xs={12} sm={4}>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium" mb={1}>
-                        Notificaciones por email
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                        Recibe actualizaciones de sprint
-                      </Typography>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={preferences.emailNotifications}
-                            onChange={(e) => handlePreferenceChange('emailNotifications', e.target.checked)}
-                            disabled={loading}
-                          />
-                        }
-                        label={preferences.emailNotifications ? 'Activas' : 'Desactivadas'}
-                      />
-                    </Box>
-                  </Grid>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={preferences.emailNotifications}
+                          onChange={(e) => handlePreferenceChange('emailNotifications', e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label="Notificaciones por Email"
+                    />
 
-                  <Grid item xs={12} sm={4}>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium" mb={1}>
-                        Recordatorios diarios
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                        Daily stand-up automático
-                      </Typography>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={preferences.dailyReminders}
-                            onChange={(e) => handlePreferenceChange('dailyReminders', e.target.checked)}
-                            disabled={loading}
-                          />
-                        }
-                        label={preferences.dailyReminders ? 'Activos' : 'Desactivados'}
-                      />
-                    </Box>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={preferences.dailyReminders}
+                          onChange={(e) => handlePreferenceChange('dailyReminders', e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label="Recordatorios Diarios"
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
           </Grid>
         </Grid>
 
@@ -800,7 +857,8 @@ const Configuration = () => {
         <Box sx={{ 
           mt: 4, 
           display: 'flex', 
-          justifyContent: 'center'
+          justifyContent: 'center',
+          flexShrink: 0,
         }}>
           <Button
             variant="contained"
@@ -810,13 +868,13 @@ const Configuration = () => {
             disabled={loading}
             sx={{ 
               minWidth: 250,
-              background: theme.gradient,
+              background: appTheme.gradient,
               textTransform: "none",
               fontWeight: 600,
               px: 4,
               py: 1.5,
               "&:hover": {
-                background: theme.gradientAlt,
+                background: appTheme.gradientAlt,
               },
             }}
           >
@@ -830,17 +888,18 @@ const Configuration = () => {
             sx={{ 
               mt: 4,
               borderRadius: 2,
-              boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
-              border: `1px solid #e0e0e0`,
+              boxShadow: appTheme.shadow,
+              border: appTheme.border,
+              flexShrink: 0,
             }}
           >
             <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
                 <Box>
                   <Typography 
                     variant="h6" 
                     fontWeight="700"
-                    sx={{ color: theme.primaryDark }}
+                    sx={{ color: appTheme.primaryDark }}
                   >
                     Gestión de Usuarios
                   </Typography>
@@ -854,11 +913,11 @@ const Configuration = () => {
                   onClick={handleNewUser}
                   disabled={loading}
                   sx={{
-                    background: theme.gradient,
+                    background: appTheme.gradient,
                     textTransform: "none",
                     fontWeight: 600,
                     "&:hover": {
-                      background: theme.gradientAlt,
+                      background: appTheme.gradientAlt,
                     },
                   }}
                 >
@@ -870,13 +929,16 @@ const Configuration = () => {
                 component={Paper} 
                 sx={{ 
                   boxShadow: 'none', 
-                  border: '1px solid #e0e0e0',
+                  border: appTheme.border,
                   borderRadius: 2,
+                  backgroundColor: 'transparent',
                 }}
               >
                 <Table>
                   <TableHead>
-                    <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                    <TableRow sx={{ 
+                      bgcolor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' 
+                    }}>
                       <TableCell><strong>Nombre</strong></TableCell>
                       <TableCell><strong>Email</strong></TableCell>
                       <TableCell><strong>Rol</strong></TableCell>
@@ -885,7 +947,14 @@ const Configuration = () => {
                   </TableHead>
                   <TableBody>
                     {users.map((user) => (
-                      <TableRow key={user._id} hover>
+                      <TableRow 
+                        key={user._id} 
+                        hover
+                        sx={{ 
+                          '&:last-child td, &:last-child th': { border: 0 },
+                          backgroundColor: appTheme.cardBg
+                        }}
+                      >
                         <TableCell>{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
