@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -8,10 +8,8 @@ import {
   Button,
   Switch,
   FormControlLabel,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
+  IconButton,
+  Grid,
   Table,
   TableBody,
   TableCell,
@@ -19,40 +17,137 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton,
   Chip,
-  Grid
+  CircularProgress,
+  Alert,
+  Avatar,
+  Badge,
+  InputAdornment,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   ArrowBack,
+  Save,
   Edit,
   Delete,
   PersonAdd,
-  Save
+  PhotoCamera,
+  Close,
+  Visibility,
+  VisibilityOff
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import UserService from '../services/UserService';
+import useAuthStore from '../store/authStore';
+import { useThemeContext } from '../theme/useThemeContext';
+import useAppTheme from '../theme/useAppTheme';
+import Swal from 'sweetalert2';
 
 const Configuration = () => {
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { darkMode, toggleDarkMode } = useThemeContext();
+  const appTheme = useAppTheme();
+
+  // Tema verde menta profesional con soporte para modo oscuro
+  const customTheme = {
+    primary: "#4CAF50",
+    primaryDark: "#45A049",
+    primaryLight: "#81C784",
+    background: theme.palette.mode === 'dark' ? theme.palette.background.default : "#e6f2ed",
+    cardBg: theme.palette.mode === 'dark' ? theme.palette.background.paper : "#ffffff",
+    gradient: "linear-gradient(135deg, #4CAF50 0%, #81C784 100%)",
+    gradientAlt: "linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)",
+    text: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.text.primary,
+    textSecondary: theme.palette.mode === 'dark' ? theme.palette.text.secondary : theme.palette.text.secondary,
+  };
+
+  // Obtener usuario y métodos desde el store (localStorage)
+  const { user: currentUser, updateUser } = useAuthStore();
+
   const [personalInfo, setPersonalInfo] = useState({
-    fullName: 'María Rodríguez',
-    email: 'maria.rodriguez@cohispania.com',
-    role: 'Scrum Master',
+    fullName: '',
+    email: '',
+    role: '',
+    avatar: '',
+    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
   const [preferences, setPreferences] = useState({
-    theme: 'light',
+    theme: darkMode ? 'dark' : 'light',
     emailNotifications: true,
-    dailyReminders: true,
-    timezone: 'Europe/Madrid (GMT+1)'
+    dailyReminders: true
   });
 
-  const [users] = useState([
-    { id: 1, name: 'Ana García', email: 'ana.garcia@cohispania.com', role: 'Developer', status: 'Activo' },
-    { id: 2, name: 'Carlos López', email: 'carlos.lopez@cohispania.com', role: 'Developer', status: 'Activo' },
-    { id: 3, name: 'María Rodríguez', email: 'maria.rodriguez@cohispania.com', role: 'Scrum Master', status: 'Activo' },
-    { id: 4, name: 'Juan Martínez', email: 'juan.martinez@cohispania.com', role: 'QA', status: 'Activo' }
-  ]);
+  // Estados para mostrar/ocultar contraseñas
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Estados para el backend
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Validación: Si no hay usuario, mostrar loading
+  if (!currentUser) {
+    return (
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        backgroundColor: appTheme.background
+      }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Cargar datos del usuario actual al montar el componente
+  useEffect(() => {
+    loadCurrentUser();
+    // Solo cargar usuarios si es admin
+    if (currentUser?.isAdmin) {
+      loadUsers();
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    setPreferences(prev => ({
+      ...prev,
+      theme: darkMode ? 'dark' : 'light'
+    }));
+  }, [darkMode]);
+
+  const loadCurrentUser = () => {
+    if (currentUser) {
+      setPersonalInfo({
+        fullName: currentUser.name || '',
+        email: currentUser.email || '',
+        role: currentUser.role || '',
+        avatar: currentUser.avatar || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const usersData = await UserService.getAll();
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error);
+      // No mostrar error si no tiene permisos de admin
+    }
+  };
 
   const handlePersonalInfoChange = (field, value) => {
     setPersonalInfo(prev => ({
@@ -66,11 +161,372 @@ const Configuration = () => {
       ...prev,
       [field]: value
     }));
+
+    // Manejar cambio de tema global
+    if (field === 'theme' && value === 'dark' !== darkMode) {
+      toggleDarkMode();
+    }
   };
 
-  const handleSaveChanges = () => {
-    console.log('Guardando cambios...', { personalInfo, preferences });
-    // Aquí implementarías la lógica para guardar los cambios
+  const handleSaveChanges = async () => {
+    // Validar contraseñas si se están cambiando
+    if (personalInfo.newPassword || personalInfo.confirmPassword) {
+      if (!personalInfo.currentPassword) {
+        setError('Debes proporcionar tu contraseña actual para cambiarla');
+        return;
+      }
+
+      if (personalInfo.newPassword !== personalInfo.confirmPassword) {
+        setError('Las contraseñas nuevas no coinciden');
+        return;
+      }
+
+      if (personalInfo.newPassword.length < 6) {
+        setError('La nueva contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      setSuccess('');
+
+      let hasProfileChanges = false;
+      let hasPasswordChanges = false;
+
+      // Verificar si hay cambios en el perfil
+      const nameChanged = personalInfo.fullName !== currentUser?.name;
+      const emailChanged = personalInfo.email !== currentUser?.email;
+      const avatarChanged = personalInfo.avatar !== (currentUser?.avatar || '');
+
+      hasProfileChanges = nameChanged || emailChanged || avatarChanged;
+
+      // Actualizar perfil básico (nombre, email y avatar) si hay cambios
+      if (hasProfileChanges) {
+        const profileData = {
+          name: personalInfo.fullName,
+          email: personalInfo.email,
+          avatar: personalInfo.avatar
+        };
+
+        console.log('💾 Guardando perfil:', {
+          nameChanged,
+          emailChanged,
+          avatarChanged,
+          currentAvatar: currentUser?.avatar?.substring(0, 50),
+          newAvatar: personalInfo.avatar === '' ? 'CADENA VACÍA' : personalInfo.avatar?.substring(0, 50),
+          avatarLength: personalInfo.avatar?.length,
+          avatarType: typeof personalInfo.avatar
+        });
+
+        await UserService.updateProfile(profileData);
+
+        // Actualizar el store de Zustand con la nueva información
+        updateUser({
+          name: personalInfo.fullName,
+          email: personalInfo.email,
+          avatar: personalInfo.avatar
+        });
+
+        console.log('✅ Store actualizado con avatar:', personalInfo.avatar === '' ? 'CADENA VACÍA' : 'TIENE CONTENIDO');
+      }
+
+      // Cambiar contraseña si se proporcionó
+      if (personalInfo.newPassword) {
+        await UserService.changePassword({
+          currentPassword: personalInfo.currentPassword,
+          newPassword: personalInfo.newPassword,
+          confirmPassword: personalInfo.confirmPassword
+        });
+        hasPasswordChanges = true;
+      }
+
+      // Mostrar mensaje de éxito si hubo algún cambio
+      if (hasProfileChanges || hasPasswordChanges) {
+        setSuccess('Cambios guardados exitosamente');
+      } else {
+        setError('No hay cambios para guardar');
+      }
+
+      // Limpiar campos de contraseña
+      setPersonalInfo(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+
+    } catch (error) {
+      console.error('Error al guardar cambios:', error);
+
+      // Mensajes de error específicos
+      let errorMessage = 'Error al guardar los cambios';
+
+      if (error.response?.status === 413 || error.message?.includes('413')) {
+        errorMessage = 'La imagen es demasiado grande. Por favor, usa una imagen más pequeña (máximo 2MB).';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
+  // Manejar Enter para guardar cambios
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !loading) {
+      handleSaveChanges();
+    }
+  };
+
+  // Convertir imagen a Base64
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // Manejar cambio de avatar (desde input file o drag & drop)
+  const handleAvatarChange = async (file) => {
+    if (!file) return;
+
+    // Validar que sea una imagen
+    if (!file.type.startsWith('image/')) {
+      setError('Por favor selecciona un archivo de imagen válido');
+      return;
+    }
+
+    // Validar tamaño (máximo 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('La imagen no debe superar los 2MB');
+      return;
+    }
+
+    try {
+      setSuccess('Procesando imagen...');
+      const base64 = await convertToBase64(file);
+      console.log('Avatar convertido a Base64:', {
+        fileName: file.name,
+        fileSize: file.size,
+        base64Length: base64.length,
+        preview: base64.substring(0, 50) + '...'
+      });
+      handlePersonalInfoChange('avatar', base64);
+      setSuccess('Imagen cargada. Haz click en "Guardar Cambios" para aplicar.');
+      setError(''); // Limpiar cualquier error previo
+    } catch (error) {
+      console.error('Error al convertir imagen:', error);
+      setError('Error al procesar la imagen');
+    }
+  };
+
+  // Manejar drag over
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // Manejar drop de imagen
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const file = e.dataTransfer.files[0];
+    handleAvatarChange(file);
+  };
+
+  // Manejar click en el botón de cámara
+  const handleAvatarClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      handleAvatarChange(file);
+    };
+    input.click();
+  };
+
+  // Eliminar avatar
+  const handleRemoveAvatar = () => {
+    console.log('🗑️ Eliminando avatar - Estado anterior:', personalInfo.avatar?.substring(0, 50));
+    handlePersonalInfoChange('avatar', '');
+    console.log('🗑️ Avatar establecido a cadena vacía');
+    setSuccess('Avatar eliminado. Recuerda hacer click en "Guardar Cambios"');
+  };
+
+  const handleNewUser = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Nuevo Usuario',
+      html:
+        '<input id="swal-name" class="swal2-input" placeholder="Nombre completo">' +
+        '<input id="swal-email" class="swal2-input" placeholder="Email">' +
+        '<select id="swal-role" class="swal2-input">' +
+        '<option value="Developer">Developer</option>' +
+        '<option value="Admin">Admin</option>' +
+        '</select>',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Crear',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#4CAF50',
+      preConfirm: () => {
+        return {
+          name: document.getElementById('swal-name').value,
+          email: document.getElementById('swal-email').value,
+          role: document.getElementById('swal-role').value
+        };
+      }
+    });
+
+    if (formValues && formValues.name && formValues.email) {
+      try {
+        setLoading(true);
+        setError('');
+        await UserService.create({
+          name: formValues.name,
+          email: formValues.email,
+          role: formValues.role,
+          password: 'temporal123'
+        });
+
+        await loadUsers();
+        Swal.fire({
+          icon: 'success',
+          title: '¡Usuario creado!',
+          text: 'El usuario ha sido agregado exitosamente',
+          confirmButtonColor: '#4CAF50'
+        });
+        setSuccess('Usuario agregado exitosamente');
+      } catch (error) {
+        console.error('Error al crear usuario:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.message || error.message,
+          confirmButtonColor: '#4CAF50'
+        });
+        setError('Error al crear usuario: ' + (error.response?.data?.message || error.message));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleEditUser = async (userId) => {
+    const user = users.find(u => u._id === userId);
+    if (user) {
+      const { value: formValues } = await Swal.fire({
+        title: 'Editar Usuario',
+        html:
+          `<input id="swal-name" class="swal2-input" placeholder="Nombre completo" value="${user.name}">` +
+          `<input id="swal-email" class="swal2-input" placeholder="Email" value="${user.email}">` +
+          '<select id="swal-role" class="swal2-input">' +
+          `<option value="Developer" ${user.role === 'Developer' ? 'selected' : ''}>Developer</option>` +
+          `<option value="Admin" ${user.role === 'Admin' ? 'selected' : ''}>Admin</option>` +
+          '</select>',
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Actualizar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#4CAF50',
+        preConfirm: () => {
+          return {
+            name: document.getElementById('swal-name').value,
+            email: document.getElementById('swal-email').value,
+            role: document.getElementById('swal-role').value
+          };
+        }
+      });
+
+      if (formValues && formValues.name && formValues.email) {
+        try {
+          setLoading(true);
+          setError('');
+          await UserService.update(userId, {
+            name: formValues.name,
+            email: formValues.email,
+            role: formValues.role
+          });
+
+          await loadUsers();
+          Swal.fire({
+            icon: 'success',
+            title: '¡Usuario actualizado!',
+            text: 'Los datos han sido actualizados exitosamente',
+            confirmButtonColor: '#4CAF50'
+          });
+          setSuccess('Usuario actualizado exitosamente');
+        } catch (error) {
+          console.error('Error al actualizar usuario:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.response?.data?.message || error.message,
+            confirmButtonColor: '#4CAF50'
+          });
+          setError('Error al actualizar usuario: ' + (error.response?.data?.message || error.message));
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    const user = users.find(u => u._id === userId);
+    if (user) {
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        html: `Se eliminará al usuario <strong>${user.name}</strong>.<br/>Esta acción no se puede deshacer.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#4CAF50',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          setLoading(true);
+          setError('');
+          await UserService.delete(userId);
+          await loadUsers();
+          Swal.fire({
+            icon: 'success',
+            title: '¡Eliminado!',
+            text: 'El usuario ha sido eliminado exitosamente',
+            confirmButtonColor: '#4CAF50'
+          });
+          setSuccess('Usuario eliminado exitosamente');
+        } catch (error) {
+          console.error('Error al eliminar usuario:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.response?.data?.message || error.message,
+            confirmButtonColor: '#4CAF50'
+          });
+          setError('Error al eliminar usuario: ' + (error.response?.data?.message || error.message));
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
   };
 
   const getRoleColor = (role) => {
@@ -86,251 +542,578 @@ const Configuration = () => {
     }
   };
 
+  const isAdmin = currentUser?.isAdmin || currentUser?.role === 'Scrum Master';
+
+  if (loading && users.length === 0) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+        sx={{ backgroundColor: appTheme.background }}
+      >
+        <CircularProgress size={60} sx={{ color: appTheme.primary }} />
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton sx={{ mr: 2 }}>
-          <ArrowBack />
-        </IconButton>
-        <Box>
-          <Typography variant="h4" fontWeight="bold">
-            Configuración
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Gestiona tu perfil y preferencias
-          </Typography>
-        </Box>
-      </Box>
-
-      <Grid container spacing={3}>
-        {/* Información Personal */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" fontWeight="bold" mb={2}>
-                Información Personal
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mb={3}>
-                Actualiza tus datos de perfil
-              </Typography>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                  label="Nombre"
-                  value={personalInfo.fullName}
-                  onChange={(e) => handlePersonalInfoChange('fullName', e.target.value)}
-                  fullWidth
-                />
-
-                <TextField
-                  label="Correo electrónico"
-                  value={personalInfo.email}
-                  onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
-                  fullWidth
-                />
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <TextField
-                    label="Rol"
-                    value={personalInfo.role}
-                    onChange={(e) => handlePersonalInfoChange('role', e.target.value)}
-                    fullWidth
-                  />
-                  <Chip 
-                    label="Admin" 
-                    color="error" 
-                    size="small"
-                  />
-                </Box>
-
-                <TextField
-                  label="Nueva contraseña"
-                  type="password"
-                  value={personalInfo.newPassword}
-                  onChange={(e) => handlePersonalInfoChange('newPassword', e.target.value)}
-                  placeholder="Dejar en blanco para no cambiar"
-                  fullWidth
-                />
-
-                <TextField
-                  label="Confirmar contraseña"
-                  type="password"
-                  value={personalInfo.confirmPassword}
-                  onChange={(e) => handlePersonalInfoChange('confirmPassword', e.target.value)}
-                  placeholder="Confirma tu nueva contraseña"
-                  fullWidth
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Preferencias */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" fontWeight="bold" mb={2}>
-                Preferencias
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mb={3}>
-                Personaliza tu experiencia
-              </Typography>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <Box>
-                  <Typography variant="body2" fontWeight="medium" mb={1}>
-                    Tema de la aplicación
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                    Cambia entre modo claro y oscuro
-                  </Typography>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={preferences.theme === 'dark'}
-                        onChange={(e) => handlePreferenceChange('theme', e.target.checked ? 'dark' : 'light')}
-                      />
-                    }
-                    label=""
-                  />
-                </Box>
-
-                <Box>
-                  <Typography variant="body2" fontWeight="medium" mb={1}>
-                    Notificaciones por email
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                    Recibe actualizaciones de sprint
-                  </Typography>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={preferences.emailNotifications}
-                        onChange={(e) => handlePreferenceChange('emailNotifications', e.target.checked)}
-                      />
-                    }
-                    label=""
-                  />
-                </Box>
-
-                <Box>
-                  <Typography variant="body2" fontWeight="medium" mb={1}>
-                    Recordatorios diarios
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" mb={2} display="block">
-                    Daily stand-up automático
-                  </Typography>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={preferences.dailyReminders}
-                        onChange={(e) => handlePreferenceChange('dailyReminders', e.target.checked)}
-                      />
-                    }
-                    label=""
-                  />
-                </Box>
-
-                <Box>
-                  <Typography variant="body2" fontWeight="medium" mb={1}>
-                    Zona horaria
-                  </Typography>
-                  <FormControl fullWidth>
-                    <Select
-                      value={preferences.timezone}
-                      onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
-                    >
-                      <MenuItem value="Europe/Madrid (GMT+1)">Europe/Madrid (GMT+1)</MenuItem>
-                      <MenuItem value="America/New_York (GMT-5)">America/New_York (GMT-5)</MenuItem>
-                      <MenuItem value="Asia/Tokyo (GMT+9)">Asia/Tokyo (GMT+9)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Botón Guardar */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-start' }}>
-        <Button
-          variant="contained"
-          startIcon={<Save />}
-          onClick={handleSaveChanges}
-          sx={{ minWidth: 200 }}
+    <Box sx={{
+      minHeight: "100vh",
+      backgroundColor: appTheme.background,
+      py: 3,
+      width: '100%',
+      margin: '2% 0',
+      padding: 0,
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {/* Container principal - Ocupa todo el espacio disponible */}
+      <Box sx={{
+        flex: 1,
+        width: '100%',
+        maxWidth: '1400px',
+        mx: 'auto',
+        px: { xs: 2, sm: 3, md: 4 },
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {/* Header */}
+        <Box
+          sx={{
+            background: appTheme.cardBg,
+            borderRadius: 2,
+            p: 3,
+            mb: 3,
+            boxShadow: appTheme.shadow,
+            border: appTheme.border,
+          }}
         >
-          Guardar cambios
-        </Button>
-      </Box>
-
-      {/* Gestión de Usuarios */}
-      <Card sx={{ mt: 4 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
             <Box>
-              <Typography variant="h6" fontWeight="bold">
-                Gestión de Usuarios
+              <Typography
+                variant="h5"
+                fontWeight="700"
+                sx={{
+                  color: appTheme.primaryDark,
+                  mb: 0.5
+                }}
+              >
+                Configuración
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Administra los miembros del equipo
+              <Typography variant="h7" color="text.secondary">
+                Gestiona tu cuenta y preferencias
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              startIcon={<PersonAdd />}
-              sx={{ bgcolor: '#3f51b5' }}
+            <IconButton
+              onClick={handleGoBack}
+              sx={{
+                backgroundColor: appTheme.primary,
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: appTheme.primaryDark,
+                },
+              }}
             >
-              Nuevo usuario
-            </Button>
+              <ArrowBack />
+            </IconButton>
+          </Box>
+        </Box>
+
+        {/* Mostrar mensajes */}
+        {error && (
+          <Alert
+            severity="error"
+            sx={{
+              mb: 3,
+              borderRadius: 2,
+            }}
+            onClose={() => setError('')}
+          >
+            {error}
+          </Alert>
+        )}
+
+        {success && (
+          <Alert
+            severity="success"
+            sx={{
+              mb: 3,
+              borderRadius: 2,
+            }}
+            onClose={() => setSuccess('')}
+          >
+            {success}
+          </Alert>
+        )}
+
+        <Box container sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 3,
+          width: '100%',
+          mb: 2
+        }}>
+          {/* Información Personal */}
+          <Box sx={{
+            flex: '1 1 calc(60%  - 12px)',
+            minWidth: { xs: '100%', lg: 'calc(60% - 12px)' }
+          }}>
+            <Card
+              sx={{
+                borderRadius: 2,
+                boxShadow: appTheme.shadow,
+                border: appTheme.border,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Typography
+                  variant="h6"
+                  fontWeight="700"
+                  mb={1}
+                  sx={{ color: customTheme.textPrimary }}
+                >
+                  Información Personal
+                </Typography>
+                <Typography variant="body2" color="text.secondary" mb={3}>
+                  Actualiza tus datos de perfil
+                </Typography>
+
+                <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
+                  <Box sx={{
+                    display: 'flex', flexDirection: 'column', gap: 2,
+                    flex: '1 1 calc(60%  - 12px)',
+                    minWidth: { xs: '100%', lg: 'calc(60% - 12px)' }
+                  }}>
+                    <TextField
+                      label="Nombre Completo"
+                      value={personalInfo.fullName}
+                      onChange={(e) => handlePersonalInfoChange('fullName', e.target.value)}
+                      fullWidth
+                      disabled={loading}
+                    />
+
+                    <TextField
+                      label="Correo electrónico"
+                      type="email"
+                      value={personalInfo.email}
+                      onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
+                      fullWidth
+                      disabled={loading}
+                    />
+
+                    <TextField
+                      label="Rol"
+                      value={personalInfo.role}
+                      fullWidth
+                      disabled
+                      helperText="Contacta a un administrador para cambiar tu rol"
+                    />
+                  </Box>
+
+                  {/* Avatar Section */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      mb: 3,
+                      flex: '1 1 calc(40% - 12px)',
+                      minWidth: { xs: '100%', lg: 'calc(40% - 12px)' }
+                    }}
+                  >
+                    <Box
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      sx={{
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                        },
+                      }}
+                    >
+                      <Badge
+                        overlap="circular"
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                        badgeContent={
+                          <IconButton
+                            sx={{
+                              backgroundColor: appTheme.primary,
+                              color: 'white',
+                              width: 40,
+                              height: 40,
+                              '&:hover': {
+                                backgroundColor: appTheme.primaryDark,
+                              },
+                            }}
+                            onClick={handleAvatarClick}
+                            disabled={loading}
+                          >
+                            <PhotoCamera fontSize="small" />
+                          </IconButton>
+                        }
+                      >
+                        <Avatar
+                          src={personalInfo.avatar}
+                          alt={personalInfo.fullName}
+                          sx={{
+                            width: 120,
+                            height: 120,
+                            fontSize: '3rem',
+                            backgroundColor: appTheme.primary,
+                            border: `4px solid ${appTheme.primary}`,
+                          }}
+                        >
+                          {!personalInfo.avatar && personalInfo.fullName.charAt(0).toUpperCase()}
+                        </Avatar>
+                      </Badge>
+
+                      {/* Botón para eliminar avatar */}
+                      {personalInfo.avatar && (
+                        <IconButton
+                          sx={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            backgroundColor: '#f44336',
+                            color: 'white',
+                            width: 32,
+                            height: 32,
+                            '&:hover': {
+                              backgroundColor: '#d32f2f',
+                            },
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                          }}
+                          onClick={handleRemoveAvatar}
+                          disabled={loading}
+                          size="small"
+                        >
+                          <Close fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mt: 1, textAlign: 'center' }}
+                    >
+                      Click o arrastra una imagen aquí
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
           </Box>
 
-          <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                  <TableCell fontWeight="bold">Nombre</TableCell>
-                  <TableCell fontWeight="bold">Email</TableCell>
-                  <TableCell fontWeight="bold">Rol</TableCell>
-                  <TableCell fontWeight="bold">Estado</TableCell>
-                  <TableCell fontWeight="bold">Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id} hover>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={user.role}
-                        color={getRoleColor(user.role)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={user.status}
-                        color="success"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <IconButton size="small" color="primary">
-                        <Edit fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" color="error">
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+          {/* Columna derecha - Contraseña y Preferencias */}
+          <Box sx={{
+            flex: '1 1 calc(40% - 12px)',
+            minWidth: { xs: '100%', lg: 'calc(40% - 12px)' }
+          }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, height: '100%' }}>
+              {/* Cambiar Contraseña */}
+              <Card
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: appTheme.shadow,
+                  border: appTheme.border,
+                  flex: 1,
+                }}
+              >
+                <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Typography
+                    variant="h6"
+                    fontWeight="700"
+                    mb={1}
+                    sx={{ color: customTheme.textPrimary }}
+                  >
+                    Cambiar Contraseña
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={3}>
+                    Actualiza tu contraseña de acceso
+                  </Typography>
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
+                    <TextField
+                      label="Contraseña Actual"
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={personalInfo.currentPassword}
+                      onChange={(e) => handlePersonalInfoChange('currentPassword', e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      fullWidth
+                      disabled={loading}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              edge="end"
+                              disabled={loading}
+                            >
+                              {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }}
+                    />
+
+                    <TextField
+                      label="Nueva Contraseña"
+                      type={showNewPassword ? "text" : "password"}
+                      value={personalInfo.newPassword}
+                      onChange={(e) => handlePersonalInfoChange('newPassword', e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Mínimo 6 caracteres"
+                      fullWidth
+                      disabled={loading}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              edge="end"
+                              disabled={loading}
+                            >
+                              {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }}
+                    />
+
+                    <TextField
+                      label="Confirmar Nueva Contraseña"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={personalInfo.confirmPassword}
+                      onChange={(e) => handlePersonalInfoChange('confirmPassword', e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Repite la nueva contraseña"
+                      fullWidth
+                      disabled={loading}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              edge="end"
+                              disabled={loading}
+                            >
+                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }}
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
+
+              {/* Preferencias */}
+              {/* <Card
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: appTheme.shadow,
+                  border: appTheme.border,
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography 
+                    variant="h6" 
+                    fontWeight="700" 
+                    mb={1}
+                    sx={{ color: appTheme.primaryDark }}
+                  >
+                    Preferencias
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={3}>
+                    Personaliza tu experiencia
+                  </Typography>
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={preferences.theme === 'dark'}
+                          onChange={(e) => handlePreferenceChange('theme', e.target.checked ? 'dark' : 'light')}
+                          color="primary"
+                        />
+                      }
+                      label="Modo Oscuro"
+                    />
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={preferences.emailNotifications}
+                          onChange={(e) => handlePreferenceChange('emailNotifications', e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label="Notificaciones por Email"
+                    />
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={preferences.dailyReminders}
+                          onChange={(e) => handlePreferenceChange('dailyReminders', e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label="Recordatorios Diarios"
+                    />
+                  </Box>
+                </CardContent>
+              </Card> */}
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Botón Guardar */}
+        <Box sx={{
+          mt: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={loading ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <Save />}
+            onClick={handleSaveChanges}
+            disabled={loading}
+            sx={{
+              minWidth: 250,
+              background: appTheme.gradient,
+              textTransform: "none",
+              fontWeight: 600,
+              px: 4,
+              py: 1.5,
+              "&:hover": {
+                background: appTheme.gradientAlt,
+              },
+            }}
+          >
+            {loading ? 'Guardando...' : 'Guardar Cambios'}
+          </Button>
+        </Box>
+
+        {/* Gestión de Usuarios - Solo visible para admin */}
+        {isAdmin && users.length > 0 && (
+          <Card
+            sx={{
+              mt: 2,
+              borderRadius: 2,
+              boxShadow: appTheme.shadow,
+              border: appTheme.border,
+              flexShrink: 0,
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+                <Box>
+                  <Typography
+                    variant="h6"
+                    fontWeight="700"
+                    sx={{ color: customTheme.textPrimary }}
+                  >
+                    Gestión de Usuarios
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Administra los miembros del equipo
+                  </Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  startIcon={<PersonAdd />}
+                  onClick={handleNewUser}
+                  disabled={loading}
+                  sx={{
+                    background: appTheme.gradient,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    "&:hover": {
+                      background: appTheme.gradientAlt,
+                    },
+                  }}
+                >
+                  Nuevo Usuario
+                </Button>
+              </Box>
+
+              <TableContainer
+                component={Paper}
+                sx={{
+                  boxShadow: 'none',
+                  border: appTheme.border,
+                  borderRadius: 2,
+                  backgroundColor: 'transparent',
+                }}
+              >
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{
+                      bgcolor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'
+                    }}>
+                      <TableCell><strong>Nombre</strong></TableCell>
+                      <TableCell><strong>Email</strong></TableCell>
+                      <TableCell><strong>Rol</strong></TableCell>
+                      <TableCell><strong>Acciones</strong></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow
+                        key={user._id}
+                        hover
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                          backgroundColor: appTheme.cardBg
+                        }}
+                      >
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={user.role}
+                            color={getRoleColor(user.role)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleEditUser(user._id)}
+                            disabled={loading}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteUser(user._id)}
+                            disabled={loading || user._id === currentUser?.id}
+                            title={user._id === currentUser?.id ? 'No puedes eliminar tu propio usuario' : 'Eliminar usuario'}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        )}
+      </Box>
     </Box>
   );
 };
