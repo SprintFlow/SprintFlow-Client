@@ -160,6 +160,8 @@ const UserDashboard = () => {
     useEffect(() => {
         if (sprints && sprints.length > 0) {
             const active = sprints.find(s => s.status === "Activo");
+
+            console.log("Sprint activo encontrado:", active); // DEBUG
             setActiveSprint(active || null);
         }
     }, [sprints]);
@@ -199,6 +201,15 @@ const UserDashboard = () => {
             day: "numeric",
             month: "long"
         });
+    };
+
+    // Función para extraer el número del sprint del nombre
+    const extractSprintNumber = (sprintName) => {
+        if (!sprintName) return 'N/A';
+
+        // Buscar números en el string del nombre
+        const match = sprintName.match(/\d+/);
+        return match ? match[0] : sprintName;
     };
 
     // 🔹 Datos calculados
@@ -369,7 +380,7 @@ const UserDashboard = () => {
                     {/* Sprint actual */}
                     <Box item
                         sx={{
-                            flex: '1 1 calc(25% - 16px)', 
+                            flex: '1 1 calc(25% - 16px)',
                             minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
                         }}
                     >
@@ -389,7 +400,8 @@ const UserDashboard = () => {
                                     <Target style={{ color: '#5b5c5c' }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
-                                    {activeSprint ? activeSprint.number || '1' : '0'}
+                                    {/* {activeSprint ? activeSprint.number || '1' : '0'} */}
+                                    {activeSprint ? extractSprintNumber(activeSprint.name) : '0'}
                                 </Typography>
                                 <Typography sx={{ fontSize: '12px', color: customTheme.textSecondary }}>
                                     {activeSprint ? 'En progreso' : 'No activo'}
@@ -401,7 +413,7 @@ const UserDashboard = () => {
                     {/* Mis Puntos (Sprint) */}
                     <Box item
                         sx={{
-                            flex: '1 1 calc(25% - 16px)', 
+                            flex: '1 1 calc(25% - 16px)',
                             minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
                         }}
                     >
@@ -433,7 +445,7 @@ const UserDashboard = () => {
                     {/* Puntos Totales Planificados */}
                     <Box item
                         sx={{
-                            flex: '1 1 calc(25% - 16px)', 
+                            flex: '1 1 calc(25% - 16px)',
                             minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
                         }}
                     >
@@ -465,7 +477,7 @@ const UserDashboard = () => {
                     {/* Días Restantes */}
                     <Box item
                         sx={{
-                            flex: '1 1 calc(25% - 16px)', 
+                            flex: '1 1 calc(25% - 16px)',
                             minWidth: { xs: '100%', sm: 'calc(50% - 16px)', md: 'calc(25% - 16px)' }
                         }}
                     >
@@ -511,30 +523,26 @@ const UserDashboard = () => {
                                 border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                             }}>
                                 <CardContent sx={{ p: 3 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                                        <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, color: '#5b5c5c' }}>
-                                            Sprint Activo
-                                        </Typography>
-                                        <Chip
-                                            label="Activo"
-                                            sx={{
-                                                color: 'white',
-                                                backgroundColor: customTheme.primary,
-                                                fontWeight: 600
-                                            }}
-                                        />
-                                    </Box>
-
                                     <Box sx={{ mb: 3 }}>
-                                        <Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                             <Typography variant="h6" sx={{ fontWeight: 600, color: customTheme.primary }}>
                                                 {activeSprint.name}
                                             </Typography>
-                                            <Typography sx={{ color: customTheme.textSecondary, fontSize: 14, mt: 0.5 }}>
-                                                {formatDate(activeSprint.startDate)} - {formatDate(activeSprint.endDate)}
-                                                {` (${calculateSprintDuration(activeSprint.startDate, activeSprint.endDate)} días)`}
-                                            </Typography>
+                                            <Chip
+                                                label="Activo"
+                                                size="small"
+                                                sx={{
+                                                    color: 'white',
+                                                    backgroundColor: customTheme.primary,
+                                                    fontWeight: 600,
+                                                    height: '24px'
+                                                }}
+                                            />
                                         </Box>
+                                        <Typography sx={{ color: customTheme.textSecondary, fontSize: 14 }}>
+                                            {formatDate(activeSprint.startDate)} - {formatDate(activeSprint.endDate)}
+                                            {` (${calculateSprintDuration(activeSprint.startDate, activeSprint.endDate)} días)`}
+                                        </Typography>
                                     </Box>
 
                                     {/* Progreso del equipo */}
