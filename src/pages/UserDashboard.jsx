@@ -79,6 +79,57 @@ const UserDashboard = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
+    // NUEVA FUNCIÓN: Agrupar registros por fecha
+    const groupRecordsByDate = (records) => {
+        if (!records || records.length === 0) return [];
+
+        const groupedByDate = records.reduce((acc, record) => {
+            const date = new Date(record.registeredAt);
+            const dateKey = date.toISOString().split('T')[0];
+
+            if (!acc[dateKey]) {
+                acc[dateKey] = {
+                    date: record.registeredAt,
+                    dateKey: dateKey,
+                    stories: {},
+                    hasInterruption: false
+                };
+            }
+
+            record.stories.forEach(story => {
+                const pointValue = story.pointValue || story.points || 0;
+                if (!acc[dateKey].stories[pointValue]) {
+                    acc[dateKey].stories[pointValue] = 0;
+                }
+                acc[dateKey].stories[pointValue] += story.count || 0;
+            });
+
+            if (record.isInterruption) {
+                acc[dateKey].hasInterruption = true;
+            }
+
+            return acc;
+        }, {});
+
+        return Object.values(groupedByDate)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+    };
+
+    const formatGroupedStories = (storiesObj) => {
+        return Object.entries(storiesObj)
+            .sort(([a], [b]) => parseFloat(a) - parseFloat(b))
+            .map(([pointValue, count]) =>
+                `${count} historia${count !== 1 ? 's' : ''} de ${pointValue} punto${parseFloat(pointValue) !== 1 ? 's' : ''}`
+            )
+            .join(', ');
+    };
+
+    const calculateGroupTotal = (storiesObj) => {
+        return Object.entries(storiesObj).reduce((total, [pointValue, count]) => {
+            return total + (parseFloat(pointValue) * count);
+        }, 0);
+    };
+
     // ===== EFFECTS =====
     useEffect(() => {
         loadDashboardData();
@@ -176,6 +227,7 @@ const UserDashboard = () => {
     // 🔹 Datos calculados
     const myPoints = activeSprint ? getPointsBySprint(activeSprint._id) : 0;
     const sprintRecords = activeSprint ? getSprintRecords(activeSprint._id) : [];
+    const groupedRecords = groupRecordsByDate(sprintRecords);
     const plannedPoints = activeSprint?.plannedTotalPoints || 0;
 
     // Funciones para el registro de puntos
@@ -355,10 +407,10 @@ const UserDashboard = () => {
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#5b5c5c' }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.textPrimary }}>
                                         Sprint actual
                                     </Typography>
-                                    <Target style={{ color: '#5b5c5c' }} />
+                                    <Target style={{ color: customTheme.textPrimary }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
                                     {activeSprint ? extractSprintNumber(activeSprint.name) : '0'}
@@ -387,10 +439,10 @@ const UserDashboard = () => {
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#5b5c5c' }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.textPrimary }}>
                                         Mis Puntos (Sprint)
                                     </Typography>
-                                    <TrendingUp style={{ color: '#5b5c5c' }} />
+                                    <TrendingUp style={{ color: customTheme.textPrimary }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
                                     {activeSprint ? getPointsBySprint(activeSprint._id)?.toFixed(1) : 0}
@@ -419,10 +471,10 @@ const UserDashboard = () => {
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#5b5c5c' }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.textPrimary }}>
                                         Puntos Totales
                                     </Typography>
-                                    <Calendar style={{ color: '#5b5c5c' }} />
+                                    <Calendar style={{ color: customTheme.textPrimary }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: customTheme.primary }}>
                                     {activeSprint?.plannedTotalPoints?.toFixed(1) || 0}
@@ -445,19 +497,16 @@ const UserDashboard = () => {
                             height: '100%',
                             borderRadius: 3,
                             bgcolor: customTheme.cardBg,
-                            // boxShadow: '0 2px 12px rgba(16, 185, 129, 0.1)',
                             boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
                             border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                             transition: 'transform 0.2s',
-                            // border: `1px solid ${customTheme.border}`,
-                            // '&:hover': { transform: 'translateY(-2px)' }
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: '#5b5c5c' }}>
+                                    <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 600, color: customTheme.textPrimary }}>
                                         Días Restantes
                                     </Typography>
-                                    <Clock style={{ color: '#5b5c5c' }} />
+                                    <Clock style={{ color: customTheme.textPrimary }} />
                                 </Box>
                                 <Typography sx={{ fontSize: '35px', fontWeight: 'bold', mb: 1, color: '#ef4444' }}>
                                     {dashboardStats.daysRemaining}
@@ -581,7 +630,7 @@ const UserDashboard = () => {
                             boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
                             border: `1px solid ${theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'}`,
                         }}>
-                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#5b5c5c' }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: customTheme.textPrimary }}>
                                 Registrar Puntos Completados
                             </Typography>
                             <Typography sx={{ color: customTheme.textSecondary, fontSize: '14px', mb: 3 }}>
@@ -781,20 +830,20 @@ const UserDashboard = () => {
                             height: 'fit-content'
                         }}>
                             <CardContent sx={{ p: 3 }}>
-                                <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: '#5b5c5c' }}>
+                                <Typography variant='h5' sx={{ fontSize: 20, fontWeight: 600, mb: 3, color: customTheme.textPrimary }}>
                                     Mis Registros Recientes
                                 </Typography>
 
-                                {(!activeSprint || getSprintRecords(activeSprint._id).length === 0) ? (
+                                {(!activeSprint || groupedRecords.length === 0) ? (
                                     <Box textAlign="center" py={4}>
                                         <Typography variant="body1" color={customTheme.textSecondary}>
                                             No hay registros recientes para este sprint
                                         </Typography>
                                     </Box>
                                 ) : (
-                                    getSprintRecords(activeSprint._id).slice(0, 8).map((record, index) => (
+                                    groupedRecords.slice(0, 8).map((group, index) => (
                                         <Box
-                                            key={record._id || index}
+                                            key={group.dateKey}
                                             sx={{
                                                 mb: 2,
                                                 p: 2,
@@ -807,25 +856,41 @@ const UserDashboard = () => {
                                                 }
                                             }}
                                         >
+                                            {/* Texto de las historias agrupadas */}
                                             <Typography sx={{ fontWeight: 600, mb: 0.5, color: '#5b5c5c' }}>
-                                                {record.stories.map(story =>
-                                                    `${story.count} historia(s) de ${story.pointValue || story.points || '0'} punto(s)`
-                                                ).join(', ')}
+                                                {formatGroupedStories(group.stories)}
                                             </Typography>
-                                            <Typography component="span" sx={{ color: customTheme.textSecondary, fontSize: '14px' }}>
-                                                {formatRecordDate(record.registeredAt)}
-                                                {record.isInterruption && (
+
+                                            {/* Fecha y chip de interrupción */}
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                                <Typography component="span" sx={{ color: customTheme.textSecondary, fontSize: '14px' }}>
+                                                    {formatRecordDate(group.date)}
+                                                </Typography>
+
+                                                {/* Mostrar total de puntos del día (opcional) */}
+                                                <Typography component="span" sx={{
+                                                    color: customTheme.primary,
+                                                    fontSize: '13px',
+                                                    fontWeight: 600
+                                                }}>
+                                                    ({calculateGroupTotal(group.stories).toFixed(1)} pts)
+                                                </Typography>
+
+                                                {/* Chip de interrupción si aplica */}
+                                                {group.hasInterruption && (
                                                     <Chip
                                                         label="Interrupción"
                                                         size="small"
                                                         sx={{
-                                                            ml: 1,
+                                                            ml: 0.5,
+                                                            height: '20px',
                                                             bgcolor: theme.palette.mode === 'dark' ? '#422006' : '#fef3c7',
-                                                            color: theme.palette.mode === 'dark' ? '#fbbf24' : '#92400e'
+                                                            color: theme.palette.mode === 'dark' ? '#fbbf24' : '#92400e',
+                                                            fontSize: '11px'
                                                         }}
                                                     />
                                                 )}
-                                            </Typography>
+                                            </Box>
                                         </Box>
                                     ))
                                 )}
