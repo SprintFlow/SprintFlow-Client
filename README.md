@@ -104,3 +104,4 @@ npm install
 
 # Ejecutar el frontend en modo desarrollo
 npm run dev
+```
