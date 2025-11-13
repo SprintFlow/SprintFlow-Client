@@ -519,23 +519,28 @@ export default function SprintDetail() {
                   color: 'white'
                 }}
               />
-              <Button
-                startIcon={<Edit />}
-                variant="outlined"
-                onClick={handleEdit}
-                sx={{
-                  textTransform: "none",
-                  borderColor: customTheme.primary,
-                  color: customTheme.primary,
-                  fontWeight: 600,
-                  "&:hover": {
-                    borderColor: customTheme.primaryDark,
-                    backgroundColor: "rgba(76, 175, 80, 0.04)",
-                  }
-                }}
-              >
-                Editar
-              </Button>
+              {/* Botón de Edición - Solo para Activo o Planificado */}
+              {(sprintStatus === "Activo" || sprintStatus === "Planificado") && (
+                <Button
+                  startIcon={<Edit />}
+                  variant="outlined"
+                  onClick={handleEdit}
+                  sx={{
+                    textTransform: "none",
+                    borderColor: customTheme.primary,
+                    color: customTheme.primary,
+                    fontWeight: 600,
+                    "&:hover": {
+                      borderColor: customTheme.primaryDark,
+                      backgroundColor: "rgba(76, 175, 80, 0.04)",
+                    }
+                  }}
+                >
+                  Editar
+                </Button>
+              )}
+
+              {/* Botón de Eliminar - Siempre visible para todos los estados */}
               <Button
                 startIcon={<Delete />}
                 variant="outlined"
