@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import sprintService from "../services/sprintService";
+import sprintService from "../services/SprintService";
 
 // Función para calcular el estado del sprint basado en fechas y puntos
 const calculateSprintStatus = (sprint) => {
