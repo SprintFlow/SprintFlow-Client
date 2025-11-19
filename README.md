@@ -167,11 +167,31 @@ npm run dev
 - Se recomienda mantener los stores y servicios sincronizados con la API para evitar errores de datos.
 - Incluye tests unitarios con **Vitest** y configuración para pruebas de componentes React.
 
-## 🎨 GIF de Presentación
+---
+## 📬 Documentación de la API (Postman)
 
 <div align="center">
-  <img src="public/SprintFlow-green.gif" alt="SprintFlow Logo Animado" width="600" style="border-radius: 30px;">
+  <a href="https://documenter.getpostman.com/view/46421338/2sB3WmS2DF" target="_blank">
+    <img src="https://www.svgrepo.com/show/354202/postman-icon.svg" 
+         alt="Postman Logo" 
+         width="90" 
+         style="border-radius: 12px; margin-bottom: 10px;">
+  </a>
+  
+  <br>
+  <strong>Haz clic en el logo para acceder a la colección completa en Postman</strong>
 </div>
+
+---
+
+## 👥 Equipo de Desarrollo
+
+- **Aday Álvarez**  
+- **Paloma Gómez**  
+- **Valentina Montilla**  
+- **Guissella Pérez**  
+- **Sofía Reyes**  
+- **Carmen Tajuelo**
 
 
 
