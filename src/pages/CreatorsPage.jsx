@@ -42,37 +42,37 @@ const CreatorsPage = () => {
             name: "Aday Álvarez",
             github: "https://github.com/Aday25",
             linkedin: "https://www.linkedin.com/in/adayasc/",
-            avatar: "/public/aday.jpg"
+            avatar: "/aday.jpg"
         },
         {
             name: "Paloma Gómez",
             github: "https://github.com/Pal-cloud",
             linkedin: "https://www.linkedin.com/in/palomagsal/",
-            avatar: "/public/paloma.jpg"
+            avatar: "/paloma.jpg"
         },
         {
             name: "Valentina Montilla",
             github: "https://github.com/ValenMontilla7",
             linkedin: "https://www.linkedin.com/in/valentina-montilla-493a7b380/",
-            avatar: "/public/valentina.jpg"
+            avatar: "/valentina.jpg"
         },
         {
             name: "Guissella Pérez",
             github: "https://github.com/guiss26",
             linkedin: "https://www.linkedin.com/in/guissella-p%C3%A9rez/",
-            avatar: "/public/guissella.jpeg"
+            avatar: "/guissella.jpeg"
         },
         {
             name: "Sofía Reyes",
             github: "https://github.com/Sofiareyes12",
             linkedin: "https://www.linkedin.com/in/sofiareyes12/",
-            avatar: "/public/sofia.jpg"
+            avatar: "/sofia.jpg"
         },
         {
             name: "Carmen Tajuelo",
             github: "https://github.com/CarmenTajuelo",
             linkedin: "https://www.linkedin.com/in/carmentajuelo/",
-            avatar: "/public/carmen.jpg"
+            avatar: "/carmen.jpg"
         }
     ];
 
