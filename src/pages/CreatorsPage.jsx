@@ -15,6 +15,14 @@ import { keyframes } from "@emotion/react";
 import { useThemeContext } from "../theme/useThemeContext";
 import SprintFlowLogo from "../components/SprintFlowLogo";
 
+// Importar imágenes
+import adayImage from "../../public/aday.jpg";
+import palomaImage from "../../public/paloma.jpg";
+import valentinaImage from "../../public/valentina.jpg";
+import guissellaImage from "../../public/guissella.jpeg";
+import sofiaImage from "../../public/sofia.jpg";
+import carmenImage from "../../public/carmen.jpg";
+
 // Floating animation for main avatar
 const floatAnimation = keyframes`
   0% { transform: translateY(-10px) rotate(-5deg); }
@@ -32,47 +40,47 @@ const CreatorsPage = () => {
         ? "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)"
         : "linear-gradient(135deg, #e6f2ed 0%, #f0f8ff 100%)";
 
-    const cardBackground = darkMode ? "#2d2d2d" : "white";
+    const cardBackground = darkMode ? "#2d2d2d" : "#a3cfbbff";
     const textColor = darkMode ? "white" : "text.primary";
     const secondaryTextColor = darkMode ? "grey.400" : "text.secondary";
 
-    // Creators data
+    // Creators data with imported images
     const creators = [
         {
             name: "Aday Álvarez",
             github: "https://github.com/Aday25",
             linkedin: "https://www.linkedin.com/in/adayasc/",
-            avatar: "/aday.jpg"
+            avatar: adayImage  // ✅ Usando import
         },
         {
             name: "Paloma Gómez",
             github: "https://github.com/Pal-cloud",
             linkedin: "https://www.linkedin.com/in/palomagsal/",
-            avatar: "/paloma.jpg"
+            avatar: palomaImage  // ✅ Usando import
         },
         {
             name: "Valentina Montilla",
             github: "https://github.com/ValenMontilla7",
             linkedin: "https://www.linkedin.com/in/valentina-montilla-493a7b380/",
-            avatar: "/valentina.jpg"
+            avatar: valentinaImage  // ✅ Usando import
         },
         {
             name: "Guissella Pérez",
             github: "https://github.com/guiss26",
             linkedin: "https://www.linkedin.com/in/guissella-p%C3%A9rez/",
-            avatar: "/guissella.jpeg"
+            avatar: guissellaImage  // ✅ Usando import
         },
         {
             name: "Sofía Reyes",
             github: "https://github.com/Sofiareyes12",
             linkedin: "https://www.linkedin.com/in/sofiareyes12/",
-            avatar: "/sofia.jpg"
+            avatar: sofiaImage  // ✅ Usando import
         },
         {
             name: "Carmen Tajuelo",
             github: "https://github.com/CarmenTajuelo",
             linkedin: "https://www.linkedin.com/in/carmentajuelo/",
-            avatar: "/carmen.jpg"
+            avatar: carmenImage  // ✅ Usando import
         }
     ];
 
@@ -152,7 +160,7 @@ const CreatorsPage = () => {
                                             textAlign: "center",
                                             p: 3,
                                             borderRadius: 3,
-                                            background: darkMode ? "#2d2d2d" : "#a3cfbbff",
+                                            background: cardBackground,
                                             boxShadow: darkMode
                                                 ? "0 8px 32px rgba(0,0,0,0.3)"
                                                 : "0 8px 32px rgba(0,0,0,0.1)",
