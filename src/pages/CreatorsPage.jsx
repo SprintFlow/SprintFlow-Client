@@ -16,12 +16,12 @@ import { useThemeContext } from "../theme/useThemeContext";
 import SprintFlowLogo from "../components/SprintFlowLogo";
 
 // Importar imágenes
-import adayImage from "../../public/aday.jpg";
-import palomaImage from "../../public/paloma.jpg";
-import valentinaImage from "../../public/valentina.jpg";
-import guissellaImage from "../../public/guissella.jpeg";
-import sofiaImage from "../../public/sofia.jpg";
-import carmenImage from "../../public/carmen.jpg";
+import adayImage from "../assets/aday.jpg";
+import palomaImage from "../assets/paloma.jpg";
+import valentinaImage from "../assets/valentina.jpg";
+import guissellaImage from "../assets/guissella.jpeg";
+import sofiaImage from "../assets/sofia.jpg";
+import carmenImage from "../assets/carmen.jpg";
 
 // Floating animation for main avatar
 const floatAnimation = keyframes`
@@ -50,37 +50,37 @@ const CreatorsPage = () => {
             name: "Aday Álvarez",
             github: "https://github.com/Aday25",
             linkedin: "https://www.linkedin.com/in/adayasc/",
-            avatar: adayImage  // ✅ Usando import
+            avatar: adayImage
         },
         {
             name: "Paloma Gómez",
             github: "https://github.com/Pal-cloud",
             linkedin: "https://www.linkedin.com/in/palomagsal/",
-            avatar: palomaImage  // ✅ Usando import
+            avatar: palomaImage
         },
         {
             name: "Valentina Montilla",
             github: "https://github.com/ValenMontilla7",
             linkedin: "https://www.linkedin.com/in/valentina-montilla-493a7b380/",
-            avatar: valentinaImage  // ✅ Usando import
+            avatar: valentinaImage
         },
         {
             name: "Guissella Pérez",
             github: "https://github.com/guiss26",
             linkedin: "https://www.linkedin.com/in/guissella-p%C3%A9rez/",
-            avatar: guissellaImage  // ✅ Usando import
+            avatar: guissellaImage
         },
         {
             name: "Sofía Reyes",
             github: "https://github.com/Sofiareyes12",
             linkedin: "https://www.linkedin.com/in/sofiareyes12/",
-            avatar: sofiaImage  // ✅ Usando import
+            avatar: sofiaImage
         },
         {
             name: "Carmen Tajuelo",
             github: "https://github.com/CarmenTajuelo",
             linkedin: "https://www.linkedin.com/in/carmentajuelo/",
-            avatar: carmenImage  // ✅ Usando import
+            avatar: carmenImage
         }
     ];
 
