@@ -142,8 +142,6 @@ vitest.setup.js
 ```
 ---
 
----
-
 ## ⚙️ Instalación y Ejecución
 
 ```bash
