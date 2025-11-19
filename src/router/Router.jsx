@@ -14,6 +14,7 @@ import AdminDashboard from "../pages/Admindashboard";
 import SprintDetail from "../pages/SprintDetail";
 import NotFoundPage from "../pages/NotFoundPage";
 import ProtectedRoute from "../components/ProtectedRoute";
+import CreatorsPage from '../pages/CreatorsPage';
 
 const routerSprint = createBrowserRouter([
   {
@@ -96,6 +97,14 @@ const routerSprint = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Results />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "creators",
+        element: (
+         <ProtectedRoute>
+            <CreatorsPage />
           </ProtectedRoute>
         ),
       },

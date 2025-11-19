@@ -47,8 +47,8 @@ export default function Footer() {
       </Typography>
       <Typography variant="caption">
         Desarrollado por{" "}
-        <Link href="#" underline="hover" color="primary">
-          Cohispania Team
+        <Link href="/creators" underline="hover" color="primary">
+          SprintFlow Team
         </Link>
       </Typography>
     </Box>

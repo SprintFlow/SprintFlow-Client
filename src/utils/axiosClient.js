@@ -1,17 +1,19 @@
 import axios from "axios";
 
+// ✅ Configuración para desarrollo y producción
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+
+console.log('🔗 Conectando a:', baseURL); // Para debug
+
 const axiosClient = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL: baseURL,
   headers: { "Content-Type": "application/json" },
 });
 
-// ✅ SOLO UN interceptor de request
+// Interceptor de request
 axiosClient.interceptors.request.use(
   (config) => {
-    // Obtener token de localStorage en lugar de useAuthStore
-    // para evitar importación circular
     const token = localStorage.getItem('token');
-    console.log("Token enviado:", token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -20,7 +22,7 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Interceptor de response mejorado
+// Interceptor de response mejorado
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {

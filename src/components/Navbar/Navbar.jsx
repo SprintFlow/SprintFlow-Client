@@ -74,7 +74,7 @@ export default function Navbar() {
 
     const adminMenuItems = [
         { path: "/admin-dashboard", label: "Dashboard Admin", icon: <Dashboard /> },
-        { path: "/create-sprint", label: "Gestión Sprints", icon: <AdminPanelSettings /> },
+        { path: "/create-sprint", label: "Crear sprint", icon: <AdminPanelSettings /> },
         { path: "/results", label: "Resultados", icon: <TrendingUp /> },
         { path: "/configuration", label: "Mi Perfil", icon: <AdminPanelSettings /> }
     ];

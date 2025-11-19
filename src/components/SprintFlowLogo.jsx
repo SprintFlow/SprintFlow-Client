@@ -1,8 +1,8 @@
-export default function SprintFlowLogo({ size = 520 }) {
+export default function SprintFlowLogo({ size = 520, textColor = "#1f2937" }) {
   return (
     <div
       className="flex items-center justify-center bg-white"
-      style={{ width: size, height: size * 0.8 }} // mantiene proporciÃ³n
+      style={{ width: size, height: size * 0.8 }}
     >
       <svg
         viewBox="0 0 450 380"
@@ -71,7 +71,7 @@ export default function SprintFlowLogo({ size = 520 }) {
           textAnchor="middle"
           fontWeight="600"
           fontSize="38"
-          fill="#1f2937"
+          fill={textColor}
           fontFamily="Arial, sans-serif"
         >
           SprintFlow
