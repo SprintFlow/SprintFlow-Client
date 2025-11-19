@@ -186,10 +186,10 @@ npm run dev
 
 ## 👥 Equipo de Desarrollo
 
-- **Aday Álvarez**  
+- **Aday Álvarez**
+- **Guissella Pérez** 
 - **Paloma Gómez**  
-- **Valentina Montilla**  
-- **Guissella Pérez**  
+- **Valentina Montilla**    
 - **Sofía Reyes**  
 - **Carmen Tajuelo**
 
